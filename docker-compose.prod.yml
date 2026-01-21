@@ -1,0 +1,26 @@
+version: '3.8'
+
+# Docker Compose per producció
+# Aquest fitxer s'utilitzarà a AWS amb configuracions optimitzades
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+    environment:
+      - ENVIRONMENT=production
+      - DEBUG=false
+    restart: unless-stopped
+    # Altres configuracions a afegir al Sprint 6
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    restart: unless-stopped
+    # Altres configuracions a afegir al Sprint 6
+
+# Configuració completa al Sprint 6
