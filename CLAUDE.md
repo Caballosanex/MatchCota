@@ -249,111 +249,93 @@ matchcota/
 
 ## 6. Models de Dades
 
-### Tenant (Protectora)
+### 1. Taula: PROTECTORA (Tenants)
 
-```python
-class Tenant(Base):
-    __tablename__ = "tenants"
-    
-    id: UUID (PK)
-    name: str                    # "Protectora d'Animals de Barcelona"
-    slug: str (unique, index)    # "protectora-barcelona"
-    email: str
-    phone: str (nullable)
-    website: str (nullable)
-    logo_url: str (nullable)
-    primary_color: str           # "#4A90A4"
-    status: enum                 # pending, trial, active, suspended
-    subscription_tier: str       # basic, pro, enterprise
-    max_animals: int             # Límit segons pla
-    trial_ends_at: datetime
-    created_at: datetime
-    updated_at: datetime
-```
+| Camp | Tipus | Context / Notes |
+| --- | --- | --- |
+| **id** | UUID | PK |
+| **nom_entitat** | String | nom entitat |
+| **slug** | String | Unique, Index. "no accents / espais / ..." |
+| **direccio** | String | Inclou: adreça, ciutat, codi postal |
+| **tel** | String | |
+| **email** | String | |
+| **cif** | String | |
+| **website** | String | |
+| **logo_url** | String | |
+| **pla_pagament** | JSON/String | Inclou: compte bancari, status. Nota: "més davant" |
+| **data_creacio** | DateTime | |
 
-### User
+*Nota: Quadre d' "ALERTA! cues/grip/..." i "newsletter $".*
 
-```python
-class User(Base):
-    __tablename__ = "users"
-    
-    id: UUID (PK)
-    tenant_id: UUID (FK tenants.id)  # SEMPRE PRESENT
-    email: str
-    password_hash: str
-    name: str
-    role: enum                   # admin, staff
-    is_active: bool
-    must_change_password: bool
-    last_login: datetime
-    created_at: datetime
-```
+---
 
-### Animal
+### 2. Taula: ANIMALS
 
-```python
-class Animal(Base):
-    __tablename__ = "animals"
-    
-    id: UUID (PK)
-    tenant_id: UUID (FK tenants.id)  # SEMPRE PRESENT
-    
-    # Info bàsica
-    name: str
-    species: str                 # dog, cat, rabbit, other
-    breed: str (nullable)
-    age_years: float             # 0.5 = 6 mesos
-    sex: str                     # male, female
-    weight_kg: float (nullable)
-    description: text
-    photos: array[str]           # URLs a S3
-    status: str                  # available, reserved, adopted
-    
-    # Característiques per matching (valors de -1.0 a 1.0)
-    energy_level: float
-    exercise_needs: float
-    independence: float
-    training_difficulty: float
-    child_friendly: float
-    dog_friendly: float
-    cat_friendly: float
-    special_needs: float
-    special_needs_description: str (nullable)
-    
-    # Mida (one-hot)
-    size_small: float            # 1.0 si és petit
-    size_medium: float
-    size_large: float
-    
-    # Edat (one-hot)
-    age_puppy: float
-    age_young: float
-    age_adult: float
-    age_senior: float
-    
-    created_at: datetime
-    updated_at: datetime
-```
+| Camp | Tipus | Context / Notes |
+| --- | --- | --- |
+| **id** | UUID | PK |
+| **tenant_id** | UUID | FK -> PROTECTORA.id |
+| **nom** | String | |
+| **data_naixement** | Date | "data neix o anys" |
+| **mida** | String | "mida / pes" |
+| **pes** | Decimal | |
+| **microxip** | String | Nº de microxip |
+| **especie** | String | |
+| **raca** | String | |
+| **sexe** | String | |
+| **ppp** | Bool | |
+| **necessitat_atencio** | Decimal | Context: "independència" |
+| **sociabilitat** | Decimal | |
+| **descripcio** | Text | |
+| **condicions_mediques** | Text | |
+| **nivell_energia** | Decimal | |
+| **foto_urls** | ARRAY(String) | array d'url's |
 
-### Lead
+**Càlcul de Característiques Matching (Animals):**
+* **bo_amb_nens**: `Decimal`
+* **bo_amb_gossos**: `Decimal`
+* **bo_amb_gats**: `Decimal`
+* **experiencia_necessaria**: (Vinculat a Necessitat d'atenció, Sociabilitat i Nivell d'energia)
 
-```python
-class Lead(Base):
-    __tablename__ = "leads"
-    
-    id: UUID (PK)
-    tenant_id: UUID (FK tenants.id)  # SEMPRE PRESENT
-    email: str
-    name: str (nullable)
-    phone: str (nullable)
-    questionnaire_responses: jsonb
-    top_matches: array[UUID]     # IDs dels animals recomanats
-    top_score: float
-    status: str                  # new, contacted, in_process, closed
-    notes: text (nullable)
-    created_at: datetime
-    contacted_at: datetime (nullable)
-```
+---
+
+### 3. Taula: EMPLEATS (Users)
+
+| Camp | Tipus | Context / Notes |
+| --- | --- | --- |
+| **id** | UUID | PK |
+| **tenant_id** | UUID | FK -> PROTECTORA.id. "a quina prote pertany un empleat?" |
+| **usuari_id** | String/UUID | (Potser redundant amb id, o per auth extern?) |
+| **nom_usuari** | String | |
+| **nom** | String | |
+| **email** | String | |
+| **contrasenya** | String | Hash |
+
+---
+
+### 4. Taula: LEADS
+
+| Camp | Tipus | Context / Notes |
+| --- | --- | --- |
+| **id** | UUID | PK |
+| **tenant_id** | UUID | FK -> PROTECTORA.id |
+| **email** | String | |
+| **tel** | String | |
+| **nom** | String | |
+| **respostes** | JSON | |
+| **millors_match** | JSON | |
+| **puntuacions** | JSON | |
+
+---
+
+### 5. Taula: QÜESTIONARI
+
+| Camp | Tipus | Context / Notes |
+| --- | --- | --- |
+| **id** | UUID | PK |
+| **tenant_id** | UUID | FK -> PROTECTORA.id |
+| **preguntes** | JSON | |
+| **pes_respostes** | JSON | |
 
 ---
 
