@@ -1,5 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+
+from app.config import settings
+from app.core.tenant import TenantMiddleware, get_current_tenant
+from app.models.tenant import Tenant
+
 
 app = FastAPI(
     title="MatchCota API",
@@ -7,10 +12,13 @@ app = FastAPI(
     version="0.1.0"
 )
 
-# CORS - permetre requests des del frontend
+# Multi-tenant Middleware (inner layer)
+app.add_middleware(TenantMiddleware)
+
+# CORS - permetre requests des del frontend (outer layer)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=settings.get_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -27,3 +35,11 @@ async def root():
 @app.get("/api/v1/health")
 async def health():
     return {"status": "healthy"}
+
+@app.get("/api/v1/tenant/current")
+def get_current_tenant_info(tenant: Tenant = Depends(get_current_tenant)):
+    return {
+        "id": str(tenant.id),
+        "name": tenant.name,
+        "slug": tenant.slug
+    }

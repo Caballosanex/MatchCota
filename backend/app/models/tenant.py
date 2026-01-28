@@ -29,7 +29,7 @@ class Tenant(Base):
 
     # Legal
     cif = Column(String(20)) # CIF
-
+    
     # Personalització
     logo_url = Column(String(500)) # logo_url
     

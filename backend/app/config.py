@@ -5,6 +5,7 @@ Utilitza pydantic-settings per carregar i validar variables d'entorn.
 Totes les variables es carreguen des de .env o variables d'entorn del sistema.
 """
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 
@@ -12,6 +13,7 @@ from typing import Optional
 class Settings(BaseSettings):
     """
     Configuració principal de l'aplicació.
+
 
     Les variables es carreguen automàticament des de:
     1. Fitxer .env a l'arrel del projecte
@@ -98,9 +100,17 @@ class Settings(BaseSettings):
     max_upload_size: int = 10 * 1024 * 1024  # 10 MB
     allowed_image_types: list[str] = ["image/jpeg", "image/png", "image/webp"]
 
+    @field_validator("allowed_image_types", "cors_origins", mode="before", check_fields=False)
+    @classmethod
+    def parse_list_from_str(cls, v):
+        if isinstance(v, str):
+            return [x.strip() for x in v.split(",") if x.strip()]
+        return v
+
     # ====================
     # PAGINATION
     # ====================
+
 
     default_page_size: int = 20
     max_page_size: int = 100
