@@ -1,5 +1,3 @@
-version: '3.8'
-
 # Docker Compose per producció
 # Aquest fitxer s'utilitzarà a AWS amb configuracions optimitzades
 
