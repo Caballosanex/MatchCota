@@ -48,9 +48,10 @@ services:
       - ./backend:/app
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
-      - ENVIRONMENT=development
-      - DEBUG=true
+      # Override critical variables for Docker networking
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/matchcota
       - REDIS_URL=redis://redis:6379
       - SMTP_HOST=mailhog
@@ -73,7 +74,10 @@ services:
       - /app/node_modules
     ports:
       - "5173:5173"
+    env_file:
+      - .env
     environment:
+      # Vite needs VITE_ prefix for client-side variables
       - VITE_API_URL=http://localhost:8000/api/v1
       - VITE_ENVIRONMENT=development
     depends_on:
