@@ -1,39 +1,16 @@
-import { useState, useEffect } from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Home from './pages/public/Home';
+import RegisterTenant from './pages/public/RegisterTenant';
 
 function App() {
-  const [apiStatus, setApiStatus] = useState('checking...')
-
-  useEffect(() => {
-    fetch('http://localhost:8000/api/v1/health')
-      .then(res => res.json())
-      .then(data => setApiStatus(data.status))
-      .catch(() => setApiStatus('error'))
-  }, [])
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-      <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
-        <h1 className="text-4xl font-bold text-primary mb-4">
-          🐾 MatchCota
-        </h1>
-        <p className="text-gray-600 mb-6">
-          Plataforma multi-tenant per connectar protectores amb adoptants
-        </p>
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <p className="text-green-800 font-semibold">
-            ✓ Frontend funcionant!
-          </p>
-          <p className="text-sm text-green-600 mt-2">
-            API Status: <span className="font-mono">{apiStatus}</span>
-          </p>
-        </div>
-        <div className="mt-6 text-sm text-gray-500">
-          <p>Sprint 1: Docker Setup ✅</p>
-          <p>Team ASIX • DAW1 • DAW2</p>
-        </div>
-      </div>
-    </div>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/register-tenant" element={<RegisterTenant />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;

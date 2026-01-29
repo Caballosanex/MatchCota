@@ -43,3 +43,7 @@ def get_current_tenant_info(tenant: Tenant = Depends(get_current_tenant)):
         "name": tenant.name,
         "slug": tenant.slug
     }
+
+# Register Routers
+from app.api.v1 import tenants
+app.include_router(tenants.router, prefix="/api/v1/tenants", tags=["tenants"])
