@@ -5,7 +5,6 @@ Utilitza pydantic-settings per carregar i validar variables d'entorn.
 Totes les variables es carreguen des de .env o variables d'entorn del sistema.
 """
 
-from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 
@@ -100,12 +99,14 @@ class Settings(BaseSettings):
     max_upload_size: int = 10 * 1024 * 1024  # 10 MB
     allowed_image_types: list[str] = ["image/jpeg", "image/png", "image/webp"]
 
-    @field_validator("allowed_image_types", "cors_origins", mode="before", check_fields=False)
-    @classmethod
-    def parse_list_from_str(cls, v):
-        if isinstance(v, str):
-            return [x.strip() for x in v.split(",") if x.strip()]
-        return v
+    # Field validator per parsejar llistes des de CSV strings
+    # NOTA: Comentat temporalment perquè causava problemes amb Pydantic v2
+    # @field_validator("allowed_image_types", "cors_origins", mode="before")
+    # @classmethod
+    # def parse_list_from_str(cls, v):
+    #     if isinstance(v, str):
+    #         return [x.strip() for x in v.split(",") if x.strip()]
+    #     return v
 
     # ====================
     # PAGINATION
