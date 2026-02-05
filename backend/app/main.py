@@ -1,9 +1,8 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.core.tenant import TenantMiddleware, get_current_tenant
-from app.models.tenant import Tenant
+from app.core.tenant import TenantMiddleware
 
 
 app = FastAPI(
@@ -36,14 +35,7 @@ async def root():
 async def health():
     return {"status": "healthy"}
 
-@app.get("/api/v1/tenant/current")
-def get_current_tenant_info(tenant: Tenant = Depends(get_current_tenant)):
-    return {
-        "id": str(tenant.id),
-        "name": tenant.name,
-        "slug": tenant.slug
-    }
-
 # Register Routers
-from app.api.v1 import tenants
+from app.api.v1 import tenants, auth
 app.include_router(tenants.router, prefix="/api/v1/tenants", tags=["tenants"])
+app.include_router(auth.router, prefix="/api/v1", tags=["auth"])

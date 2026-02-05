@@ -84,7 +84,7 @@ SET name = EXCLUDED.name,
 -- 2. USERS (Empleats de les protectores)
 -- ================================================
 -- Password per tots: "admin123"
--- Hash generat amb: python -c "from passlib.context import CryptContext; print(CryptContext(['bcrypt']).hash('admin123'))"
+-- Hash generat amb bcrypt 4.1.3 (compatible amb passlib 1.7.4)
 -- NOTA: Aquest hash és per TESTING només. En producció usar hash diferent per cada user.
 
 DO $$
@@ -101,22 +101,22 @@ BEGIN
     -- Users per tenant DEMO
     INSERT INTO users (id, tenant_id, username, email, name, password_hash, created_at, updated_at)
     VALUES
-        (gen_random_uuid(), tenant_demo_id, 'admin', 'admin@demo.com', 'Admin Demo', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5NU2dYz0E5wCe', NOW(), NOW()),
-        (gen_random_uuid(), tenant_demo_id, 'maria', 'maria@demo.com', 'Maria Garcia', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5NU2dYz0E5wCe', NOW(), NOW()),
-        (gen_random_uuid(), tenant_demo_id, 'jordi', 'jordi@demo.com', 'Jordi Puig', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5NU2dYz0E5wCe', NOW(), NOW())
+        (gen_random_uuid(), tenant_demo_id, 'admin', 'admin@demo.com', 'Admin Demo', '$2b$12$S8zeJmjmzrfVCdEcLsQDvOTOvr21BSpbM0W03TSefJsnX2z4lr.Um', NOW(), NOW()),
+        (gen_random_uuid(), tenant_demo_id, 'maria', 'maria@demo.com', 'Maria Garcia', '$2b$12$S8zeJmjmzrfVCdEcLsQDvOTOvr21BSpbM0W03TSefJsnX2z4lr.Um', NOW(), NOW()),
+        (gen_random_uuid(), tenant_demo_id, 'jordi', 'jordi@demo.com', 'Jordi Puig', '$2b$12$S8zeJmjmzrfVCdEcLsQDvOTOvr21BSpbM0W03TSefJsnX2z4lr.Um', NOW(), NOW())
     ON CONFLICT (username) DO NOTHING;
 
     -- Users per tenant BARCELONA
     INSERT INTO users (id, tenant_id, username, email, name, password_hash, created_at, updated_at)
     VALUES
-        (gen_random_uuid(), tenant_bcn_id, 'admin-bcn', 'admin@protectorabcn.cat', 'Anna Martínez', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5NU2dYz0E5wCe', NOW(), NOW()),
-        (gen_random_uuid(), tenant_bcn_id, 'veterinari', 'vet@protectorabcn.cat', 'Dr. Marc López', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5NU2dYz0E5wCe', NOW(), NOW())
+        (gen_random_uuid(), tenant_bcn_id, 'admin-bcn', 'admin@protectorabcn.cat', 'Anna Martínez', '$2b$12$S8zeJmjmzrfVCdEcLsQDvOTOvr21BSpbM0W03TSefJsnX2z4lr.Um', NOW(), NOW()),
+        (gen_random_uuid(), tenant_bcn_id, 'veterinari', 'vet@protectorabcn.cat', 'Dr. Marc López', '$2b$12$S8zeJmjmzrfVCdEcLsQDvOTOvr21BSpbM0W03TSefJsnX2z4lr.Um', NOW(), NOW())
     ON CONFLICT (username) DO NOTHING;
 
     -- Users per tenant GIRONA
     INSERT INTO users (id, tenant_id, username, email, name, password_hash, created_at, updated_at)
     VALUES
-        (gen_random_uuid(), tenant_girona_id, 'admin-girona', 'admin@protectoragirona.cat', 'Laura Serra', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5NU2dYz0E5wCe', NOW(), NOW())
+        (gen_random_uuid(), tenant_girona_id, 'admin-girona', 'admin@protectoragirona.cat', 'Laura Serra', '$2b$12$S8zeJmjmzrfVCdEcLsQDvOTOvr21BSpbM0W03TSefJsnX2z4lr.Um', NOW(), NOW())
     ON CONFLICT (username) DO NOTHING;
 
 END $$;
