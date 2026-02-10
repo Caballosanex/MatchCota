@@ -36,6 +36,8 @@ async def health():
     return {"status": "healthy"}
 
 # Register Routers
-from app.api.v1 import tenants, auth
+from app.api.v1 import tenants, auth, animals, users
 app.include_router(tenants.router, prefix="/api/v1/tenants", tags=["tenants"])
 app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
+app.include_router(animals.router, prefix="/api/v1", tags=["animals"])
+app.include_router(users.router, prefix="/api/v1", tags=["users"])
