@@ -1,17 +1,14 @@
-FROM python:3.11-slim
+FROM python:3.11-alpine
 
 WORKDIR /app
 
 # Install system dependencies
-# Retry amb --fix-missing per problemes de xarxa temporals
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends --fix-missing \
+# Alpine usa apk (més lleuger i repositoris diferents que Debian)
+RUN apk add --no-cache \
     gcc \
-    libpq-dev \
-    || (apt-get update && apt-get install -y --no-install-recommends --fix-missing gcc libpq-dev) \
-    # Clean up immediately to reduce image size
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    musl-dev \
+    postgresql-dev \
+    linux-headers
 
 # Install Python dependencies
 COPY requirements.txt .
