@@ -68,7 +68,7 @@ class Settings(BaseSettings):
 
     aws_access_key_id: Optional[str] = None
     aws_secret_access_key: Optional[str] = None
-    aws_region: str = "eu-south-2"
+    aws_region: str = "us-east-1"
     s3_bucket_name: Optional[str] = None
     s3_enabled: bool = False  # Per desenvolupament, deshabilitat
 

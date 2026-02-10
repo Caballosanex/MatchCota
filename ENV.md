@@ -132,7 +132,7 @@ VITE_API_URL=http://localhost:8000/api/v1
 ```bash
 ENVIRONMENT=staging
 DEBUG=false
-DATABASE_URL=postgresql://user:pass@staging-db.xxxxx.eu-south-2.rds.amazonaws.com:5432/matchcota
+DATABASE_URL=postgresql://user:pass@staging-db.xxxxx.us-east-1.rds.amazonaws.com:5432/matchcota
 SECRET_KEY=<generat amb openssl rand -hex 32>
 JWT_SECRET_KEY=<generat amb openssl rand -hex 32>
 
@@ -141,7 +141,7 @@ AWS_SECRET_ACCESS_KEY=<IAM credentials>
 S3_BUCKET_NAME=matchcota-uploads-staging
 S3_ENABLED=true
 
-SMTP_HOST=email-smtp.eu-south-2.amazonaws.com
+SMTP_HOST=email-smtp.us-east-1.amazonaws.com
 SMTP_PORT=587
 SMTP_USER=<SES SMTP user>
 SMTP_PASSWORD=<SES SMTP password>
@@ -166,7 +166,7 @@ SECRET_KEY=<from secrets manager>
 JWT_SECRET_KEY=<from secrets manager>
 
 # Obtenir de AWS SSM Parameter Store
-AWS_REGION=eu-south-2
+AWS_REGION=us-east-1
 S3_BUCKET_NAME=matchcota-uploads-prod
 S3_ENABLED=true
 
@@ -343,7 +343,7 @@ aws secretsmanager create-secret \
 # Obtenir secret des del codi Python
 import boto3
 
-client = boto3.client('secretsmanager', region_name='eu-south-2')
+client = boto3.client('secretsmanager', region_name='us-east-1')
 response = client.get_secret_value(SecretId='matchcota/prod/database-url')
 database_url = response['SecretString']
 ```

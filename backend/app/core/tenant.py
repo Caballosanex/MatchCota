@@ -10,7 +10,8 @@ from app.config import settings
 class TenantMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Excloure rutes de sistema/docs que no requereixen tenant context
-        if request.url.path in ["/docs", "/redoc", "/openapi.json", "/api/v1/health", "/", "/api/v1/tenants", "/api/v1/tenants/"]:
+        # El /auth/login gestiona el tenant manualment per compatibilitat amb Swagger OAuth2
+        if request.url.path in ["/docs", "/redoc", "/openapi.json", "/api/v1/health", "/", "/api/v1/tenants", "/api/v1/tenants/", "/api/v1/auth/login"]:
             return await call_next(request)
 
         # 1. Extreure slug (prioritat header en dev)

@@ -616,7 +616,7 @@ REDIS_URL=redis://redis:6379
 # AWS
 AWS_ACCESS_KEY_ID=xxx
 AWS_SECRET_ACCESS_KEY=xxx
-AWS_REGION=eu-south-2
+AWS_REGION=us-east-1
 S3_BUCKET_NAME=matchcota-uploads
 
 # Email
