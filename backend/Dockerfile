@@ -3,10 +3,12 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install system dependencies
+# Retry amb --fix-missing per problemes de xarxa temporals
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+    apt-get install -y --no-install-recommends --fix-missing \
     gcc \
     libpq-dev \
+    || (apt-get update && apt-get install -y --no-install-recommends --fix-missing gcc libpq-dev) \
     # Clean up immediately to reduce image size
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
