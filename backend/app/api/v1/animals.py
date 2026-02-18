@@ -16,6 +16,8 @@ from app.core.tenant import get_current_tenant
 from app.api.v1.auth import get_current_user
 
 
+from app.services import animals as animals_service
+
 router = APIRouter(tags=["animals"])
 
 
@@ -38,13 +40,7 @@ def list_animals(
     - species: Filtrar per espècie (dog, cat, etc.)
     - skip/limit: Paginació
     """
-    query = db.query(Animal).filter(Animal.tenant_id == tenant.id)
-
-    if species:
-        query = query.filter(Animal.species == species)
-
-    animals = query.offset(skip).limit(limit).all()
-    return animals
+    return animals_service.list_animals(db, tenant.id, skip, limit, species)
 
 
 @router.get("/animals/{animal_id}", response_model=AnimalResponse)
@@ -54,18 +50,7 @@ def get_animal(
     db: Session = Depends(get_db)
 ):
     """Obtenir detall d'un animal."""
-    animal = db.query(Animal).filter(
-        Animal.id == animal_id,
-        Animal.tenant_id == tenant.id  # CRÍTIC: filtrar per tenant
-    ).first()
-
-    if not animal:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Animal no trobat"
-        )
-
-    return animal
+    return animals_service.get_animal(db, animal_id, tenant.id)
 
 
 # ============================================
@@ -84,15 +69,7 @@ def create_animal(
 
     L'animal es crea automàticament dins del tenant de l'usuari actual.
     """
-    animal = Animal(
-        tenant_id=tenant.id,  # Assignar automàticament tenant
-        **animal_data.model_dump()
-    )
-    db.add(animal)
-    db.commit()
-    db.refresh(animal)
-
-    return animal
+    return animals_service.create_animal(db, animal_data, tenant.id)
 
 
 @router.put("/admin/animals/{animal_id}", response_model=AnimalResponse)
@@ -104,26 +81,7 @@ def update_animal(
     db: Session = Depends(get_db)
 ):
     """Actualitzar un animal (només admin del mateix tenant)."""
-    animal = db.query(Animal).filter(
-        Animal.id == animal_id,
-        Animal.tenant_id == tenant.id  # CRÍTIC: només animals del propi tenant
-    ).first()
-
-    if not animal:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Animal no trobat"
-        )
-
-    # Actualitzar només camps proporcionats
-    update_data = animal_data.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(animal, field, value)
-
-    db.commit()
-    db.refresh(animal)
-
-    return animal
+    return animals_service.update_animal(db, animal_id, animal_data, tenant.id)
 
 
 @router.delete("/admin/animals/{animal_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -134,18 +92,5 @@ def delete_animal(
     db: Session = Depends(get_db)
 ):
     """Esborrar un animal (només admin del mateix tenant)."""
-    animal = db.query(Animal).filter(
-        Animal.id == animal_id,
-        Animal.tenant_id == tenant.id
-    ).first()
+    return animals_service.delete_animal(db, animal_id, tenant.id)
 
-    if not animal:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Animal no trobat"
-        )
-
-    db.delete(animal)
-    db.commit()
-
-    return None
