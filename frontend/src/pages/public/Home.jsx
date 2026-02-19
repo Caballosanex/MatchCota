@@ -20,6 +20,7 @@ export default function Home() {
                 <p className="text-gray-600 mb-6">
                     Plataforma multi-tenant per connectar protectores amb adoptants
                 </p>
+
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
                     <p className="text-green-800 font-semibold">
                         ✓ Frontend funcionant!
@@ -29,13 +30,25 @@ export default function Home() {
                     </p>
                 </div>
 
+                {/* Accions principals */}
                 <div className="space-y-3">
-                    <Link to="/register-tenant" className="block w-full text-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                    <Link
+                        to="/register-tenant"
+                        className="block w-full text-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
+                    >
                         Registrar Protectora
+                    </Link>
+
+                    {/* Nou botó per afegir animal */}
+                    <Link
+                        to="/register-animal"
+                        className="block w-full text-center py-2 px-4 border border-indigo-600 rounded-md shadow-sm text-sm font-medium text-indigo-600 bg-white hover:bg-indigo-50 transition-colors"
+                    >
+                        ➕ Afegir Nou Animal
                     </Link>
                 </div>
 
-                <div className="mt-6 text-sm text-gray-500">
+                <div className="mt-6 text-sm text-gray-500 border-t pt-4">
                     <p>Sprint 1: Docker Setup ✅</p>
                     <p>Team ASIX • DAW1 • DAW2</p>
                 </div>
