@@ -26,7 +26,10 @@ export function AuthProvider({ children }) {
     }, []);
 
     const login = async (email, password) => {
-        const tenantSlug = tenant?.slug || 'demo';
+        const tenantSlug = tenant?.slug;
+        if (!tenantSlug) {
+            throw new Error('No tenant selected. Navigate to a protectora first.');
+        }
 
         const formData = new URLSearchParams();
         formData.append('username', email);

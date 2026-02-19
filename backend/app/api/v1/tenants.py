@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import Any
+from typing import Any, List
 
 from app.database import get_db
 from app.models.tenant import Tenant as TenantModel
@@ -9,6 +9,22 @@ from app.core.tenant import get_current_tenant
 from app.services import tenants as tenants_service
 
 router = APIRouter()
+
+
+@router.get("/", response_model=List[Tenant])
+def list_tenants(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    """
+    Llistar tots els tenants (protectores) registrades.
+
+    [DEV] En producció, aquest endpoint serà privat o limitat.
+    Ara és públic per permetre la landing page de desenvolupament.
+    """
+    from app.crud import tenants as crud_tenants
+    return crud_tenants.get_tenants(db, skip=skip, limit=limit)
 
 
 @router.get("/current", response_model=Tenant)
