@@ -77,8 +77,8 @@ services:
     env_file:
       - .env
     environment:
-      # Vite needs VITE_ prefix for client-side variables
-      - VITE_API_URL=http://localhost:8000/api/v1
+      # Proxy target per al Vite dev server (server-side, no necessita VITE_ prefix)
+      - API_PROXY_TARGET=http://backend:8000
       - VITE_ENVIRONMENT=development
     depends_on:
       - backend

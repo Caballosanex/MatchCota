@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
 /**
  * Creates a new tenant.
@@ -6,7 +6,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
  * @returns {Promise<Object>} - The created tenant object.
  */
 export async function createTenant(tenantData) {
-    const response = await fetch(`${API_URL}/tenants`, {
+    const response = await fetch(`${API_URL}/tenants/`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

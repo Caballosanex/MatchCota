@@ -48,7 +48,7 @@ export default function AdminLayout() {
                     <div className="flex-shrink-0 flex bg-gray-700 p-4">
                         <div className="flex items-center w-full">
                             <div className="ml-3">
-                                <p className="text-sm font-medium text-white">{user.name}</p>
+                                <p className="text-sm font-medium text-white">{user.name || user.email}</p>
                                 <button
                                     onClick={logout}
                                     className="text-xs font-medium text-gray-300 hover:text-white"

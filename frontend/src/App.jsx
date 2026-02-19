@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { TenantProvider } from './contexts/TenantContext';
 import { AuthProvider } from './contexts/AuthContext';
 
@@ -29,27 +29,30 @@ function App() {
               <Route path="animals" element={<Animals />} />
               <Route path="animals/:id" element={<AnimalDetail />} />
               <Route path="login" element={<Login />} />
-
-              {/* Mantinc les rutes existents tot i que potser haurien d'estar organitzades diferent */}
               <Route path="register-tenant" element={<RegisterTenant />} />
               <Route path="register-animal" element={<RegisterAnimal />} />
-
-              {/* Placeholder per Test de Compatibilitat */}
-              <Route path="test" element={<div className="p-8">Test de Compatibilitat (Pendent)</div>} />
+              <Route path="test" element={<div className="p-8 text-center text-gray-500">Test de Compatibilitat (Sprint 5)</div>} />
             </Route>
 
             {/* Admin Routes (Protected) */}
             <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
-
-              {/* Placeholders per altres rutes admin */}
-              <Route path="animals" element={<div className="p-8">Gestió Animals (Pendent)</div>} />
-              <Route path="leads" element={<div className="p-8">Leads (Pendent)</div>} />
-              <Route path="settings" element={<div className="p-8">Configuració (Pendent)</div>} />
+              <Route path="animals" element={<div className="p-8">Gestio Animals (Sprint 4)</div>} />
+              <Route path="animals/new" element={<RegisterAnimal />} />
+              <Route path="leads" element={<div className="p-8">Leads (Sprint 7)</div>} />
+              <Route path="settings" element={<div className="p-8">Configuracio (Pendent)</div>} />
             </Route>
 
             {/* 404 */}
-            <Route path="*" element={<div className="p-8">Pàgina no trobada</div>} />
+            <Route path="*" element={
+              <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                  <h1 className="text-4xl font-bold text-gray-900 mb-2">404</h1>
+                  <p className="text-gray-500">Pagina no trobada</p>
+                </div>
+              </div>
+            } />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

@@ -1,16 +1,32 @@
-// src/api/animals.js
-const API_URL = 'http://localhost:8000/api/v1'; // Ajusta según tu backend
+const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
-export const createAnimal = async (formData) => {
-    const response = await fetch(`${API_URL}/animals`, {
-        method: 'POST',
-        // No enviamos Content-Type manual porque FormData lo configura solo
-        body: formData,
-    });
+export const getAnimals = async (tenantSlug) => {
+    const headers = { 'Content-Type': 'application/json' };
+    if (tenantSlug) {
+        headers['X-Tenant-Slug'] = tenantSlug;
+    }
+
+    const response = await fetch(`${API_URL}/animals`, { headers });
 
     if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Error al crear el animal');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Error al carregar els animals');
+    }
+
+    return await response.json();
+};
+
+export const getAnimal = async (animalId, tenantSlug) => {
+    const headers = { 'Content-Type': 'application/json' };
+    if (tenantSlug) {
+        headers['X-Tenant-Slug'] = tenantSlug;
+    }
+
+    const response = await fetch(`${API_URL}/animals/${animalId}`, { headers });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || "Error al carregar l'animal");
     }
 
     return await response.json();

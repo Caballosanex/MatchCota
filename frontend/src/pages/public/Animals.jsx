@@ -47,10 +47,16 @@ export default function Animals() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {animals.map((animal) => (
                         <Card key={animal.id} noPadding className="hover:shadow-lg transition-shadow duration-300">
-                            <img className="h-48 w-full object-cover" src={animal.image} alt={animal.name} />
+                            <img
+                                className="h-48 w-full object-cover"
+                                src={animal.photo_urls?.[0] || 'https://via.placeholder.com/400x300?text=Sense+foto'}
+                                alt={animal.name}
+                            />
                             <div className="p-4">
                                 <h3 className="text-lg font-medium text-gray-900">{animal.name}</h3>
-                                <p className="text-sm text-gray-500">{animal.breed} • {animal.age}</p>
+                                <p className="text-sm text-gray-500">
+                                    {animal.species}{animal.breed ? ` • ${animal.breed}` : ''}
+                                </p>
                                 <div className="mt-4">
                                     <Link to={`/animals/${animal.id}`}>
                                         <Button variant="outline" size="sm" className="w-full">
