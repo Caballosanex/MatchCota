@@ -121,9 +121,12 @@ export default function Landing() {
                             Registra la teva protectora &rarr;
                         </Link>
                         {/* "Veure demo" - White pill with border */}
-                        <button className="px-8 py-4 bg-white border-2 border-indigo-100 text-indigo-600 rounded-full font-bold hover:bg-indigo-50 hover:border-indigo-200 transition-all text-center">
+                        <Link
+                            to="/demo"
+                            className="px-8 py-4 bg-white border-2 border-indigo-100 text-indigo-600 rounded-full font-bold hover:bg-indigo-50 hover:border-indigo-200 transition-all text-center"
+                        >
                             Veure demo
-                        </button>
+                        </Link>
                     </div>
                 </div>
                 {/* Hero Illustration */}

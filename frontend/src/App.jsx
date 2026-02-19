@@ -14,6 +14,7 @@ import AnimalDetail from './pages/public/AnimalDetail';
 import Login from './pages/public/Login';
 import RegisterTenant from './pages/public/RegisterTenant';
 import RegisterAnimal from './pages/public/RegisterAnimal';
+import DemoTest from './pages/platform/DemoTest';
 
 // Admin Pages
 import Dashboard from './pages/admin/Dashboard';
@@ -24,6 +25,9 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
+            {/* Demo Route */}
+            <Route path="/demo" element={<DemoTest />} />
+
             {/* Landing Route - No Layout (Landing has its own Header/Footer) */}
             <Route path="/" element={<Landing />} />
 
