@@ -16,7 +16,7 @@ const Input = forwardRef(({
             <input
                 ref={ref}
                 className={`
-          block w-full rounded-md border-gray-300 shadow-sm 
+          block w-full rounded-md border border-gray-300 shadow-sm
           focus:border-blue-500 focus:ring-blue-500 sm:text-sm
           disabled:cursor-not-allowed disabled:bg-gray-50
           ${error ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}
