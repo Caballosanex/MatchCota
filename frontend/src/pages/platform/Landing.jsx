@@ -315,7 +315,7 @@ export default function Landing() {
                             {tenants.map((t) => (
                                 <a
                                     key={t.id}
-                                    href={`/?tenant=${t.slug}`}
+                                    href={`/home?tenant=${t.slug}`}
                                     className="block bg-slate-800 rounded border border-slate-700 p-4 hover:border-indigo-500 transition-colors"
                                 >
                                     <div className="flex justify-between items-start mb-2">
