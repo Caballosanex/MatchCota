@@ -10,7 +10,6 @@ export function TenantProvider({ children }) {
     useEffect(() => {
         const detectTenant = async () => {
             try {
-                // Obtenir el subdomini o query param
                 const hostname = window.location.hostname;
                 const parts = hostname.split('.');
 
@@ -24,9 +23,15 @@ export function TenantProvider({ children }) {
                 } else if (parts.length > 2) {
                     // Subdomini real (protectora-barcelona.matchcota.com)
                     subdomain = parts[0];
+                } else {
+                    // [DEV] Si no hi ha ?tenant= ni subdomini, mirem sessionStorage.
+                    // Això permet refrescar la pàgina sense perdre el tenant actiu.
+                    // En producció, el subdomini sempre estarà present.
+                    subdomain = sessionStorage.getItem('matchcota_tenant_slug') || '';
                 }
-                // [DEV] Si estem a localhost sense ?tenant=, NO assignem cap tenant.
-                // Això fa que App.jsx mostri la landing de MatchCota (plataforma).
+
+                // [DEV] Si estem a localhost sense cap tenant, NO assignem cap tenant.
+                // Això fa que la landing de MatchCota (plataforma) es mostri.
                 //
                 // [PROD] A AWS, cada protectora tindrà el seu subdomini creat
                 // per una Lambda durant l'onboarding. La landing de MatchCota
@@ -41,11 +46,14 @@ export function TenantProvider({ children }) {
                     });
 
                     if (!response.ok) {
+                        sessionStorage.removeItem('matchcota_tenant_slug');
                         throw new Error('Tenant not found');
                     }
 
                     const tenantData = await response.json();
                     setTenant(tenantData);
+                    // Guardar slug a sessionStorage per persistir entre navegacions
+                    sessionStorage.setItem('matchcota_tenant_slug', tenantData.slug);
                 }
                 // Si no hi ha subdomain, tenant queda null → landing de plataforma
 
