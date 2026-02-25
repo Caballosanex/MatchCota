@@ -1,6 +1,6 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function AdminLayout() {
     const { user, loading, logout } = useAuth();
@@ -20,6 +20,7 @@ export default function AdminLayout() {
     if (!user) {
         return null; // Redirecting...
     }
+
 
     return (
         <div className="flex h-screen bg-gray-100">
@@ -47,11 +48,12 @@ export default function AdminLayout() {
                     </div>
                     <div className="flex-shrink-0 flex bg-gray-700 p-4">
                         <div className="flex items-center w-full">
-                            <div className="ml-3">
-                                <p className="text-sm font-medium text-white">{user.name || user.email}</p>
+                            <div className="ml-3 w-full overflow-hidden">
+                                <p className="text-sm font-medium text-white truncate">{user.name || user.email}</p>
                                 <button
+                                    type="button"
                                     onClick={logout}
-                                    className="text-xs font-medium text-gray-300 hover:text-white"
+                                    className="block w-full text-left mt-1 py-1 leading-none text-xs font-medium text-gray-300 hover:text-white cursor-pointer focus:outline-none"
                                 >
                                     Tancar Sessió
                                 </button>

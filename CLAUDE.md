@@ -776,5 +776,171 @@ terraform apply
 
 ---
 
+# DEFINICIÓ DEL QÜESTIONARI
+QUESTIONNAIRE = [
+    # === CATEGORIA: HABITATGE ===
+    Question(
+        id="housing_type",
+        category="housing",
+        text="Quin tipus d'habitatge tens?",
+        type=QuestionType.SINGLE_CHOICE,
+        options=[
+            QuestionOption(
+                value="apartment_small",
+                label="Pis petit (menys de 60m²)",
+                weights={"size_preference": -0.8, "energy_level": -0.5}
+            ),
+            QuestionOption(
+                value="apartment_large",
+                label="Pis gran (més de 60m²)",
+                weights={"size_preference": 0.0, "energy_level": 0.0}
+            ),
+            QuestionOption(
+                value="house_no_garden",
+                label="Casa sense jardí",
+                weights={"size_preference": 0.3, "energy_level": 0.2}
+            ),
+            QuestionOption(
+                value="house_garden",
+                label="Casa amb jardí",
+                weights={"size_preference": 0.8, "energy_level": 0.8}
+            ),
+        ]
+    ),
+    
+    Question(
+        id="outdoor_access",
+        category="housing",
+        text="Tens accés a espais a l'aire lliure propers?",
+        description="Parcs, zones verdes, àrees per passejar",
+        type=QuestionType.SINGLE_CHOICE,
+        options=[
+            QuestionOption(value="none", label="No, visc en zona molt urbana", weights={"exercise_needs": -0.7}),
+            QuestionOption(value="limited", label="Sí, però limitats", weights={"exercise_needs": -0.2}),
+            QuestionOption(value="good", label="Sí, bastants a prop", weights={"exercise_needs": 0.4}),
+            QuestionOption(value="excellent", label="Sí, molts i amplis", weights={"exercise_needs": 0.8}),
+        ]
+    ),
+
+    # === CATEGORIA: TEMPS I DEDICACIÓ ===
+    Question(
+        id="hours_alone",
+        category="time",
+        text="Quantes hores al dia estarà sol l'animal?",
+        type=QuestionType.SCALE,
+        min_value=0,
+        max_value=12,
+        # Això es processa diferent: a més hores, menys compatible amb animals dependents
+    ),
+    
+    Question(
+        id="exercise_time",
+        category="time",
+        text="Quant de temps pots dedicar a passejar/jugar cada dia?",
+        type=QuestionType.SINGLE_CHOICE,
+        options=[
+            QuestionOption(value="minimal", label="Menys de 30 minuts", weights={"exercise_needs": -0.8, "energy_level": -0.7}),
+            QuestionOption(value="moderate", label="30 min - 1 hora", weights={"exercise_needs": 0.0, "energy_level": 0.0}),
+            QuestionOption(value="good", label="1 - 2 hores", weights={"exercise_needs": 0.5, "energy_level": 0.5}),
+            QuestionOption(value="high", label="Més de 2 hores", weights={"exercise_needs": 0.9, "energy_level": 0.9}),
+        ]
+    ),
+
+    # === CATEGORIA: COMPOSICIÓ FAMILIAR ===
+    Question(
+        id="children",
+        category="family",
+        text="Hi ha nens a casa?",
+        type=QuestionType.SINGLE_CHOICE,
+        options=[
+            QuestionOption(value="none", label="No", weights={"child_friendly": 0.0}),
+            QuestionOption(value="older", label="Sí, majors de 10 anys", weights={"child_friendly": 0.3}),
+            QuestionOption(value="young", label="Sí, entre 5 i 10 anys", weights={"child_friendly": 0.7}),
+            QuestionOption(value="toddler", label="Sí, menors de 5 anys", weights={"child_friendly": 1.0}),
+        ]
+    ),
+    
+    Question(
+        id="other_pets",
+        category="family",
+        text="Tens altres animals a casa?",
+        type=QuestionType.MULTIPLE_CHOICE,
+        options=[
+            QuestionOption(value="none", label="No", weights={}),
+            QuestionOption(value="dog", label="Gos/s", weights={"dog_friendly": 1.0}),
+            QuestionOption(value="cat", label="Gat/s", weights={"cat_friendly": 1.0}),
+            QuestionOption(value="small", label="Animals petits (conills, hàmsters...)", weights={"prey_drive": -1.0}),
+        ]
+    ),
+
+    # === CATEGORIA: EXPERIÈNCIA ===
+    Question(
+        id="experience_level",
+        category="experience",
+        text="Quina experiència tens amb animals?",
+        type=QuestionType.SINGLE_CHOICE,
+        options=[
+            QuestionOption(value="none", label="Cap, seria el meu primer", weights={"training_difficulty": -0.8, "special_needs": -0.7}),
+            QuestionOption(value="some", label="He tingut animals però fa temps", weights={"training_difficulty": -0.3, "special_needs": -0.3}),
+            QuestionOption(value="current", label="Tinc o he tingut recentment", weights={"training_difficulty": 0.3, "special_needs": 0.2}),
+            QuestionOption(value="expert", label="Molta experiència, incloent casos difícils", weights={"training_difficulty": 0.9, "special_needs": 0.9}),
+        ]
+    ),
+
+    # === CATEGORIA: PREFERÈNCIES ===
+    Question(
+        id="size_preference",
+        category="preferences",
+        text="Quina mida d'animal prefereixes?",
+        type=QuestionType.MULTIPLE_CHOICE,
+        options=[
+            QuestionOption(value="small", label="Petit (menys de 10kg)", weights={"size_small": 1.0}),
+            QuestionOption(value="medium", label="Mitjà (10-25kg)", weights={"size_medium": 1.0}),
+            QuestionOption(value="large", label="Gran (més de 25kg)", weights={"size_large": 1.0}),
+            QuestionOption(value="no_preference", label="M'és igual", weights={"size_small": 0.5, "size_medium": 0.5, "size_large": 0.5}),
+        ]
+    ),
+    
+    Question(
+        id="age_preference",
+        category="preferences",
+        text="Quina edat prefereixes?",
+        type=QuestionType.MULTIPLE_CHOICE,
+        options=[
+            QuestionOption(value="puppy", label="Cadell (menys d'1 any)", weights={"age_puppy": 1.0}),
+            QuestionOption(value="young", label="Jove (1-3 anys)", weights={"age_young": 1.0}),
+            QuestionOption(value="adult", label="Adult (3-8 anys)", weights={"age_adult": 1.0}),
+            QuestionOption(value="senior", label="Senior (més de 8 anys)", weights={"age_senior": 1.0}),
+            QuestionOption(value="no_preference", label="M'és igual", weights={"age_puppy": 0.5, "age_young": 0.5, "age_adult": 0.5, "age_senior": 0.5}),
+        ]
+    ),
+    
+    Question(
+        id="energy_preference",
+        category="preferences",
+        text="Quin nivell d'energia busques?",
+        type=QuestionType.SINGLE_CHOICE,
+        options=[
+            QuestionOption(value="calm", label="Tranquil, per fer companyia", weights={"energy_level": -0.8}),
+            QuestionOption(value="moderate", label="Moderat, equilibrat", weights={"energy_level": 0.0}),
+            QuestionOption(value="active", label="Actiu, per fer activitats", weights={"energy_level": 0.6}),
+            QuestionOption(value="very_active", label="Molt actiu, esportista", weights={"energy_level": 1.0}),
+        ]
+    ),
+    
+    Question(
+        id="special_needs_ok",
+        category="preferences",
+        text="Estaries obert a adoptar un animal amb necessitats especials?",
+        description="Animals amb discapacitats, malalties cròniques o que necessitin medicació",
+        type=QuestionType.SINGLE_CHOICE,
+        options=[
+            QuestionOption(value="no", label="Prefereixo que no", weights={"special_needs": -1.0}),
+            QuestionOption(value="mild", label="Depèn, casos lleus sí", weights={"special_needs": 0.0}),
+            QuestionOption(value="yes", label="Sí, estic preparat", weights={"special_needs": 1.0}),
+        ]
+    ),
+]
+
 ## Fi del System Prompt
 ```
