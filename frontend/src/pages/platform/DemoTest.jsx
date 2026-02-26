@@ -1,9 +1,11 @@
+// Importem els hooks d'Estat (per guardar respostes) i Efectes (pel temporitzador de càrrega)
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
-// --- ICONS & ASSETS ---
+// --- ICONS & ASSETS (Animacions) ---
+// Aquest és un sub-component molt petit utilitzat just aquí mateix per mostrar l'animació final de victòria.
 const PawConfetti = () => {
-    // Generate some random positions for the confetti
+    // Generate some random positions for the confetti (100 potes de gos caient de la pantalla!)
     const paws = Array.from({ length: 50 }).map((_, i) => ({
         id: i,
         left: Math.random() * 100 + '%',
@@ -30,6 +32,7 @@ const PawConfetti = () => {
                     </svg>
                 </div>
             ))}
+            {/* Injectem estils per animar la pluja de confetti */}
             <style>{`
                 @keyframes fall {
                     0% { transform: translateY(-50px) rotate(0deg) scale(0.5); opacity: 0; }
@@ -46,20 +49,39 @@ const PawConfetti = () => {
     );
 };
 
+/**
+ * COMPONENT PÀGINA: DemoTest
+ * ----------------------------------------------------------------------
+ * Propòsit: Mostrar un qüestionari en forma de "màquina d'estats".
+ * Hi ha diverses pantalles (intro, p1, p2, carregant, resultat) i nosaltres només
+ * canviem la variable 'step' per ensenyar una pantalla o una altra sense recarregar.
+ */
 export default function DemoTest() {
-    const [step, setStep] = useState('intro'); // intro, q1, q2, loading, result
+    // 1. GESTIÓ D'ESTATS (El cor de les Interfícies React)
+
+    // 'step' defineix quina pantalla estem veient ara mateix. Valors: intro, q1, q2, loading, result.
+    const [step, setStep] = useState('intro');
+
+    // Un missatge dinàmic que canviarà mentre simulem estar "calculant" el match
     const [loadingMsg, setLoadingMsg] = useState('Analitzant el teu estil de vida...');
+
+    // Apagat per defecte, l'encenem per llençar confetti de gosset
     const [showConfetti, setShowConfetti] = useState(false);
 
-    // Initial state for answers (not actually processed in this demo, but good for UI state)
+    // Guardem les respostes de l'usuari en un objecte (com en un carret de compra, però del test!)
     const [answers, setAnswers] = useState({
-        housing: '',
-        activity: ''
+        housing: '', // Ex: "Pis" o "Casa"
+        activity: '' // Ex: "Actiu" o "Relax"
     });
 
-    // Loading sequence
+    /**
+     * EFECTE DE CÀRREGA VISUAL (Només s'activa quan entrem a la pantalla "loading")
+     */
     useEffect(() => {
+        // Només fem coses si estem a la fase de càrrega
         if (step === 'loading') {
+
+            // Llista de frases divertides que aniran canviant (feedback d'espera)
             const messages = [
                 "Buscant cues que s'agitin per tu...",
                 "Analitzant compatibilitat...",
@@ -67,32 +89,39 @@ export default function DemoTest() {
                 "Preparant el teu match..."
             ];
             let i = 0;
+
+            // Cada 1200 mil·lisegons (1.2s), avancem a la següent frase de la llista "messages"
             const msgInterval = setInterval(() => {
-                i = (i + 1) % messages.length;
+                i = (i + 1) % messages.length; // El "%" (mòdul) fa que tornem al 0 en acabar
                 setLoadingMsg(messages[i]);
             }, 1200);
 
+            // Després de 4.5 segons, diem: S'A CABAT D'ESPERAR! Mostra resultats.
             const finishTimeout = setTimeout(() => {
-                clearInterval(msgInterval);
-                setStep('result');
-                setShowConfetti(true);
-            }, 4500); // 4.5s loading time
+                clearInterval(msgInterval);  // Parem de canviar el text
+                setStep('result');           // Canviem l'estat global a Resultat!
+                setShowConfetti(true);       // Activa el confetti
+            }, 4500);
 
+            // Tota funció d'escombreries al finalitzar (neteja de React)
             return () => {
                 clearInterval(msgInterval);
                 clearTimeout(finishTimeout);
             };
         }
-    }, [step]);
+    }, [step]); // Li fem vigilar a React si el valor 'step' ha canviat.
 
-    // Render helpers
+    /**
+     * Funció auxiliar fletxa petita per canviar el pastís.
+     * Ens permet escriure handleNext('loading') en comptes de posar tot el "setStep(...)" en el HTML dirèctament.
+     */
     const handleNext = (nextStep) => {
         setStep(nextStep);
     };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex flex-col font-sans text-gray-900">
-            {/* Simple Header */}
+            {/* Capçalera Falsa de Demostració per poder tornar enrere */}
             <header className="p-6 flex justify-between items-center max-w-7xl mx-auto w-full">
                 <Link to="/" className="flex items-center gap-2">
                     <div className="w-8 h-8 bg-indigo-200 rounded-full flex items-center justify-center">
@@ -107,7 +136,8 @@ export default function DemoTest() {
 
             <main className="flex-grow flex items-center justify-center p-4">
 
-                {/* --- INTRO SCREEN --- */}
+                {/* --- PANTALLA INTRODUCCIÓ --- */}
+                {/* Aquesta part HTML NOMÉS ('&&') es pinta en pantalla si l'estat és 'intro'. */}
                 {step === 'intro' && (
                     <div className="bg-white rounded-[40px] shadow-2xl p-10 max-w-2xl w-full text-center animate-fade-in relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400"></div>
@@ -131,6 +161,7 @@ export default function DemoTest() {
                             </ul>
                         </div>
 
+                        {/* Botó per avançar la variable 'step' a 'q1' (Pregunta 1) */}
                         <button
                             onClick={() => handleNext('q1')}
                             className="w-full sm:w-auto px-10 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full font-bold text-lg hover:shadow-lg hover:scale-105 transition-all"
@@ -140,12 +171,13 @@ export default function DemoTest() {
                     </div>
                 )}
 
-                {/* --- QUESTION 1 --- */}
+                {/* --- PANTALLA PREGUNTA 1 --- */}
                 {step === 'q1' && (
                     <div className="bg-white rounded-[40px] shadow-xl p-10 max-w-2xl w-full animate-fade-in">
                         <div className="flex justify-between items-center mb-8">
                             <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest">Pregunta 1 de 2</span>
                             <div className="w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                {/* Barra de progrés: 50% */}
                                 <div className="h-full w-1/2 bg-indigo-500 rounded-full"></div>
                             </div>
                         </div>
@@ -153,18 +185,23 @@ export default function DemoTest() {
                         <h2 className="text-3xl font-bold text-gray-900 mb-8">Com és la teva llar?</h2>
 
                         <div className="space-y-4 mb-10">
+                            {/* Bucle (map) per generar botons per a cada opció d'habitatge automàticament */}
                             {['Pis petit (menys de 60m2)', 'Pis gran (més de 60m2)', 'Casa sense jardí', 'Casa amb jardí'].map((opt) => (
                                 <button
                                     key={opt}
+                                    // Com guardem la resposta: Utilitzem "...answers" (mantenim la resta de respostes de l'objecte igual)
+                                    // I actualitzem 'housing' amb el botó clicat.
                                     onClick={() => setAnswers({ ...answers, housing: opt })}
-                                    className={`w-full text-left p-5 rounded-2xl border-2 transition-all flex items-center justify-between group ${answers.housing === opt
+                                    className={`w-full text-left p-5 rounded-2xl border-2 transition-all flex items-center justify-between group ${
+                                        /* Canviem l'estil al botó si ha sigut seleccionat prèviament */
+                                        answers.housing === opt
                                             ? 'border-indigo-500 bg-indigo-50 text-indigo-900'
                                             : 'border-gray-100 hover:border-indigo-200 hover:bg-gray-50'
                                         }`}
                                 >
                                     <span className="font-medium text-lg">{opt}</span>
-                                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${answers.housing === opt ? 'border-indigo-500' : 'border-gray-300'
-                                        }`}>
+                                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${answers.housing === opt ? 'border-indigo-500' : 'border-gray-300'}`}>
+                                        {/* Punt interior si està seleccionat */}
                                         {answers.housing === opt && <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>}
                                     </div>
                                 </button>
@@ -175,10 +212,10 @@ export default function DemoTest() {
                             <button onClick={() => setStep('intro')} className="text-gray-400 hover:text-gray-600 font-medium">← Enrere</button>
                             <button
                                 onClick={() => handleNext('q2')}
-                                disabled={!answers.housing}
+                                disabled={!answers.housing} // Bloquegem (no deixem avançar) si NO hi ha respostes guardades
                                 className={`px-8 py-3 rounded-full font-bold transition-all ${answers.housing
-                                        ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md'
-                                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                    ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md'
+                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                     }`}
                             >
                                 Següent
@@ -187,12 +224,14 @@ export default function DemoTest() {
                     </div>
                 )}
 
-                {/* --- QUESTION 2 --- */}
+                {/* --- PANTALLA PREGUNTA 2 --- */}
+                {/* Lògica calcada a la Question 1, però actualitzant "answers.activity". */}
                 {step === 'q2' && (
                     <div className="bg-white rounded-[40px] shadow-xl p-10 max-w-2xl w-full animate-fade-in">
                         <div className="flex justify-between items-center mb-8">
                             <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest">Pregunta 2 de 2</span>
                             <div className="w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                {/* Barra de progrés: 100% */}
                                 <div className="h-full w-full bg-indigo-500 rounded-full"></div>
                             </div>
                         </div>
@@ -205,8 +244,8 @@ export default function DemoTest() {
                                     key={opt}
                                     onClick={() => setAnswers({ ...answers, activity: opt })}
                                     className={`w-full text-left p-5 rounded-2xl border-2 transition-all flex items-center justify-between group ${answers.activity === opt
-                                            ? 'border-indigo-500 bg-indigo-50 text-indigo-900'
-                                            : 'border-gray-100 hover:border-indigo-200 hover:bg-gray-50'
+                                        ? 'border-indigo-500 bg-indigo-50 text-indigo-900'
+                                        : 'border-gray-100 hover:border-indigo-200 hover:bg-gray-50'
                                         }`}
                                 >
                                     <span className="font-medium text-lg">{opt}</span>
@@ -221,11 +260,12 @@ export default function DemoTest() {
                         <div className="flex justify-between items-center">
                             <button onClick={() => setStep('q1')} className="text-gray-400 hover:text-gray-600 font-medium">← Enrere</button>
                             <button
+                                // Aquest botó porta a l'estat d'Esperar ("loading")
                                 onClick={() => handleNext('loading')}
                                 disabled={!answers.activity}
                                 className={`px-8 py-3 rounded-full font-bold transition-all ${answers.activity
-                                        ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md'
-                                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                    ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md'
+                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                     }`}
                             >
                                 Finalitzar i veure Match
@@ -234,7 +274,8 @@ export default function DemoTest() {
                     </div>
                 )}
 
-                {/* --- LOADING --- */}
+                {/* --- PANTALLA DE CÀRREGA (LOADING) --- */}
+                {/* L'animació d'espera on l'useEffect d'amunt farà la seva feina */}
                 {step === 'loading' && (
                     <div className="bg-white/80 backdrop-blur-xl rounded-[40px] shadow-2xl p-16 max-w-lg w-full text-center flex flex-col items-center justify-center animate-fade-in border border-white/50">
                         {/* Custom Pulse Animation */}
@@ -251,16 +292,19 @@ export default function DemoTest() {
                         <h3 className="text-2xl font-bold text-gray-800 mb-2 transition-opacity duration-300">
                             Un moment...
                         </h3>
+                        {/* {loadingMsg} s'actualitzarà periòdicament gràcies a l'useEffect que hem escrit i preparat abans! */}
                         <p className="text-indigo-600 font-medium text-lg animate-pulse">
                             {loadingMsg}
                         </p>
                     </div>
                 )}
 
-                {/* --- RESULT (MATCH) --- */}
+                {/* --- PANTALLA VICTÒRIA! (RESULTAT MATCH) --- */}
                 {step === 'result' && (
                     <>
+                        {/* Llença l'animació de les potetes volant només aquí */}
                         {showConfetti && <PawConfetti />}
+
                         <div className="bg-white rounded-[40px] shadow-2xl overflow-hidden max-w-4xl w-full animate-slide-up mx-4 relative z-10 border-4 border-indigo-100">
 
                             {/* Match Header */}
@@ -278,7 +322,7 @@ export default function DemoTest() {
                             </div>
 
                             <div className="p-8 lg:p-12">
-                                {/* MAIN MATCH CARD */}
+                                {/* MAIN MATCH CARD - Mostrem el principal (En la app real sortiran les dades de veritat) */}
                                 <div className="flex flex-col lg:flex-row gap-8 items-center mb-16">
                                     <div className="w-full lg:w-1/2">
                                         <div className="aspect-square bg-slate-200 rounded-[30px] overflow-hidden shadow-lg relative group">
@@ -320,7 +364,7 @@ export default function DemoTest() {
                                     </div>
                                 </div>
 
-                                {/* SECONDARY MATCHES */}
+                                {/* SECONDARY MATCHES (Sub-targetes restants) */}
                                 <div>
                                     <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                                         Altres amics que t'encantaran
