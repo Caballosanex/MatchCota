@@ -1,79 +1,82 @@
-// Hooks bàsics de react
+// Hooks bàsics de react (Només utilitzem State ara per les respostes globals de l'API)
 import { useState } from 'react';
 // Navegació interna pels enllaços
 import { Link } from 'react-router-dom';
 // Funció API independent per no dependre del context d'Usuari Loguejat (donat que és un formulari PÚBLIC)
 import { createTenant } from '../../api/tenants';
 
+// ----------------------------------------------------------------------
+// IMPORTACIONS DE FORMULARIS AVANÇATS (REACT-HOOK-FORM + ZOD)
+// ----------------------------------------------------------------------
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+
 /**
  * COMPONENT PÀGINA: RegisterTenant (Registre de Protectora)
  * ----------------------------------------------------------------------
- * Pàgina pública on una nova protectora (Tenant) pot omplir les seves
- * dades per donar-se d'alta al nostre sistema SaaS.
+ * PER QUÈ UTILITZEM ZOD I REACT-HOOK-FORM AQUÍ?
+ * 
+ * Aquest és el formulari més gran de tota l'App web (9 camps diferents!).
+ * Amb React tradicional, estar vigilant cada lletra de 9 camps diferents 
+ * és feixuc. React Hook Form s'encarrega de recollir les dades de tot
+ * molt ràpidament. A més, hem posat normes estrictes amb Zod,
+ * per exemple: el lloc web HA DE SER obligatòriament una "url" real, i l'email un "email".
  */
+
+// 1. DEFINICIÓ DE L'ESQUEMA DE VALIDACIÓ ZOD
+const tenantSchema = z.object({
+    name: z.string().min(1, "El nom de l'entitat és obligatori."),
+    slug: z.string()
+        .min(3, "L'identificador ha de tenir mínim 3 lletres.")
+        .regex(/^[a-z0-9-]+$/, "Només lletres minúscules, números i guions (-)"),
+    email: z.string().min(1, "Camp obligatori.").email("Format de correu electrònic no vàlid."),
+    cif: z.string().optional(),
+    phone: z.string().optional(),
+    city: z.string().optional(),
+    // En Zod, si un camp HTML és optatiu però quan l'escrius ha de ser URL, utilitzem això:
+    website: z.union([z.literal(""), z.string().url("La URL ha de començar per http:// o https://")]).optional(),
+});
+
 export default function RegisterTenant() {
-    // 1. ESTAT DEL FORMULARI MÚLTIPLE
-    // Utilitzem un sol objecte per controlar els 9 camps, molt més net que 9 variables useState.
-    const [formData, setFormData] = useState({
-        name: '',
-        slug: '',         // Identificador únic URL ('refugibcn')
-        email: '',
-        address: '',
-        city: '',
-        postal_code: '',
-        phone: '',
-        website: '',
-        cif: '',
+    // 2. CONNECTANT EL SUPER FORMULARI FRONT-END
+    const {
+        register,
+        handleSubmit,
+        reset,
+        formState: { errors, isSubmitting },
+    } = useForm({
+        resolver: zodResolver(tenantSchema),
+        defaultValues: {
+            name: '',
+            slug: '',
+            email: '',
+            cif: '',
+            phone: '',
+            city: '',
+            website: '',
+        }
     });
 
-    // Controls de la Interfície d'Usuari (està processant?, ha fallat?, ha anat bé?)
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    // Controls globals
+    const [apiError, setApiError] = useState(null);
     const [success, setSuccess] = useState(false);
 
     /**
-     * GESTOR DELS CAMPS DEL FORMULARI
-     * Mapeja automàticament qualsevol lletra escrita a l'estat formData
-     */
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        // El 'prev' és la còpia exacta d'un mil·lisegon abans d'escriure
-        setFormData((prev) => ({
-            ...prev,        // Copia tots els camps actuals
-            [name]: value,  // 'Písa' (sobrescriu) només el camp que s'acaba de tocar
-        }));
-    };
-
-    /**
      * GESTOR D'ENVIAMENT PRINCIPAL AL BACKEND
+     * (Arriba aquí només si les dades superen l'escut Zod)
      */
-    const handleSubmit = async (e) => {
-        // Evitar que la pàgina es recarregui
-        e.preventDefault();
-
-        // Activem la rodeta de pensar i netegem missatges antics
-        setLoading(true);
-        setError(null);
+    const onSubmit = async (data) => {
+        setApiError(null);
         setSuccess(false);
 
         try {
-            // Cridem la funció pura d'API (sense JWT, perquè justament s'estan registrant)
-            await createTenant(formData);
-
-            // Si tot va bé, el back ens ha creat l'entitat
+            await createTenant(data);
             setSuccess(true);
-
-            // Buidem el formulari completament
-            setFormData({
-                name: '', slug: '', email: '', address: '',
-                city: '', postal_code: '', phone: '', website: '', cif: '',
-            });
+            reset(); // Buidem el formulari
         } catch (err) {
-            // Si l'API responia amb un 400 (ex: El slug ja existeix)
-            setError(err.message);
-        } finally {
-            // En qualsevol cas, apaguem la rodeta de pensar.
-            setLoading(false);
+            // Error comú: El slug (identificador web) ja està sent usat per una altra protectora.
+            setApiError(err.message || "Hi ha hagut un error en el registre.");
         }
     };
 
@@ -141,12 +144,12 @@ export default function RegisterTenant() {
             </div>
 
             {/* ------------------------------------------------------------------ */}
-            {/* COLUMNA DRETA (1/2 o 1/1): FORMULARI INTERACTIU */}
+            {/* COLUMNA DRETA (1/2 o 1/1): FORMULARI INTERACTIU HOOK FORM ZOD */}
             {/* ------------------------------------------------------------------ */}
             <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 lg:p-20 bg-gray-50/30">
                 <div className="max-w-xl w-full">
 
-                    {/* LOGO VERSIÓ MÒBIL (S'amaga en Desktop per no repetir el de l'esquerra) */}
+                    {/* LOGO VERSIÓ MÒBIL */}
                     <div className="lg:hidden mb-10 text-center">
                         <Link to="/" className="inline-flex items-center gap-3">
                             <div className="w-10 h-10 bg-[#4A90A4] rounded-xl flex items-center justify-center">
@@ -165,139 +168,128 @@ export default function RegisterTenant() {
                         </p>
                     </div>
 
-                    {/* Malla CSS de 2 columnes ('grid-cols-2') per posar camps l'un al costat de l'altre */}
-                    <form className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-6" onSubmit={handleSubmit}>
+                    {/* FORMULARI MÀGIC */}
+                    <form className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-6" onSubmit={handleSubmit(onSubmit)}>
 
-                        {/* NOM ENTITAT (Columna sencera 'col-span-2') */}
+                        {/* NOM ENTITAT */}
                         <div className="md:col-span-2">
-                            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Nom de l'entitat</label>
+                            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Nom de l'entitat *</label>
                             <input
-                                name="name"
-                                type="text"
-                                required
-                                value={formData.name}
-                                onChange={handleChange}
+                                {...register('name')}
                                 placeholder="Protectora d'Animals..."
-                                className="w-full bg-white border-2 border-gray-100 rounded-2xl px-5 py-4 focus:border-[#4A90A4] focus:outline-none transition-all duration-300 shadow-sm hover:border-gray-200"
+                                className={`w-full bg-white border-2 rounded-2xl px-5 py-4 focus:outline-none transition-all duration-300 shadow-sm
+                                    ${errors.name ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'}`}
                             />
+                            {errors.name && <span className="text-red-500 text-xs font-bold block mt-2 ml-1 animate-shake">*{errors.name.message}</span>}
                         </div>
 
-                        {/* SLUG URL PÚBLICA (Columna sencera) */}
+                        {/* SLUG URL PÚBLICA */}
                         <div className="md:col-span-2">
-                            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Identificador Web</label>
-                            {/* Camp especial que te text flotant informatiu DINS l'input */}
+                            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Identificador Web *</label>
                             <div className="relative group">
                                 <input
-                                    name="slug"
-                                    type="text"
-                                    required
-                                    value={formData.slug}
-                                    onChange={handleChange}
+                                    {...register('slug')}
                                     placeholder="la-teva-entitat"
-                                    className="w-full bg-white border-2 border-gray-100 rounded-2xl px-5 py-4 pr-32 focus:border-[#4A90A4] focus:outline-none transition-all duration-300 shadow-sm hover:border-gray-200"
+                                    className={`w-full bg-white border-2 rounded-2xl px-5 py-4 pr-32 focus:outline-none transition-all duration-300 shadow-sm
+                                        ${errors.slug ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'}`}
                                 />
-                                {/* Text '.matchcota.com' flotant a la dreta */}
                                 <div className="absolute inset-y-0 right-0 flex items-center pr-5 pointer-events-none text-gray-300 font-bold group-focus-within:text-[#4A90A4]">
                                     .matchcota.com
                                 </div>
                             </div>
+                            {errors.slug && <span className="text-red-500 text-xs font-bold block mt-2 ml-1 animate-shake">*{errors.slug.message}</span>}
                         </div>
 
-                        {/* CORREU ELECTRÒNIC (Columna sencera) */}
+                        {/* CORREU ELECTRÒNIC */}
                         <div className="md:col-span-2">
-                            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Email professional</label>
+                            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Email professional *</label>
                             <input
-                                name="email"
-                                type="email"
-                                required
-                                value={formData.email}
-                                onChange={handleChange}
+                                {...register('email')}
                                 placeholder="exempe@entitat.cat"
-                                className="w-full bg-white border-2 border-gray-100 rounded-2xl px-5 py-4 focus:border-[#4A90A4] focus:outline-none transition-all duration-300 shadow-sm hover:border-gray-200"
+                                className={`w-full bg-white border-2 rounded-2xl px-5 py-4 focus:outline-none transition-all duration-300 shadow-sm
+                                    ${errors.email ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'}`}
                             />
+                            {errors.email && <span className="text-red-500 text-xs font-bold block mt-2 ml-1 animate-shake">*{errors.email.message}</span>}
                         </div>
 
-                        {/* CIF (Mida Mitja Columna) */}
+                        {/* CIF */}
                         <div>
                             <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">CIF</label>
                             <input
-                                name="cif"
-                                type="text"
-                                value={formData.cif}
-                                onChange={handleChange}
+                                {...register('cif')}
                                 placeholder="G-12345678"
-                                className="w-full bg-white border-2 border-gray-100 rounded-2xl px-5 py-4 focus:border-[#4A90A4] focus:outline-none transition-all duration-300 shadow-sm hover:border-gray-200"
+                                className={`w-full bg-white border-2 rounded-2xl px-5 py-4 focus:outline-none transition-all duration-300 shadow-sm
+                                    ${errors.cif ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'}`}
                             />
+                            {errors.cif && <span className="text-red-500 text-xs font-bold block mt-2 ml-1">*{errors.cif.message}</span>}
                         </div>
 
-                        {/* TELÈFON (Mida Mitja Columna) */}
+                        {/* TELÈFON */}
                         <div>
                             <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Telèfon</label>
                             <input
-                                name="phone"
-                                type="tel"
-                                value={formData.phone}
-                                onChange={handleChange}
+                                {...register('phone')}
                                 placeholder="+34..."
-                                className="w-full bg-white border-2 border-gray-100 rounded-2xl px-5 py-4 focus:border-[#4A90A4] focus:outline-none transition-all duration-300 shadow-sm hover:border-gray-200"
+                                className={`w-full bg-white border-2 rounded-2xl px-5 py-4 focus:outline-none transition-all duration-300 shadow-sm
+                                    ${errors.phone ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'}`}
                             />
+                            {errors.phone && <span className="text-red-500 text-xs font-bold block mt-2 ml-1">*{errors.phone.message}</span>}
                         </div>
 
-                        {/* CIUTAT (Mida Mitja Columna) */}
+                        {/* CIUTAT */}
                         <div>
                             <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Ciutat</label>
                             <input
-                                name="city"
-                                type="text"
-                                value={formData.city}
-                                onChange={handleChange}
+                                {...register('city')}
                                 placeholder="Barcelona"
-                                className="w-full bg-white border-2 border-gray-100 rounded-2xl px-5 py-4 focus:border-[#4A90A4] focus:outline-none transition-all duration-300 shadow-sm hover:border-gray-200"
+                                className={`w-full bg-white border-2 rounded-2xl px-5 py-4 focus:outline-none transition-all duration-300 shadow-sm
+                                    ${errors.city ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'}`}
                             />
+                            {errors.city && <span className="text-red-500 text-xs font-bold block mt-2 ml-1">*{errors.city.message}</span>}
                         </div>
 
-                        {/* LLOC WEB (Mida Mitja Columna) */}
+                        {/* LLOC WEB */}
                         <div>
-                            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Lloc Web</label>
+                            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Lloc Web (Només URLs)</label>
                             <input
-                                name="website"
-                                type="url"
+                                {...register('website')}
                                 placeholder="https://..."
-                                value={formData.website}
-                                onChange={handleChange}
-                                className="w-full bg-white border-2 border-gray-100 rounded-2xl px-5 py-4 focus:border-[#4A90A4] focus:outline-none transition-all duration-300 shadow-sm hover:border-gray-200"
+                                className={`w-full bg-white border-2 rounded-2xl px-5 py-4 focus:outline-none transition-all duration-300 shadow-sm
+                                    ${errors.website ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'}`}
                             />
+                            {errors.website && <span className="text-red-500 text-xs font-bold block mt-2 ml-1 animate-shake">*{errors.website.message}</span>}
                         </div>
 
                         {/* BLOC RESULTATS (Errors i Èxits) */}
-                        <div className="md:col-span-2 mt-4">
+                        <div className="md:col-span-2 mt-4 space-y-4">
 
-                            {/* Si error té valor, paintem requadre vermell */}
-                            {error && (
-                                <div className="text-red-500 text-sm font-bold bg-red-50 p-4 rounded-xl border border-red-100 mb-6 flex gap-3 animate-shake">
+                            {/* Error Backend */}
+                            {apiError && (
+                                <div className="text-red-500 text-sm font-bold bg-red-50 p-4 rounded-xl border border-red-100 animate-shake flex gap-3 items-center">
                                     <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
-                                    {error}
+                                    {apiError}
                                 </div>
                             )}
 
-                            {/* Si tot ha anat bé, paintem requadre turquesa corporatiu */}
+                            {/* Success OK */}
                             {success && (
-                                <div className="text-[#4A90A4] text-sm font-bold bg-[#4A90A4]/10 p-4 rounded-xl border border-[#4A90A4]/20 mb-6 flex gap-3">
+                                <div className="text-[#4A90A4] text-sm font-bold bg-[#4A90A4]/10 p-4 rounded-xl border border-[#4A90A4]/20 flex gap-3 items-center">
                                     <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                                    Protectora creada correctament! Benvinguts.
+                                    Protectora creada correctament! Pots procedir a Iniciar Sessió.
                                 </div>
                             )}
 
-                            {/* BOTÓ FINAL DE SUBMIT */}
                             <button
                                 type="submit"
-                                disabled={loading}
+                                disabled={isSubmitting} // Bloqueja botó auto de react-hook-form
                                 className="w-full bg-[#4A90A4] text-white font-black text-lg py-5 rounded-2xl shadow-xl shadow-[#4A90A4]/20 hover:bg-[#3a7c8d] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 group"
                             >
-                                {loading ? 'Enviant...' : 'Registrar ara'}
-                                <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                </svg>
+                                {isSubmitting ? 'Enviant dades...' : 'Registrar ara'}
+                                {!isSubmitting && (
+                                    <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                    </svg>
+                                )}
                             </button>
                         </div>
                     </form>
