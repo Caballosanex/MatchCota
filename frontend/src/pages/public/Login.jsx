@@ -59,7 +59,7 @@ export default function Login() {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="hola@la-teva-entitat.com"
-                                    className="w-full bg-transparent border-b-2 border-gray-100 py-3 focus:border-[#4A90A4] focus:outline-none transition-all duration-300 font-bold text-gray-900 placeholder-gray-300"
+                                    className="w-full bg-gray-50/50 border-2 border-gray-100 py-4 px-6 rounded-2xl focus:border-[#4A90A4] focus:bg-white focus:outline-none transition-all duration-300 font-bold text-gray-900 placeholder-gray-300 shadow-sm"
                                 />
                             </div>
 
@@ -74,7 +74,7 @@ export default function Login() {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="••••••••"
-                                    className="w-full bg-transparent border-b-2 border-gray-100 py-3 focus:border-[#4A90A4] focus:outline-none transition-all duration-300 font-bold text-gray-900 placeholder-gray-300"
+                                    className="w-full bg-gray-50/50 border-2 border-gray-100 py-4 px-6 rounded-2xl focus:border-[#4A90A4] focus:bg-white focus:outline-none transition-all duration-300 font-bold text-gray-900 placeholder-gray-300 shadow-sm"
                                 />
                             </div>
                         </div>

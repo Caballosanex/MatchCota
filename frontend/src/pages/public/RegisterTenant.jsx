@@ -83,7 +83,6 @@ export default function RegisterTenant() {
                         {[
                             { title: 'Gestió intel·ligent', desc: 'Troba l\'adoptant ideal amb el nostre sistema de matching.' },
                             { title: 'Estalvi de temps', desc: 'Automatitza processos i centra\'t en la cura dels animals.' },
-                            { title: '100% Gratuït', desc: 'Sempre gratuït per a protectores i associacions.' }
                         ].map((item, i) => (
                             <li key={i} className="flex gap-4 items-start">
                                 <div className="mt-1 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
