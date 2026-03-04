@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 // Importem la funció per cridar al backend i saber quines protectores hi han
 import { getTenants } from '../../api/tenants';
+import heroImage from '../../assets/hero-image.jpg';
 
 // ==========================================
 // ICONS (Components visuals purs)
@@ -146,13 +147,13 @@ export default function Landing() {
                         </Link>
                     </div>
                 </div>
-                {/* Hero Illustration - Imatge placeholder segons disseny de Figma */}
-                <div className="relative h-[500px] bg-[#6B85A0] rounded-[40px] overflow-hidden flex items-end justify-center shadow-2xl">
-                    <div className="absolute top-20 right-0 w-3/4 h-3/4 bg-[#FFB088] rounded-tl-full opacity-90 transform translate-x-12 translate-y-12"></div>
-                    <div className="absolute bottom-0 left-0 p-12 text-white/50">
-                        <p>Illustration Placeholder</p>
-                        <p className="text-xs">(Man with dog and cat)</p>
-                    </div>
+                {/* Hero Illustration */}
+                <div className="relative h-[500px] rounded-[40px] overflow-hidden shadow-2xl">
+                    <img
+                        src={heroImage}
+                        alt="MatchCota platform preview"
+                        className="w-full h-full object-cover"
+                    />
                 </div>
             </section>
 
