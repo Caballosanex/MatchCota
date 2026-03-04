@@ -186,16 +186,6 @@ export default function Login() {
                             </button>
                         </div>
                     </form>
-
-                    {/* REDIRECCIÓ AL REGISTRE PEL QUE S'EQUIVOCA (Botó per a visitants no registrats) */}
-                    <div className="mt-16 text-center">
-                        <p className="text-gray-400 font-bold">
-                            Encara no tens un espai?{' '}
-                            <Link to="/register-tenant" className="text-[#4A90A4] hover:text-[#3a7c8d] underline decoration-2 underline-offset-8 transition-all">
-                                Crea la teva protectora
-                            </Link>
-                        </p>
-                    </div>
                 </div>
             </div>
 

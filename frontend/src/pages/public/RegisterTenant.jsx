@@ -293,14 +293,6 @@ export default function RegisterTenant() {
                             </button>
                         </div>
                     </form>
-
-                    {/* REDIRECCIÓ AL LOGIN SI L'USUARI S'HI HA COLAT SENSE VOLER */}
-                    <p className="mt-10 text-center text-gray-500 font-bold">
-                        Ja formes part de MatchCota?{' '}
-                        <Link to="/login" className="text-[#4A90A4] hover:text-[#3a7c8d] underline decoration-2 underline-offset-8 transition-all">
-                            Inicia sessió
-                        </Link>
-                    </p>
                 </div>
             </div>
         </div>
