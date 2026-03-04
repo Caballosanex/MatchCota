@@ -1,14 +1,20 @@
 /**
  * [DEV] Landing page de la plataforma MatchCota.
- *
- * Aquesta pàgina es mostra quan s'accedeix a localhost:5173 sense cap tenant.
- * [PROD] A AWS, la landing de MatchCota serà una app/domini separat.
+ * ----------------------------------------------------------------------
+ * Aquesta pàgina es mostra quan algú accedeix a la web principal (sense protectora).
+ * Funciona com un aparador per convèncer a les protectores que utilitzin el nostre software.
  */
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+// Importem la funció per cridar al backend i saber quines protectores hi han
 import { getTenants } from '../../api/tenants';
+import heroImage from '../../assets/hero-image.jpg';
 
-// --- ICONS ---
+// ==========================================
+// ICONS (Components visuals purs)
+// Han estat fets amb SVG pel dissenyador.
+// ==========================================
+
 const ClipboardIcon = () => (
     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
@@ -52,31 +58,42 @@ const DiamondIcon = () => (
     </svg>
 );
 
-
+// ==========================================
+// COMPONENT PRINCIPAL
+// ==========================================
 export default function Landing() {
+    // Estat local de la Landing
+    // 1. Array per guardar la llista de protectores que baixarem del servidor
     const [tenants, setTenants] = useState([]);
+    // 2. Control de càrrega per mostrar un text de "Carregant..." mentre arriben les dades
     const [loadingTenants, setLoadingTenants] = useState(true);
+    // 3. Estatus de l'API (per veure si el servidor en general està viu)
     const [apiStatus, setApiStatus] = useState('checking...');
 
+    /**
+     * EFECTE D'INICIACIÓ
+     * El useEffect s'executa automàticament just quan s'obre la landing.
+     */
     useEffect(() => {
-        // Health check
+        // A. Comprovació de Salut (Health check) - Li demanem al backend si està actiu (sprint 6/7 info)
         fetch('/api/v1/health')
             .then(res => res.json())
             .then(data => setApiStatus(data.status))
-            .catch(() => setApiStatus('error'));
+            .catch(() => setApiStatus('error')); // Si falla la petició de xarxa, guardem 'error'
 
-        // Carregar llista de protectores
+        // B. Carregar la llista de protectores (Tenants)
         getTenants()
             .then(data => {
-                setTenants(data);
-                setLoadingTenants(false);
+                setTenants(data); // Guardem les protectores rebudes a l'estat local
+                setLoadingTenants(false); // Ja no estem "carregant"
             })
-            .catch(() => setLoadingTenants(false));
-    }, []);
+            .catch(() => setLoadingTenants(false)); // Si dóna error, almenys apaguem el "carregant"
+    }, []); // Array buit vol dir que això NOMÉS passarà 1 cop a l'inci
 
     return (
         <div className="min-h-screen bg-white font-sans text-gray-900 selection:bg-indigo-100 selection:text-indigo-900">
-            {/* Header */}
+            {/* --- SECCIÓ 0: NAVEGACIÓ (HEADER) --- */}
+            {/* 'fixed' fa que es quedi ancorat dalt de tot. 'backdrop-blur-md' li dóna aquell toc vidre matisat (glassmorphism) modern */}
             <header className="fixed w-full top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -88,7 +105,7 @@ export default function Landing() {
                         </div>
                         <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-indigo-800">MatchCota</span>
                     </div>
-                    {/* "Registra't" button is pill shaped, outlined or white */}
+                    {/* Botó de Registre de nova protectora */}
                     <Link
                         to="/register-tenant"
                         className="px-6 py-2.5 border border-indigo-200 text-indigo-600 rounded-full hover:bg-indigo-50 hover:border-indigo-300 transition-all font-medium text-sm shadow-sm"
@@ -98,10 +115,11 @@ export default function Landing() {
                 </div>
             </header>
 
-            {/* Spacer for fixed header */}
+            {/* Espaiat "fantasma" de 20px (h-20) perquè el contingut no es col·loqui darrere la capçalera (ja que és 'fixed') */}
             <div className="h-20"></div>
 
-            {/* Hero Section */}
+            {/* --- SECCIÓ 1: HERO (Presentació Principal) --- */}
+            {/*  Fem un Grid que mostrarà 2 columnes ('lg:grid-cols-2') en dispositius grans, text a l'esquerra, imatge a la dreta */}
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 grid lg:grid-cols-2 gap-12 items-center">
                 <div className="text-left space-y-8">
                     <h1 className="text-5xl lg:text-7xl font-extrabold text-gray-900 leading-[1.1] tracking-tight">
@@ -113,14 +131,14 @@ export default function Landing() {
                         Plataforma intel·ligent que connecta protectores amb adoptants mitjançant matching per compatibilitat.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                        {/* "Registra la teva protectora" - Figma shows a light purple/periwinkle color */}
+                        {/* Botó principal - Crida a l'acció (CTA) */}
                         <Link
                             to="/register-tenant"
                             className="px-8 py-4 bg-[#B4C0FF] text-indigo-900 rounded-full font-bold hover:bg-[#A3B0FF] transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 text-center"
                         >
                             Registra la teva protectora &rarr;
                         </Link>
-                        {/* "Veure demo" - White pill with border */}
+                        {/* Botó secundari - Porta a la plana falsa d'enquesta React que acabem d'explicar (DemoTest) */}
                         <Link
                             to="/demo"
                             className="px-8 py-4 bg-white border-2 border-indigo-100 text-indigo-600 rounded-full font-bold hover:bg-indigo-50 hover:border-indigo-200 transition-all text-center"
@@ -130,17 +148,16 @@ export default function Landing() {
                     </div>
                 </div>
                 {/* Hero Illustration */}
-                <div className="relative h-[500px] bg-[#6B85A0] rounded-[40px] overflow-hidden flex items-end justify-center shadow-2xl">
-                    {/* Placeholder matching the Figma composition roughly */}
-                    <div className="absolute top-20 right-0 w-3/4 h-3/4 bg-[#FFB088] rounded-tl-full opacity-90 transform translate-x-12 translate-y-12"></div>
-                    <div className="absolute bottom-0 left-0 p-12 text-white/50">
-                        <p>Illustration Placeholder</p>
-                        <p className="text-xs">(Man with dog and cat)</p>
-                    </div>
+                <div className="relative h-[500px] rounded-[40px] overflow-hidden shadow-2xl">
+                    <img
+                        src={heroImage}
+                        alt="MatchCota platform preview"
+                        className="w-full h-full object-cover"
+                    />
                 </div>
             </section>
 
-            {/* Com funciona? */}
+            {/* --- SECCIÓ 2: HOW IT WORKS (Passos) --- */}
             <section className="bg-white py-24">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-20">
@@ -188,7 +205,7 @@ export default function Landing() {
                 </div>
             </section>
 
-            {/* Per què MatchCota? */}
+            {/* --- SECCIÓ 3: CARACTERÍSTIQUES (FEATURES) --- */}
             <section className="bg-gray-50/50 py-24">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <h2 className="text-3xl font-bold text-center text-gray-900 mb-16">Per què MatchCota?</h2>
@@ -249,7 +266,7 @@ export default function Landing() {
                 </div>
             </section>
 
-            {/* Footer */}
+            {/* --- SECCIÓ 4: PEU DE PÀGINA (FOOTER) --- */}
             <footer className="bg-white border-t border-gray-100 pt-20 pb-10">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid md:grid-cols-4 gap-12 mb-16">
@@ -294,7 +311,9 @@ export default function Landing() {
                 </div>
             </footer>
 
-            {/* DEV AREA - Preserved for functionality */}
+            {/* --- SECCIÓ Z: ÀREA SE DEV (Amagada sota el disseny normal però útil per als autors) --- */}
+            {/* Això serveix per llistar directament les protectores i que l'usuari pugui entrar-hi directament.
+                Està vinculada a l'estat local 'tenants' carregat del useEffect. */}
             <div className="bg-slate-900 text-slate-400 py-12 border-t-4 border-indigo-500">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between mb-8">
@@ -304,12 +323,15 @@ export default function Landing() {
                         </span>
                     </div>
 
+                    {/* Si trigem a rebre dades de l'API: */}
                     {loadingTenants ? (
                         <div className="font-mono text-sm">Carregant protectores...</div>
+                        // Si l'array està buit:
                     ) : tenants.length === 0 ? (
                         <div className="font-mono text-sm text-yellow-500">
                             No hi ha protectores registrades. Ves a "Registra't" per crear-ne una.
                         </div>
+                        // Si tenim almenys un element dins l'array, pintem cada element (cadascun serà t):
                     ) : (
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {tenants.map((t) => (
