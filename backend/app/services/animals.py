@@ -8,13 +8,15 @@ from app.schemas.animal import AnimalCreate, AnimalUpdate, AnimalResponse
 from app.models.animal import Animal
 
 def list_animals(
-    db: Session, 
-    tenant_id: UUID, 
-    skip: int = 0, 
-    limit: int = 100, 
-    species: Optional[str] = None
+    db: Session,
+    tenant_id: UUID,
+    skip: int = 0,
+    limit: int = 100,
+    species: Optional[str] = None,
+    size: Optional[str] = None,
+    sex: Optional[str] = None,
 ) -> List[Animal]:
-    return crud_animals.get_animals_by_tenant(db, tenant_id, skip, limit, species)
+    return crud_animals.get_animals_by_tenant(db, tenant_id, skip, limit, species, size, sex)
 
 def get_animal(db: Session, animal_id: UUID, tenant_id: UUID) -> Animal:
     animal = crud_animals.get_animal_by_tenant(db, animal_id, tenant_id)

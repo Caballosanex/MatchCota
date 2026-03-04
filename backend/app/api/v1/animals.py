@@ -30,6 +30,8 @@ def list_animals(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     species: Optional[str] = None,
+    size: Optional[str] = None,
+    sex: Optional[str] = None,
     tenant: Tenant = Depends(get_current_tenant),
     db: Session = Depends(get_db)
 ):
@@ -37,10 +39,12 @@ def list_animals(
     Llistar animals disponibles del tenant actual.
 
     Filtres:
-    - species: Filtrar per espècie (dog, cat, etc.)
-    - skip/limit: Paginació
+    - species: Filtrar per especie (dog, cat, etc.)
+    - size: Filtrar per mida (small, medium, large)
+    - sex: Filtrar per sexe (male, female)
+    - skip/limit: Paginacio
     """
-    return animals_service.list_animals(db, tenant.id, skip, limit, species)
+    return animals_service.list_animals(db, tenant.id, skip, limit, species, size, sex)
 
 
 @router.get("/animals/{animal_id}", response_model=AnimalResponse)

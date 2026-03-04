@@ -35,7 +35,7 @@ class AnimalBase(BaseModel):
 
 class AnimalCreate(AnimalBase):
     """Schema per crear un animal."""
-    pass
+    photo_urls: Optional[List[str]] = None
 
 
 class AnimalUpdate(BaseModel):
@@ -58,6 +58,7 @@ class AnimalUpdate(BaseModel):
     good_with_dogs: Optional[Decimal] = None
     good_with_cats: Optional[Decimal] = None
     experience_required: Optional[Decimal] = None
+    photo_urls: Optional[List[str]] = None
 
 
 class AnimalResponse(AnimalBase):

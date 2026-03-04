@@ -9,17 +9,23 @@ def get_animal(db: Session, animal_id: UUID) -> Optional[Animal]:
     return db.query(Animal).filter(Animal.id == animal_id).first()
 
 def get_animals_by_tenant(
-    db: Session, 
-    tenant_id: UUID, 
-    skip: int = 0, 
-    limit: int = 100, 
-    species: Optional[str] = None
+    db: Session,
+    tenant_id: UUID,
+    skip: int = 0,
+    limit: int = 100,
+    species: Optional[str] = None,
+    size: Optional[str] = None,
+    sex: Optional[str] = None,
 ) -> List[Animal]:
     query = db.query(Animal).filter(Animal.tenant_id == tenant_id)
-    
+
     if species:
         query = query.filter(Animal.species == species)
-        
+    if size:
+        query = query.filter(Animal.size == size)
+    if sex:
+        query = query.filter(Animal.sex == sex)
+
     return query.offset(skip).limit(limit).all()
 
 def get_animal_by_tenant(db: Session, animal_id: UUID, tenant_id: UUID) -> Optional[Animal]:

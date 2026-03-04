@@ -1,5 +1,8 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.core.tenant import TenantMiddleware
@@ -38,12 +41,18 @@ async def root():
 async def health():
     return {"status": "healthy"}
 
+# Mount local uploads directory for dev
+uploads_path = os.path.join(os.path.dirname(__file__), "..", "uploads")
+os.makedirs(uploads_path, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=uploads_path), name="uploads")
+
 # Register Routers
-from app.api.v1 import tenants, auth, animals, users
+from app.api.v1 import tenants, auth, animals, users, upload
 app.include_router(tenants.router, prefix="/api/v1/tenants", tags=["tenants"])
 app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
 app.include_router(animals.router, prefix="/api/v1", tags=["animals"])
 app.include_router(users.router, prefix="/api/v1", tags=["users"])
+app.include_router(upload.router, prefix="/api/v1", tags=["upload"])
 
 
 # Configuració Swagger: Afegir header X-Tenant-Slug global

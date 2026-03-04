@@ -13,6 +13,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import PublicLayout from './layouts/PublicLayout';
 import AdminLayout from './layouts/AdminLayout';
 
+<<<<<<< Updated upstream
 // ==========================================
 // IMPORTACIÓ DE PÀGINES (Pantalles)
 // ==========================================
@@ -22,15 +23,26 @@ import Landing from './pages/platform/Landing'; // La pàgina de presentació
 import DemoTest from './pages/platform/DemoTest';
 
 // Pàgines Públiques (el que veu l'adoptant quan visita una protectora)
+=======
+// Public Pages
+import Landing from './pages/platform/Landing';
+>>>>>>> Stashed changes
 import Home from './pages/public/Home';
 import Animals from './pages/public/Animals';
 import AnimalDetail from './pages/public/AnimalDetail';
 import Login from './pages/public/Login';
-import RegisterTenant from './pages/public/RegisterTenant';
+            <BrowserRouter>
+<<<<<<< Updated upstream
 import RegisterAnimal from './pages/public/RegisterAnimal';
+=======
+import DemoTest from './pages/platform/DemoTest';
+>>>>>>> Stashed changes
 
 // Pàgines Privades (el que veu l'administrador de la protectora)
 import Dashboard from './pages/admin/Dashboard';
+import AnimalsManager from './pages/admin/AnimalsManager';
+import AnimalCreate from './pages/admin/AnimalCreate';
+import AnimalEdit from './pages/admin/AnimalEdit';
 
 /**
  * COMPONENTE ARREL: App
@@ -38,7 +50,7 @@ import Dashboard from './pages/admin/Dashboard';
  * Aquest és el cor de la nostra aplicació. Aquí definim el "mapa" de carreteres (Rutes).
  * Li diem a React: "Si l'usuari va a la URL /animals, ensenya-li el component Animals".
  */
-function App() {
+                  {/* Eliminat RegisterAnimal de rutes públiques, ara només admin */}
   return (
     // 1. PROVEÏDORS DE DADES
     // L'ordre importa: AuthProvider necessita saber el Tenant, així que TenantProvider va fora.
@@ -66,9 +78,12 @@ function App() {
               {/* Rutes d'accés i registre */}
               <Route path="login" element={<Login />} />
               <Route path="register-tenant" element={<RegisterTenant />} />
+<<<<<<< Updated upstream
               <Route path="register-animal" element={<RegisterAnimal />} />
 
               {/* Ruta temporal ("mockada") per al test */}
+=======
+>>>>>>> Stashed changes
               <Route path="test" element={<div className="p-8 text-center text-gray-500">Test de Compatibilitat (Sprint 5)</div>} />
             </Route>
 
@@ -79,10 +94,16 @@ function App() {
               <Route index element={<Navigate to="dashboard" replace />} />
 
               <Route path="dashboard" element={<Dashboard />} />
+<<<<<<< Updated upstream
               <Route path="animals/new" element={<RegisterAnimal />} />
 
               {/* Rutes temporals ("mockades") d'Sprints futurs */}
               <Route path="animals" element={<div className="p-8">Gestio Animals (Sprint 4)</div>} />
+=======
+              <Route path="animals" element={<AnimalsManager />} />
+              <Route path="animals/new" element={<AnimalCreate />} />
+              <Route path="animals/:id" element={<AnimalEdit />} />
+>>>>>>> Stashed changes
               <Route path="leads" element={<div className="p-8">Leads (Sprint 7)</div>} />
               <Route path="settings" element={<div className="p-8">Configuracio (Pendent)</div>} />
             </Route>

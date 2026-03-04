@@ -67,6 +67,9 @@ Thumbs.db
 *.log
 logs/
 
+# Uploads (dev only, production uses S3)
+backend/uploads/
+
 # Coverage
 htmlcov/
 .coverage

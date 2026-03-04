@@ -1,5 +1,6 @@
 // Hook per guardar dades i Hook per fer coses a l'inici
 import { useState, useEffect } from 'react';
+<<<<<<< Updated upstream
 // Link per navegar a la pàgina de detall sense recarregar
 import { Link } from 'react-router-dom';
 // Components UI reutilitzables creats per nosaltres
@@ -7,7 +8,14 @@ import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import SkeletonCard from '../../components/ui/SkeletonCard'; // IMPORTEM EL NOU COMPONENT SKELETON
 // Eina per parlar amb el backend
+=======
+import { Link, useSearchParams } from 'react-router-dom';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import AnimalFilters from '../../components/animals/AnimalFilters';
+>>>>>>> Stashed changes
 import { useApi } from '../../hooks/useApi';
+import { useTenant } from '../../hooks/useTenant';
 
 /**
  * COMPONENT PÀGINA: Animals (Llistat d'adopcions amb Paginació)
@@ -22,6 +30,7 @@ export default function Animals() {
     const [animals, setAnimals] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+<<<<<<< Updated upstream
 
     // ESTATS NOUS DE PAGINACIÓ
     // currentPage: Sabrà en quina pàgina estem actualment (per defecte la primera, la 1)
@@ -29,12 +38,36 @@ export default function Animals() {
     // itemsPerPage: Quants gossos volem ensenyar com a màxim per pàgina?
     const itemsPerPage = 6;
 
+=======
+    const [searchParams, setSearchParams] = useSearchParams();
+>>>>>>> Stashed changes
     const api = useApi();
+    const { tenant } = useTenant();
+
+    const filters = {
+        species: searchParams.get('species') || '',
+        size: searchParams.get('size') || '',
+        sex: searchParams.get('sex') || '',
+    };
+
+    const handleFilterChange = (newFilters) => {
+        const params = new URLSearchParams();
+        Object.entries(newFilters).forEach(([key, value]) => {
+            if (value) params.set(key, value);
+        });
+        setSearchParams(params);
+    };
 
     // 2. EFECTE DE CÀRREGA INICIAL
     useEffect(() => {
+        if (!tenant) {
+            setLoading(false);
+            return;
+        }
+
         const fetchAnimals = async () => {
             try {
+<<<<<<< Updated upstream
                 // FEM SERVIR PROMISE.ALL PER ESPERAR MÍNIM 600ms
                 // Així assegurem que l'usuari vegi els "Skeletons" i evitem un parpelleig massa ràpid
                 const [data] = await Promise.all([
@@ -53,6 +86,15 @@ export default function Animals() {
             } catch (err) {
                 setError("No s'han pogut carregar els animals en aquest moment.");
                 console.error(err);
+=======
+                setLoading(true);
+                const queryStr = searchParams.toString();
+                const endpoint = `/animals${queryStr ? `?${queryStr}` : ''}`;
+                const data = await api.get(endpoint);
+                setAnimals(Array.isArray(data) ? data : []);
+            } catch (err) {
+                setError("No s'han pogut carregar els animals.");
+>>>>>>> Stashed changes
             } finally {
                 // IMPORTANT: Apaguem el Loading per deixar pas al disseny real.
                 setLoading(false);
@@ -60,7 +102,15 @@ export default function Animals() {
         };
 
         fetchAnimals();
-    }, []);
+    }, [searchParams, tenant]);
+
+    if (!tenant) {
+        return (
+            <div className="text-center py-10 text-gray-500">
+                Selecciona una protectora per veure els animals.
+            </div>
+        );
+    }
 
     // 3. MATEMÀTIQUES DE LA PAGINACIÓ CLIENT
     // Quin índex és el darrer animal d'aquesta pàgina? (ex. Pàgina 1 * 6 = 6)
@@ -84,7 +134,7 @@ export default function Animals() {
                 <h1 className="text-3xl font-bold text-gray-900 mb-6">Els nostres animals en adopció</h1>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {/* Generem 6 targetes fanstasmes del no res només per dibuixar la xarxa gris! */}
-                    {Array.from({ length: 6 }).map((_, index) => (
+                import { Link, useSearchParams } from 'react-router-dom';
                         <SkeletonCard key={`skeleton-${index}`} />
                     ))}
                 </div>
@@ -97,11 +147,14 @@ export default function Animals() {
     // 5. RENDERITZAT FINAL AMB DADES REALS I PAGINACIÓ
     return (
         <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-6">Els nostres animals en adopció</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-6">Els nostres animals en adopcio</h1>
+
+            <AnimalFilters filters={filters} onFilterChange={handleFilterChange} />
 
             {animals.length === 0 ? (
-                <p>No hi ha animals disponibles en aquest moment.</p>
+                <p className="text-gray-500 text-center py-8">No hi ha animals disponibles amb aquests filtres.</p>
             ) : (
+<<<<<<< Updated upstream
                 <>
                     {/* BUCLE: RECORREM LA NOVA SUBLISTA TALLADA (currentAnimals) MIDA MÀXIMA: 6 */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -124,6 +177,40 @@ export default function Animals() {
                                             </Button>
                                         </Link>
                                     </div>
+=======
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {animals.map((animal) => (
+                        <Card key={animal.id} noPadding className="hover:shadow-lg transition-shadow duration-300">
+                            <img
+                                className="h-48 w-full object-cover"
+                                src={animal.photo_urls?.[0] || 'https://via.placeholder.com/400x300?text=Sense+foto'}
+                                alt={animal.name}
+                            />
+                            <div className="p-4">
+                                <h3 className="text-lg font-medium text-gray-900">{animal.name}</h3>
+                                <p className="text-sm text-gray-500">
+                                    {animal.species === 'dog' ? 'Gos' : animal.species === 'cat' ? 'Gat' : animal.species}
+                                    {animal.breed ? ` - ${animal.breed}` : ''}
+                                </p>
+                                <div className="flex gap-2 mt-2">
+                                    {animal.sex && (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                            {animal.sex === 'male' ? 'Mascle' : 'Femella'}
+                                        </span>
+                                    )}
+                                    {animal.size && (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                            {animal.size === 'small' ? 'Petit' : animal.size === 'medium' ? 'Mitja' : 'Gran'}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="mt-4">
+                                    <Link to={`/animals/${animal.id}`}>
+                                        <Button variant="outline" size="sm" className="w-full">
+                                            Veure detalls
+                                        </Button>
+                                    </Link>
+>>>>>>> Stashed changes
                                 </div>
                             </Card>
                         ))}

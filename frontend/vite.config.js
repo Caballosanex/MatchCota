@@ -15,6 +15,11 @@ export default defineConfig({
         target: process.env.API_PROXY_TARGET || 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
+      },
+      '/uploads': {
+        target: process.env.API_PROXY_TARGET || 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
       }
     }
   }

@@ -8,6 +8,11 @@ export function useApi() {
     const baseUrl = import.meta.env.VITE_API_URL || '/api/v1';
 
     const request = async (endpoint, options = {}) => {
+        // Guard: si no hi ha tenant, les requests fallaran al backend
+        if (!tenant?.slug) {
+            throw new Error('No hi ha cap protectora seleccionada.');
+        }
+
         const headers = {
             'Content-Type': 'application/json',
             ...options.headers,
@@ -17,18 +22,8 @@ export function useApi() {
             headers['Authorization'] = `Bearer ${user.token}`;
         }
 
-        if (tenant && tenant.slug) {
-            headers['X-Tenant-Slug'] = tenant.slug;
-        } else if (tenant && tenant.id === 'default' && import.meta.env.DEV) {
-            // Fallback for dev if tenant object is incomplete but we want to force something?
-            // But TenantContext should now give us a full object. 
-            // Let's stick to tenant.slug.
-        }
-
-        // Mantinc l'ID per si de cas algun endpoint el necessita, però el principal és el Slug
-        if (tenant) {
-            headers['X-Tenant-ID'] = tenant.id;
-        }
+        headers['X-Tenant-Slug'] = tenant.slug;
+        headers['X-Tenant-ID'] = tenant.id;
 
         const config = {
             ...options,
