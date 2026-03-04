@@ -36,7 +36,6 @@ yarn-error.log*
 dist/
 dist-ssr/
 *.local
-package-lock.json
 
 # Environment
 .env
