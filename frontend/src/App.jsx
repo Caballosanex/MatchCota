@@ -26,6 +26,8 @@ import Home from './pages/public/Home';
 import Animals from './pages/public/Animals';
 import AnimalDetail from './pages/public/AnimalDetail';
 import Login from './pages/public/Login';
+import RegisterTenant from './pages/public/RegisterTenant';
+import RegisterAnimal from './pages/public/RegisterAnimal';
 
 // Pàgines Privades (el que veu l'administrador de la protectora)
 import Dashboard from './pages/admin/Dashboard';
@@ -66,6 +68,8 @@ export default function App() {
 
               {/* Rutes d'accés i registre */}
               <Route path="login" element={<Login />} />
+              <Route path="register-tenant" element={<RegisterTenant />} />
+              <Route path="register-animal" element={<RegisterAnimal />} />
               <Route path="test" element={<div className="p-8 text-center text-gray-500">Test de Compatibilitat (Sprint 5)</div>} />
             </Route>
 
