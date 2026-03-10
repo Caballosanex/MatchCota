@@ -146,11 +146,11 @@ export default function RegisterTenant() {
             {/* ------------------------------------------------------------------ */}
             {/* COLUMNA DRETA (1/2 o 1/1): FORMULARI INTERACTIU HOOK FORM ZOD */}
             {/* ------------------------------------------------------------------ */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 lg:p-20 bg-gray-50/30">
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-8 lg:p-12 bg-gray-50/30">
                 <div className="max-w-xl w-full">
 
                     {/* LOGO VERSIÓ MÒBIL */}
-                    <div className="lg:hidden mb-10 text-center">
+                    <div className="lg:hidden mb-6 text-center">
                         <Link to="/" className="inline-flex items-center gap-3">
                             <div className="w-10 h-10 bg-[#4A90A4] rounded-xl flex items-center justify-center">
                                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -161,23 +161,23 @@ export default function RegisterTenant() {
                         </Link>
                     </div>
 
-                    <div className="mb-10 text-center lg:text-left">
-                        <h2 className="text-4xl font-black text-gray-900 mb-3 tracking-tight">Crea el teu compte</h2>
+                    <div className="mb-6 text-center lg:text-left">
+                        <h2 className="text-3xl lg:text-4xl font-black text-gray-900 mb-2 tracking-tight">Crea el teu compte</h2>
                         <p className="text-gray-500 font-medium tracking-tight">
                             Comença avui mateix i dóna vida al teu espai digital.
                         </p>
                     </div>
 
                     {/* FORMULARI MÀGIC */}
-                    <form className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-6" onSubmit={handleSubmit(onSubmit)}>
+                    <form className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4" onSubmit={handleSubmit(onSubmit)}>
 
                         {/* NOM ENTITAT */}
                         <div className="md:col-span-2">
-                            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Nom de l'entitat *</label>
+                            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-1 block ml-1">Nom de l'entitat *</label>
                             <input
                                 {...register('name')}
                                 placeholder="Protectora d'Animals..."
-                                className={`w-full bg-white border-2 rounded-2xl px-5 py-4 focus:outline-none transition-all duration-300 shadow-sm
+                                className={`w-full bg-white border-2 rounded-2xl px-5 py-3 focus:outline-none transition-all duration-300 shadow-sm
                                     ${errors.name ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'}`}
                             />
                             {errors.name && <span className="text-red-500 text-xs font-bold block mt-2 ml-1 animate-shake">*{errors.name.message}</span>}
@@ -185,12 +185,12 @@ export default function RegisterTenant() {
 
                         {/* SLUG URL PÚBLICA */}
                         <div className="md:col-span-2">
-                            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Identificador Web *</label>
+                            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-1 block ml-1">Identificador Web *</label>
                             <div className="relative group">
                                 <input
                                     {...register('slug')}
                                     placeholder="la-teva-entitat"
-                                    className={`w-full bg-white border-2 rounded-2xl px-5 py-4 pr-32 focus:outline-none transition-all duration-300 shadow-sm
+                                    className={`w-full bg-white border-2 rounded-2xl px-5 py-3 pr-32 focus:outline-none transition-all duration-300 shadow-sm
                                         ${errors.slug ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'}`}
                                 />
                                 <div className="absolute inset-y-0 right-0 flex items-center pr-5 pointer-events-none text-gray-300 font-bold group-focus-within:text-[#4A90A4]">
@@ -202,11 +202,11 @@ export default function RegisterTenant() {
 
                         {/* CORREU ELECTRÒNIC */}
                         <div className="md:col-span-2">
-                            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Email professional *</label>
+                            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-1 block ml-1">Email professional *</label>
                             <input
                                 {...register('email')}
                                 placeholder="exempe@entitat.cat"
-                                className={`w-full bg-white border-2 rounded-2xl px-5 py-4 focus:outline-none transition-all duration-300 shadow-sm
+                                className={`w-full bg-white border-2 rounded-2xl px-5 py-3 focus:outline-none transition-all duration-300 shadow-sm
                                     ${errors.email ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'}`}
                             />
                             {errors.email && <span className="text-red-500 text-xs font-bold block mt-2 ml-1 animate-shake">*{errors.email.message}</span>}
@@ -214,11 +214,11 @@ export default function RegisterTenant() {
 
                         {/* CIF */}
                         <div>
-                            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">CIF</label>
+                            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-1 block ml-1">CIF</label>
                             <input
                                 {...register('cif')}
                                 placeholder="G-12345678"
-                                className={`w-full bg-white border-2 rounded-2xl px-5 py-4 focus:outline-none transition-all duration-300 shadow-sm
+                                className={`w-full bg-white border-2 rounded-2xl px-5 py-3 focus:outline-none transition-all duration-300 shadow-sm
                                     ${errors.cif ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'}`}
                             />
                             {errors.cif && <span className="text-red-500 text-xs font-bold block mt-2 ml-1">*{errors.cif.message}</span>}
@@ -226,11 +226,11 @@ export default function RegisterTenant() {
 
                         {/* TELÈFON */}
                         <div>
-                            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Telèfon</label>
+                            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-1 block ml-1">Telèfon</label>
                             <input
                                 {...register('phone')}
                                 placeholder="+34..."
-                                className={`w-full bg-white border-2 rounded-2xl px-5 py-4 focus:outline-none transition-all duration-300 shadow-sm
+                                className={`w-full bg-white border-2 rounded-2xl px-5 py-3 focus:outline-none transition-all duration-300 shadow-sm
                                     ${errors.phone ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'}`}
                             />
                             {errors.phone && <span className="text-red-500 text-xs font-bold block mt-2 ml-1">*{errors.phone.message}</span>}
@@ -238,11 +238,11 @@ export default function RegisterTenant() {
 
                         {/* CIUTAT */}
                         <div>
-                            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Ciutat</label>
+                            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-1 block ml-1">Ciutat</label>
                             <input
                                 {...register('city')}
                                 placeholder="Barcelona"
-                                className={`w-full bg-white border-2 rounded-2xl px-5 py-4 focus:outline-none transition-all duration-300 shadow-sm
+                                className={`w-full bg-white border-2 rounded-2xl px-5 py-3 focus:outline-none transition-all duration-300 shadow-sm
                                     ${errors.city ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'}`}
                             />
                             {errors.city && <span className="text-red-500 text-xs font-bold block mt-2 ml-1">*{errors.city.message}</span>}
@@ -250,11 +250,11 @@ export default function RegisterTenant() {
 
                         {/* LLOC WEB */}
                         <div>
-                            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Lloc Web (Només URLs)</label>
+                            <label className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-1 block ml-1">Lloc Web (Només URLs)</label>
                             <input
                                 {...register('website')}
                                 placeholder="https://..."
-                                className={`w-full bg-white border-2 rounded-2xl px-5 py-4 focus:outline-none transition-all duration-300 shadow-sm
+                                className={`w-full bg-white border-2 rounded-2xl px-5 py-3 focus:outline-none transition-all duration-300 shadow-sm
                                     ${errors.website ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'}`}
                             />
                             {errors.website && <span className="text-red-500 text-xs font-bold block mt-2 ml-1 animate-shake">*{errors.website.message}</span>}
@@ -282,7 +282,7 @@ export default function RegisterTenant() {
                             <button
                                 type="submit"
                                 disabled={isSubmitting} // Bloqueja botó auto de react-hook-form
-                                className="w-full bg-[#4A90A4] text-white font-black text-lg py-5 rounded-2xl shadow-xl shadow-[#4A90A4]/20 hover:bg-[#3a7c8d] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 group"
+                                className="w-full bg-[#4A90A4] text-white font-black text-lg py-4 rounded-2xl shadow-xl shadow-[#4A90A4]/20 hover:bg-[#3a7c8d] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 group"
                             >
                                 {isSubmitting ? 'Enviant dades...' : 'Registrar ara'}
                                 {!isSubmitting && (

@@ -28,7 +28,7 @@ const PawConfetti = () => {
                     }}
                 >
                     <svg className="w-6 h-6 transform rotate-12 opacity-80" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 11.5c.6 0 1.2.2 1.7.5.5-2 2-3.5 4.3-3.5 2.5 0 4.5 1.8 4.5 4.5 0 2.2-2.7 5.7-6 9-1.9 2-3.5 2-4.5 2s-2.6 0-4.5-2c-3.3-3.3-6-6.8-6-9 0-2.7 2-4.5 4.5-4.5 2.3 0 3.8 1.5 4.3 3.5.5-.3 1.1-.5 1.7-.5z" />
+                        <path d="M12 21.056c-3.14-1.298-5.32-3.116-6.613-5.334-1.47-2.52-1.396-5.465.176-7.382 1.34-1.63 3.615-1.604 5.253-1.02a4.4 4.4 0 011.184.6 4.39 4.39 0 011.185-.6c1.637-.584 3.913-.61 5.252 1.02 1.572 1.917 1.646 4.86.177 7.38-1.294 2.219-3.473 4.037-6.614 5.336zM3.46 8.52c-1.642 0-2.96-1.53-2.96-3.414 0-1.884 1.318-3.415 2.96-3.415 1.643 0 2.961 1.53 2.961 3.415 0 1.884-1.318 3.414-2.96 3.414zm4.61-4.733c-1.336 0-2.42-1.392-2.42-3.107S6.734.023 8.07.023c1.337 0 2.42 1.392 2.42 3.107s-1.083 3.107-2.42 3.107zm7.86 0c-1.337 0-2.42-1.392-2.42-3.107S14.594.023 15.93.023c1.336 0 2.42 1.392 2.42 3.107s-1.084 3.107-2.42 3.107zm4.61 4.733c-1.642 0-2.96-1.53-2.96-3.414 0-1.884 1.318-3.415 2.96-3.415 1.643 0 2.961 1.53 2.961 3.415 0 1.884-1.318 3.414-2.96 3.414z" />
                     </svg>
                 </div>
             ))}
@@ -139,22 +139,22 @@ export default function DemoTest() {
                 {/* --- PANTALLA INTRODUCCIÓ --- */}
                 {/* Aquesta part HTML NOMÉS ('&&') es pinta en pantalla si l'estat és 'intro'. */}
                 {step === 'intro' && (
-                    <div className="bg-white rounded-[40px] shadow-2xl p-10 max-w-2xl w-full text-center animate-fade-in relative overflow-hidden">
+                    <div className="bg-white rounded-[40px] shadow-2xl p-10 md:p-14 max-w-3xl w-full text-center animate-fade-in relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400"></div>
 
-                        <h1 className="text-4xl font-extrabold text-gray-900 mb-6">
+                        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 tracking-tight">
                             Troba el teu company ideal
                         </h1>
-                        <p className="text-xl text-gray-500 mb-10 leading-relaxed">
+                        <p className="text-xl text-gray-500 mb-10 leading-relaxed max-w-xl mx-auto">
                             Respon unes preguntes sobre el teu estil de vida i et mostrarem els animals més compatibles amb tu.
                         </p>
 
-                        <div className="bg-indigo-50 rounded-2xl p-6 mb-10 text-left mx-auto max-w-lg border border-indigo-100">
-                            <h3 className="font-bold text-indigo-900 mb-3 flex items-center gap-2">
+                        <div className="bg-indigo-50 rounded-3xl p-6 mb-10 text-left mx-auto max-w-xl border border-indigo-100">
+                            <h3 className="font-bold text-lg text-indigo-900 mb-4 flex items-center gap-3">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 Què avaluarem?
                             </h3>
-                            <ul className="space-y-2 text-indigo-700 text-sm">
+                            <ul className="space-y-2 text-indigo-700 text-base">
                                 <li className="flex items-center gap-2">✓ El teu estil de vida i disponibilitat</li>
                                 <li className="flex items-center gap-2">✓ El tipus d'habitatge (pis, casa, jardí...)</li>
                                 <li className="flex items-center gap-2">✓ Experiència amb animals</li>
@@ -173,7 +173,7 @@ export default function DemoTest() {
 
                 {/* --- PANTALLA PREGUNTA 1 --- */}
                 {step === 'q1' && (
-                    <div className="bg-white rounded-[40px] shadow-xl p-10 max-w-2xl w-full animate-fade-in">
+                    <div className="bg-white rounded-[40px] shadow-xl p-10 md:p-14 max-w-3xl w-full animate-fade-in mx-auto">
                         <div className="flex justify-between items-center mb-8">
                             <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest">Pregunta 1 de 2</span>
                             <div className="w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -182,38 +182,33 @@ export default function DemoTest() {
                             </div>
                         </div>
 
-                        <h2 className="text-3xl font-bold text-gray-900 mb-8">Com és la teva llar?</h2>
+                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8">Com és la teva llar?</h2>
 
-                        <div className="space-y-4 mb-10">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-10">
                             {/* Bucle (map) per generar botons per a cada opció d'habitatge automàticament */}
-                            {['Pis petit (menys de 60m2)', 'Pis gran (més de 60m2)', 'Casa sense jardí', 'Casa amb jardí'].map((opt) => (
+                            {['Pis petit', 'Pis gran', 'Casa adossada', 'Casa amb terreny'].map((opt) => (
                                 <button
                                     key={opt}
-                                    // Com guardem la resposta: Utilitzem "...answers" (mantenim la resta de respostes de l'objecte igual)
-                                    // I actualitzem 'housing' amb el botó clicat.
                                     onClick={() => setAnswers({ ...answers, housing: opt })}
-                                    className={`w-full text-left p-5 rounded-2xl border-2 transition-all flex items-center justify-between group ${
-                                        /* Canviem l'estil al botó si ha sigut seleccionat prèviament */
-                                        answers.housing === opt
-                                            ? 'border-indigo-500 bg-indigo-50 text-indigo-900'
-                                            : 'border-gray-100 hover:border-indigo-200 hover:bg-gray-50'
+                                    className={`w-full text-left p-4 md:p-5 rounded-2xl border-2 transition-all flex flex-col items-start gap-3 group ${answers.housing === opt
+                                        ? 'border-indigo-500 bg-indigo-50 text-indigo-900 shadow-md'
+                                        : 'border-gray-100 hover:border-indigo-200 hover:bg-gray-50'
                                         }`}
                                 >
-                                    <span className="font-medium text-lg">{opt}</span>
                                     <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${answers.housing === opt ? 'border-indigo-500' : 'border-gray-300'}`}>
-                                        {/* Punt interior si està seleccionat */}
                                         {answers.housing === opt && <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>}
                                     </div>
+                                    <span className="font-semibold text-base">{opt}</span>
                                 </button>
                             ))}
                         </div>
 
-                        <div className="flex justify-between items-center">
-                            <button onClick={() => setStep('intro')} className="text-gray-400 hover:text-gray-600 font-medium">← Enrere</button>
+                        <div className="flex justify-between items-center mt-auto border-t pt-6">
+                            <button onClick={() => setStep('intro')} className="text-gray-400 hover:text-gray-600 font-medium text-base flex items-center gap-2">← Enrere</button>
                             <button
                                 onClick={() => handleNext('q2')}
                                 disabled={!answers.housing} // Bloquegem (no deixem avançar) si NO hi ha respostes guardades
-                                className={`px-8 py-3 rounded-full font-bold transition-all ${answers.housing
+                                className={`px-8 py-3 text-base rounded-full font-bold transition-all ${answers.housing
                                     ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md'
                                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                     }`}
@@ -227,7 +222,7 @@ export default function DemoTest() {
                 {/* --- PANTALLA PREGUNTA 2 --- */}
                 {/* Lògica calcada a la Question 1, però actualitzant "answers.activity". */}
                 {step === 'q2' && (
-                    <div className="bg-white rounded-[40px] shadow-xl p-10 max-w-2xl w-full animate-fade-in">
+                    <div className="bg-white rounded-[40px] shadow-xl p-10 md:p-14 max-w-3xl w-full animate-fade-in mx-auto">
                         <div className="flex justify-between items-center mb-8">
                             <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest">Pregunta 2 de 2</span>
                             <div className="w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -236,34 +231,34 @@ export default function DemoTest() {
                             </div>
                         </div>
 
-                        <h2 className="text-3xl font-bold text-gray-900 mb-8">El teu nivell d'activitat?</h2>
+                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8">El teu nivell d'activitat?</h2>
 
-                        <div className="space-y-4 mb-10">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-10">
                             {['Sofà i manta (Relax)', 'Passejos tranquils (Moderat)', "M'encanta l'esport (Actiu)"].map((opt) => (
                                 <button
                                     key={opt}
                                     onClick={() => setAnswers({ ...answers, activity: opt })}
-                                    className={`w-full text-left p-5 rounded-2xl border-2 transition-all flex items-center justify-between group ${answers.activity === opt
-                                        ? 'border-indigo-500 bg-indigo-50 text-indigo-900'
+                                    className={`w-full text-left p-4 md:p-5 rounded-2xl border-2 transition-all flex flex-col items-start gap-3 group ${answers.activity === opt
+                                        ? 'border-indigo-500 bg-indigo-50 text-indigo-900 shadow-md'
                                         : 'border-gray-100 hover:border-indigo-200 hover:bg-gray-50'
                                         }`}
                                 >
-                                    <span className="font-medium text-lg">{opt}</span>
                                     <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${answers.activity === opt ? 'border-indigo-500' : 'border-gray-300'
                                         }`}>
                                         {answers.activity === opt && <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>}
                                     </div>
+                                    <span className="font-semibold text-base">{opt}</span>
                                 </button>
                             ))}
                         </div>
 
-                        <div className="flex justify-between items-center">
-                            <button onClick={() => setStep('q1')} className="text-gray-400 hover:text-gray-600 font-medium">← Enrere</button>
+                        <div className="flex justify-between items-center mt-auto border-t pt-6">
+                            <button onClick={() => setStep('q1')} className="text-gray-400 hover:text-gray-600 font-medium text-base flex items-center gap-2">← Enrere</button>
                             <button
                                 // Aquest botó porta a l'estat d'Esperar ("loading")
                                 onClick={() => handleNext('loading')}
                                 disabled={!answers.activity}
-                                className={`px-8 py-3 rounded-full font-bold transition-all ${answers.activity
+                                className={`px-8 py-3 text-base rounded-full font-bold transition-all ${answers.activity
                                     ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md'
                                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                     }`}
@@ -277,7 +272,7 @@ export default function DemoTest() {
                 {/* --- PANTALLA DE CÀRREGA (LOADING) --- */}
                 {/* L'animació d'espera on l'useEffect d'amunt farà la seva feina */}
                 {step === 'loading' && (
-                    <div className="bg-white/80 backdrop-blur-xl rounded-[40px] shadow-2xl p-16 max-w-lg w-full text-center flex flex-col items-center justify-center animate-fade-in border border-white/50">
+                    <div className="bg-white/80 backdrop-blur-xl rounded-[40px] shadow-2xl p-14 max-w-lg w-full text-center flex flex-col items-center justify-center animate-fade-in border border-white/50">
                         {/* Custom Pulse Animation */}
                         <div className="relative w-32 h-32 mb-8">
                             <div className="absolute inset-0 bg-indigo-200 rounded-full animate-ping opacity-20"></div>
@@ -305,94 +300,83 @@ export default function DemoTest() {
                         {/* Llença l'animació de les potetes volant només aquí */}
                         {showConfetti && <PawConfetti />}
 
-                        <div className="bg-white rounded-[40px] shadow-2xl overflow-hidden max-w-4xl w-full animate-slide-up mx-4 relative z-10 border-4 border-indigo-100">
+                        <div className="bg-white rounded-[40px] shadow-2xl overflow-hidden max-w-7xl w-full animate-slide-up mx-auto relative z-10 border-4 border-indigo-100 flex flex-col items-center flex-grow m-4">
 
                             {/* Match Header */}
-                            <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-8 text-center text-white relative overflow-hidden">
+                            <div className="w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-8 md:p-12 text-center text-white relative overflow-hidden flex flex-col items-center justify-center">
                                 <div className="absolute top-0 left-0 w-full h-full opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDIwIDIwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMSI+PGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iMiIvPjwvc3ZnPg==')]"></div>
-                                <div className="inline-block bg-white/20 backdrop-blur-sm rounded-full px-4 py-1 text-xs font-bold uppercase tracking-wider mb-2">
-                                    ÉS UN MATCH!
-                                </div>
-                                <h1 className="text-4xl lg:text-5xl font-extrabold mb-2">
-                                    Hem trobat el teu <br /> company ideal
+                                <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold flex items-center gap-3">
+                                    ÉS UN MATCH PERFECTE
                                 </h1>
-                                <p className="text-white/90">
-                                    Segons el teu estil de vida i la personalitat dels nostres animals, hem trobat connexions especials. T'estaven esperant!
+                                <p className="text-white/90 text-lg mt-3 font-medium">
+                                    Aquests són els animals més compatibles amb tu. T'estaven esperant!
                                 </p>
                             </div>
 
-                            <div className="p-8 lg:p-12">
-                                {/* MAIN MATCH CARD - Mostrem el principal (En la app real sortiran les dades de veritat) */}
-                                <div className="flex flex-col lg:flex-row gap-8 items-center mb-16">
-                                    <div className="w-full lg:w-1/2">
-                                        <div className="aspect-square bg-slate-200 rounded-[30px] overflow-hidden shadow-lg relative group">
-                                            {/* Image Placeholder */}
-                                            <div className="absolute inset-0 bg-gray-300 flex items-center justify-center text-gray-500 animate-pulse">
-                                                <span className="text-sm">Foto de la Luna</span>
-                                            </div>
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-6">
-                                                <div className="bg-white/90 backdrop-blur text-indigo-900 px-4 py-2 rounded-full text-sm font-bold shadow-md">
-                                                    98% Compatible
-                                                </div>
-                                            </div>
+                            <div className="p-8 lg:p-14 w-full flex flex-col lg:flex-row gap-8 lg:gap-12 flex-grow">
+                                {/* MAIN MATCH CARD - Mostrem el principal a l'esquerra */}
+                                <div className="w-full lg:w-3/5 xl:w-2/3 bg-indigo-50/50 rounded-3xl p-8 border border-indigo-100/50 flex flex-col md:flex-row gap-8 shadow-sm">
+                                    <div className="w-full md:w-1/2 aspect-square bg-slate-200 rounded-3xl overflow-hidden shadow relative group mx-auto md:mx-0 max-w-[400px]">
+                                        {/* Image Placeholder */}
+                                        <div className="absolute inset-0 bg-gray-300 flex items-center justify-center text-gray-500 animate-pulse">
+                                            <span className="text-base font-medium">Foto de la Luna</span>
+                                        </div>
+                                        <div className="absolute top-4 right-4 bg-white text-indigo-900 px-4 py-1.5 rounded-full text-sm font-bold shadow flex items-center gap-1.5">
+                                            ⭐ 98% Afinitat
                                         </div>
                                     </div>
-                                    <div className="w-full lg:w-1/2 space-y-6">
+                                    <div className="w-full md:w-1/2 flex flex-col py-4">
                                         <div>
-                                            <h2 className="text-4xl font-extrabold text-gray-900 mb-1">LUNA</h2>
-                                            <p className="text-xl text-gray-500 font-medium">Border Collie · 5 Anys · Femella</p>
+                                            <div className="text-indigo-600 text-sm font-bold uppercase mb-2 tracking-widest inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 rounded-lg">Match Principal</div>
+                                            <h2 className="text-5xl font-extrabold text-gray-900 mb-2 mt-2">LUNA</h2>
+                                            <p className="text-lg text-gray-500 font-medium mb-6">Border Collie · 5 Anys · Femella</p>
                                         </div>
 
-                                        <div className="bg-indigo-50 rounded-2xl p-6 border border-indigo-100">
-                                            <h4 className="font-bold text-indigo-900 mb-2 flex items-center gap-2">
-                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
-                                                Per què vosaltres?
-                                            </h4>
-                                            <p className="text-indigo-800/80 text-sm leading-relaxed">
-                                                "La Luna té una energia que encaixa perfectament amb el teu estil de vida actiu. És intel·ligent, carinyosa i busca algú amb qui compartir llargues passejades, tal com has indicat!"
-                                            </p>
-                                        </div>
+                                        <p className="text-indigo-900/80 text-lg leading-relaxed mb-8 flex-grow">
+                                            Una energia que encaixa perfectament amb el teu estil de vida. És carinyosa i busca l'aventura donades les teves preferències.
+                                        </p>
 
-                                        <div className="flex gap-4">
-                                            <button className="flex-1 bg-indigo-600 text-white py-4 rounded-xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:shadow-xl transition-all">
-                                                Concerta una visita
-                                            </button>
-                                            <button className="px-6 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
-                                                ❤️
+                                        <div className="mt-auto flex flex-col gap-4">
+                                            <button className="w-full bg-indigo-600 text-white py-4 xl:py-5 rounded-2xl font-bold text-lg shadow-md shadow-indigo-200 hover:bg-indigo-700 hover:shadow-xl transition-all hover:-translate-y-1">
+                                                Concerta Visita amb la Luna
                                             </button>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* SECONDARY MATCHES (Sub-targetes restants) */}
-                                <div>
-                                    <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                                        Altres amics que t'encantaran
-                                        <div className="h-px bg-gray-200 flex-1 ml-4"></div>
-                                    </h3>
-                                    <div className="grid md:grid-cols-2 gap-6">
-                                        {/* Milo */}
-                                        <div className="flex gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
-                                            <div className="w-24 h-24 bg-gray-200 rounded-2xl flex-shrink-0"></div>
-                                            <div>
-                                                <h4 className="font-bold text-lg text-gray-900">Milo, 2 Anys</h4>
-                                                <p className="text-sm text-gray-500 mb-3">Mestís · Molt juganer</p>
-                                                <button className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold hover:bg-indigo-200 transition-colors">
-                                                    Veure la seva història
-                                                </button>
+                                {/* SECONDARY MATCHES - A la dreta llistats menuts */}
+                                <div className="w-full lg:w-2/5 xl:w-1/3 flex flex-col gap-5 justify-center">
+                                    <h3 className="text-base font-bold text-gray-400 uppercase tracking-widest px-2 mb-2">Altres amics genials</h3>
+
+                                    {/* Milo */}
+                                    <div className="flex gap-5 p-4 rounded-3xl bg-white shadow-sm border border-gray-100 hover:border-indigo-200 transition-all hover:bg-gray-50">
+                                        <div className="w-24 h-24 bg-gray-200 rounded-2xl flex-shrink-0 relative overflow-hidden">
+                                            <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-gray-800 px-2 py-0.5 rounded-lg text-xs font-bold shadow-sm">
+                                                85%
                                             </div>
                                         </div>
+                                        <div className="flex flex-col justify-center flex-grow">
+                                            <h4 className="font-bold text-xl text-gray-900">Milo</h4>
+                                            <p className="text-sm text-gray-500 mb-3 font-medium">2 Anys · Mestís</p>
+                                            <button className="text-indigo-600 text-sm font-bold hover:text-indigo-800 text-left flex items-center gap-1">
+                                                Veure el seu perfil <span aria-hidden="true">&rarr;</span>
+                                            </button>
+                                        </div>
+                                    </div>
 
-                                        {/* Rocky */}
-                                        <div className="flex gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
-                                            <div className="w-24 h-24 bg-gray-200 rounded-2xl flex-shrink-0"></div>
-                                            <div>
-                                                <h4 className="font-bold text-lg text-gray-900">Rocky, 8 Anys</h4>
-                                                <p className="text-sm text-gray-500 mb-3">Beagle · Tranquil i noble</p>
-                                                <button className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold hover:bg-indigo-200 transition-colors">
-                                                    Veure la seva història
-                                                </button>
+                                    {/* Rocky */}
+                                    <div className="flex gap-5 p-4 rounded-3xl bg-white shadow-sm border border-gray-100 hover:border-indigo-200 transition-all hover:bg-gray-50">
+                                        <div className="w-24 h-24 bg-gray-200 rounded-2xl flex-shrink-0 relative overflow-hidden">
+                                            <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-gray-800 px-2 py-0.5 rounded-lg text-xs font-bold shadow-sm">
+                                                72%
                                             </div>
+                                        </div>
+                                        <div className="flex flex-col justify-center flex-grow">
+                                            <h4 className="font-bold text-xl text-gray-900">Rocky</h4>
+                                            <p className="text-sm text-gray-500 mb-3 font-medium">8 Anys · Beagle</p>
+                                            <button className="text-indigo-600 text-sm font-bold hover:text-indigo-800 text-left flex items-center gap-1">
+                                                Veure el seu perfil <span aria-hidden="true">&rarr;</span>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
