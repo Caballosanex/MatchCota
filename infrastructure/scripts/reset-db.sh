@@ -43,7 +43,7 @@ echo ""
 echo "📋 Executant seed data..."
 
 # Executar seed
-./infrastructure/scripts/seed.sh
+$(dirname "$0")/seed.sh
 
 echo ""
 echo "✅ Base de dades resetejada correctament!"
