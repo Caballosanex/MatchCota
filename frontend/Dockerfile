@@ -2,10 +2,11 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy only package.json (not the lock file) so npm resolves
+# the correct platform-native bindings inside the container
+COPY package.json ./
 
-# Install dependencies
+# Install dependencies — resolves correct rollup bindings for the container's OS/arch
 RUN npm install
 
 # Copy application
