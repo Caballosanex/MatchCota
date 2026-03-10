@@ -38,7 +38,8 @@ export function useApi() {
                 throw new Error(errorData.detail || `Error ${response.status}: ${response.statusText}`);
             }
 
-            return await response.json();
+            const text = await response.text();
+            return text ? JSON.parse(text) : null;
         } catch (error) {
             console.error('API Request failed:', error);
             throw error;

@@ -151,7 +151,7 @@ export default function AnimalForm({ initialData = null, onSubmit, isLoading = f
                     label="Descripcio i personalitat"
                     name="description"
                     rows={4}
-                    value={formData.description}
+                    value={formData.description || ''}
                     onChange={handleChange}
                     placeholder="Explica com es la seva personalitat..."
                 />
@@ -160,7 +160,7 @@ export default function AnimalForm({ initialData = null, onSubmit, isLoading = f
                         label="Condicions mediques"
                         name="medical_conditions"
                         rows={2}
-                        value={formData.medical_conditions}
+                        value={formData.medical_conditions || ''}
                         onChange={handleChange}
                         placeholder="Alguna condicio medica a tenir en compte?"
                     />

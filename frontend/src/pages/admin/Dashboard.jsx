@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react';
 // Importem eines pròpies per obtenir l'usuari actual i parlar amb el servidor
 import { useAuth } from '../../hooks/useAuth';
 import { useApi } from '../../hooks/useApi';
-// Importem el nostre component Card que hem documentat anteriorment
-import Card from '../../components/ui/Card';
+// No importem el Card antic, ja que farem targetes noves més modernes
+
 
 /**
  * COMPONENTE PÀGINA: Dashboard (Panell de Control)
@@ -53,41 +53,31 @@ export default function Dashboard() {
     }, []); // Els array claudàtors buits [] signifiquen "només una vegada al carregar"
 
     return (
-        <div>
-            {/* Títol Gran de la secció */}
-            <h1 className="text-3xl font-bold text-gray-900 mb-6">Panell de Control</h1>
+        <div className="animate-fade-in space-y-6">
+            <h1 className="text-3xl font-bold text-gray-900 mb-6 font-serif">Taulell de Control</h1>
 
-            {/* DISSENY GRID (Graella)
-                - 'grid-cols-1': Per mòbil ho posem tot en una columna (apilat).
-                - 'md:grid-cols-3': A partir de pantalles mitjanes (tablets/desktops), dividim en 3 columnes.
-                - 'gap-6': Que hi hagi bona separació entre les targetes.
-            */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
                 {/* 1. TARGETA: Recompte d'Animals */}
-                {/* Aquí veuràs com utilitzem el nostre component general <Card> d'abans! */}
-                <Card>
-                    <h3 className="text-lg font-medium text-gray-900">Animals</h3>
-                    <p className="text-3xl font-bold text-blue-600 mt-2">{animalCount}</p>
-                    <p className="text-sm text-gray-500 mt-1">En adopció</p>
-                </Card>
+                <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                    <h3 className="text-lg font-medium text-gray-800">Animals</h3>
+                    <p className="text-4xl font-black text-indigo-600 mt-2">{animalCount}</p>
+                    <p className="text-sm text-gray-500 mt-1 font-medium">En adopció al sistema</p>
+                </div>
 
                 {/* 2. TARGETA: Leads (Estadístiques futures) */}
-                <Card>
-                    <h3 className="text-lg font-medium text-gray-900">Leads</h3>
-                    <p className="text-3xl font-bold text-green-600 mt-2">-</p>
-                    {/* Això recordarà als programadors que aquesta part encara no està feta */}
-                    <p className="text-sm text-gray-500 mt-1">Pendent d'implementar</p>
-                </Card>
+                <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow opacity-80">
+                    <h3 className="text-lg font-medium text-gray-800">Sol·licituds</h3>
+                    <p className="text-4xl font-black text-gray-300 mt-2">-</p>
+                    <p className="text-sm text-gray-400 mt-1 font-medium">Funció properament</p>
+                </div>
 
                 {/* 3. TARGETA: Resum de l'Usuari */}
-                <Card>
-                    <h3 className="text-lg font-medium text-gray-900">Usuari</h3>
-                    {/* Mostrem el nom i, si no hi ha nom, mostrem l'email com a precaució */}
-                    <p className="text-lg mt-2">{user?.name || user?.email}</p>
-                    {/* username sol ser un codi o nickname */}
-                    <p className="text-sm text-gray-500">{user?.username}</p>
-                </Card>
+                <div className="bg-gray-50 border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                    <h3 className="text-lg font-medium text-gray-800">La teva sessió</h3>
+                    <p className="text-xl font-bold text-gray-900 mt-2 truncate">{user?.name || user?.email}</p>
+                    <p className="text-sm text-gray-500 mt-1 truncate">{user?.username || 'Administrador'}</p>
+                </div>
 
             </div>
         </div>
