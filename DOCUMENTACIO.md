@@ -13,13 +13,14 @@ Aquestes fallides suposen una experiència altament traumàtica per a l'animal i
 **El nostre objectiu absolut no és substituir el sistema actual ni el criteri dels professionals, sinó reforçar-lo i digitalitzar-lo.** Volem oferir a les entitats una base de dades sòlida per complementar la decisió final.
 
 ## 3. La Solució central: El motor de compatibilitat
-La base del projecte s'allunya del clàssic impuls visual purament estètic en pro d'una decisió conscient i estructurada. 
+La base del projecte s'allunya del clàssic impuls visual purament estètic en pro d'una decisió conscient i estructurada.
 
-MatchCota no és un simple catàleg d'animals, funciona a través d'un **model de compatibilitat vectorial**. Funciona així:
-- Mitjançant un qüestionari proactiu, es recull tota la informació rellevant de l'habitabilitat de l'adoptant i de cada animal de la protectora.
-- Aquestes característiques es converteixen en un vector numèric per a perfilar ambdós casos de forma estructurada.
-- El sistema calcula matemàticament (similitud del cosinus) la proximitat o l'ajust entre el perfil de l'usuari i cada animal. 
-- Com a resultat final, es genera un rànquing exclusiu on es recomanen els candidats adequats al seu estil de vida amb una reflexió explicant per què és un bon *match*.
+MatchCota no és un simple catàleg d'animals, funciona a través d'un **model de compatibilitat vectorial**. Sense Machine Learning, sense LLM, sense OCR — purament matemàtic. Funciona així:
+- Mitjançant un qüestionari de 10 preguntes, es recull la informació rellevant de l'estil de vida de l'adoptant.
+- Les respostes es converteixen en un vector numèric de 7 dimensions que corresponen a les mateixes 7 característiques de matching que la protectora defineix per cada animal (nivell d'energia, sociabilitat, necessitat d'atenció, bo amb nens, bo amb gossos, bo amb gats, experiència necessària).
+- El sistema calcula matemàticament (similitud del cosinus) la proximitat entre el vector de l'adoptant i el de cada animal.
+- Preferències de mida i edat s'apliquen com a filtres previs, no com a dimensions vectorials.
+- Com a resultat final, es genera un rànquing ordenat dels animals més compatibles amb l'estil de vida de l'adoptant.
 
 ## 4. Arquitectura Multi-Tenant i Rols Aïllats
 MatchCota no ha estat pensada per resoldre l'operativa d'un sol refugi. Es construeix com una plataforma SaaS escalable:
