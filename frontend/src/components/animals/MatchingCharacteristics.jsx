@@ -8,6 +8,7 @@ const CHARACTERISTICS = [
     { name: 'good_with_dogs', label: 'Bo amb gossos', description: '0 = No recomanat, 10 = Excellent' },
     { name: 'good_with_cats', label: 'Bo amb gats', description: '0 = No recomanat, 10 = Excellent' },
     { name: 'experience_required', label: 'Experiencia necessaria', description: '0 = Cap, 10 = Molta experiencia' },
+    { name: 'maintenance_level', label: 'Nivell de manteniment', description: '0 = Baix (rutines simples), 10 = Alt (cures especials)' },
 ];
 
 export default function MatchingCharacteristics({ values, onChange }) {

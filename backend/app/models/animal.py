@@ -42,11 +42,12 @@ class Animal(Base):
     photo_urls = Column(ARRAY(String)) # foto_url (TEXT[])
 
     # Calculated matching features (cached or computed)
-    # bo-nens, bo-gossos, bo-gats, exp-necessària
+    # bo-nens, bo-gossos, bo-gats, exp-necessària, manteniment
     good_with_children = Column(Numeric(3, 1)) # bo-nens
     good_with_dogs = Column(Numeric(3, 1)) # bo-gossos
     good_with_cats = Column(Numeric(3, 1)) # bo-gats
     experience_required = Column(Numeric(3, 1)) # exp-necessària (linked to others)
+    maintenance_level = Column(Numeric(3, 1)) # nivell de manteniment (dietes, cures, revisions)
 
     # Dates
     created_at = Column(DateTime, default=datetime.utcnow)
