@@ -4,32 +4,33 @@ import { Link } from 'react-router-dom';
 
 // --- ICONS & ASSETS (Animacions) ---
 // Aquest és un sub-component molt petit utilitzat just aquí mateix per mostrar l'animació final de victòria.
-const PawConfetti = () => {
-    // Generate some random positions for the confetti (100 potes de gos caient de la pantalla!)
-    const paws = Array.from({ length: 50 }).map((_, i) => ({
+const NormalConfetti = () => {
+    // Generate some random positions for the confetti (100 peces de confeti caient)
+    const pieces = Array.from({ length: 80 }).map((_, i) => ({
         id: i,
         left: Math.random() * 100 + '%',
         animationDuration: 2 + Math.random() * 3 + 's',
         animationDelay: Math.random() * 2 + 's',
-        color: ['#A5B4FC', '#FCD34D', '#FCA5A5', '#6EE7B7'][Math.floor(Math.random() * 4)] // Soft pastel colors
+        color: ['#A5B4FC', '#FCD34D', '#FCA5A5', '#6EE7B7', '#D8B4FE', '#93C5FD'][Math.floor(Math.random() * 6)],
+        isCircle: i % 2 === 0
     }));
 
     return (
         <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
-            {paws.map((paw) => (
+            {pieces.map((piece) => (
                 <div
-                    key={paw.id}
+                    key={piece.id}
                     className="absolute top-[-50px] animate-fall"
                     style={{
-                        left: paw.left,
-                        animationDuration: paw.animationDuration,
-                        animationDelay: paw.animationDelay,
-                        color: paw.color
+                        left: piece.left,
+                        animationDuration: piece.animationDuration,
+                        animationDelay: piece.animationDelay,
                     }}
                 >
-                    <svg className="w-6 h-6 transform rotate-12 opacity-80" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 21.056c-3.14-1.298-5.32-3.116-6.613-5.334-1.47-2.52-1.396-5.465.176-7.382 1.34-1.63 3.615-1.604 5.253-1.02a4.4 4.4 0 011.184.6 4.39 4.39 0 011.185-.6c1.637-.584 3.913-.61 5.252 1.02 1.572 1.917 1.646 4.86.177 7.38-1.294 2.219-3.473 4.037-6.614 5.336zM3.46 8.52c-1.642 0-2.96-1.53-2.96-3.414 0-1.884 1.318-3.415 2.96-3.415 1.643 0 2.961 1.53 2.961 3.415 0 1.884-1.318 3.414-2.96 3.414zm4.61-4.733c-1.336 0-2.42-1.392-2.42-3.107S6.734.023 8.07.023c1.337 0 2.42 1.392 2.42 3.107s-1.083 3.107-2.42 3.107zm7.86 0c-1.337 0-2.42-1.392-2.42-3.107S14.594.023 15.93.023c1.336 0 2.42 1.392 2.42 3.107s-1.084 3.107-2.42 3.107zm4.61 4.733c-1.642 0-2.96-1.53-2.96-3.414 0-1.884 1.318-3.415 2.96-3.415 1.643 0 2.961 1.53 2.961 3.415 0 1.884-1.318 3.414-2.96 3.414z" />
-                    </svg>
+                    <div 
+                        className={`opacity-80 shadow-sm ${piece.isCircle ? 'rounded-full w-3 h-3' : 'rounded-sm w-3 h-4'} transform rotate-${Math.floor(Math.random() * 45)}`} 
+                        style={{ backgroundColor: piece.color }}
+                    ></div>
                 </div>
             ))}
             {/* Injectem estils per animar la pluja de confetti */}
@@ -37,7 +38,7 @@ const PawConfetti = () => {
                 @keyframes fall {
                     0% { transform: translateY(-50px) rotate(0deg) scale(0.5); opacity: 0; }
                     10% { opacity: 1; }
-                    100% { transform: translateY(100vh) rotate(360deg) scale(1.2); opacity: 0; }
+                    100% { transform: translateY(100vh) rotate(720deg) scale(1.2); opacity: 0; }
                 }
                 .animate-fall {
                     animation-name: fall;
@@ -297,14 +298,13 @@ export default function DemoTest() {
                 {/* --- PANTALLA VICTÒRIA! (RESULTAT MATCH) --- */}
                 {step === 'result' && (
                     <>
-                        {/* Llença l'animació de les potetes volant només aquí */}
-                        {showConfetti && <PawConfetti />}
+                        {/* Llença l'animació de confeti normal volant només aquí */}
+                        {showConfetti && <NormalConfetti />}
 
                         <div className="bg-white rounded-[40px] shadow-2xl overflow-hidden max-w-7xl w-full animate-slide-up mx-auto relative z-10 border-4 border-indigo-100 flex flex-col items-center flex-grow m-4">
 
                             {/* Match Header */}
-                            <div className="w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-8 md:p-12 text-center text-white relative overflow-hidden flex flex-col items-center justify-center">
-                                <div className="absolute top-0 left-0 w-full h-full opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDIwIDIwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMSI+PGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iMiIvPjwvc3ZnPg==')]"></div>
+                            <div className="w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-8 md:p-12 text-center text-white relative flex flex-col items-center justify-center">
                                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold flex items-center gap-3">
                                     ÉS UN MATCH PERFECTE
                                 </h1>
