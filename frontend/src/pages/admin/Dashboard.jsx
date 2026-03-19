@@ -54,7 +54,7 @@ export default function Dashboard() {
 
     return (
         <div className="animate-fade-in space-y-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-6 font-serif">Taulell de Control</h1>
+            <h1 className="text-3xl font-extrabold text-gray-900 mb-6 tracking-tight">Taulell de Control</h1>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 

@@ -161,7 +161,7 @@ export default function AnimalsManager() {
             {/* Cabecera superior amb títol i botó d'afegir */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 font-serif">Animals</h1>
+                    <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Animals</h1>
                     <p className="text-gray-500 mt-1">Gestiona els perfils dels animals en adopció.</p>
                 </div>
                 <Button

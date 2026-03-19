@@ -48,7 +48,7 @@ export default function AnimalEdit() {
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">Editar: {animal?.name}</h1>
+                <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Editar: {animal?.name}</h1>
                 <Button variant="secondary" onClick={() => navigate('/admin/animals')}>
                     Tornar
                 </Button>
