@@ -100,4 +100,4 @@ Per més detalls sobre l'arquitectura i convencions, consulta [CLAUDE.md](CLAUDE
 
 ## Sprint Actual
 
-**Sprint 5 (16/03):** Matching - Qüestionari, algoritme vectorial (7 dimensions), resultats
+**Sprint 1 (19/01):** Setup inicial - Docker, GitHub, estructura projecte

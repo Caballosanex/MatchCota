@@ -387,69 +387,59 @@ POST   /api/v1/admin/upload           # Pujar imatge a S3
 
 ## 8. Algoritme de Matching
 
-### Aproximació: Vectors i similitud del cosinus
+### Aproximació MVP (Ponderació simple)
 
-Sistema purament matemàtic. Sense Machine Learning, sense LLM, sense OCR, sense factors externs no parametritzables. Les condicions mèdiques dels animals NO alteren el càlcul.
+NO fem Machine Learning complex. Fem un algoritme de ponderació basat en similitud del cosinus entre vectors.
 
 ### Flux
 
 ```
-1. Adoptant respon qüestionari (10 preguntes)
-2. Respostes es converteixen en vector numèric (7 dimensions)
-3. Cada animal ja té un vector precalculat (mateixes 7 dimensions, les "Característiques de Matching" de la UI)
-4. Calculem similitud del cosinus entre els dos vectors
+1. Adoptant respon qüestionari (15-20 preguntes)
+2. Respostes es converteixen en vector numèric (16 dimensions)
+3. Cada animal ja té un vector precalculat (mateixes 16 dimensions)
+4. Calculem similitud del cosinus entre vectors
 5. Ordenem per score i retornem top 10
+6. Generem explicació en llenguatge natural
 ```
 
-### Les 7 dimensions del vector
-
-Corresponen exactament als 7 camps de matching que la protectora introdueix per cada animal a la UI (escala 0-10):
+### Característiques del vector (16 dimensions)
 
 ```python
-DIMENSIONS = [
+FEATURES = [
+    "child_friendly",      # Bo amb nens
+    "dog_friendly",        # Bo amb gossos
+    "cat_friendly",        # Bo amb gats
     "energy_level",        # Nivell d'energia
-    "sociability",         # Sociabilitat
-    "attention_needs",     # Necessitat d'atenció
-    "good_with_children",  # Bo amb nens
-    "good_with_dogs",      # Bo amb gossos
-    "good_with_cats",      # Bo amb gats
-    "experience_required", # Experiència necessària
+    "exercise_needs",      # Necessitats exercici
+    "training_difficulty", # Dificultat entrenament
+    "independence",        # Independència
+    "special_needs",       # Necessitats especials
+    "size_small",          # Mida petit
+    "size_medium",         # Mida mitjà
+    "size_large",          # Mida gran
+    "age_puppy",           # Edat cadell
+    "age_young",           # Edat jove
+    "age_adult",           # Edat adult
+    "age_senior",          # Edat senior
+    "prey_drive",          # Instint de caça
 ]
 ```
-
-### Vector de l'animal (ja existeix a la BD)
-
-Cada animal té aquests 7 valors Decimal (0-10) emmagatzemats directament. El vector de l'animal és simplement:
-
-```python
-animal_vector = [animal.energy_level, animal.sociability, animal.attention_needs,
-                 animal.good_with_children, animal.good_with_dogs, animal.good_with_cats,
-                 animal.experience_required]
-```
-
-### Vector de l'adoptant (es construeix a partir del qüestionari)
-
-Les respostes del qüestionari acumulen pesos sobre les 7 dimensions. El resultat és un vector de 7 valors normalitzats a escala 0-10.
 
 ### Fórmula de compatibilitat
 
 ```python
-from numpy import dot
-from numpy.linalg import norm
-
-def calculate_compatibility(adopter_vector, animal_vector):
-    cosine_sim = dot(adopter_vector, animal_vector) / (
-        norm(adopter_vector) * norm(animal_vector)
+def calculate_compatibility(adopter_vector, animal_vector, weights):
+    weighted_adopter = adopter_vector * weights
+    weighted_animal = animal_vector * weights
+    
+    cosine_sim = dot(weighted_adopter, weighted_animal) / (
+        norm(weighted_adopter) * norm(weighted_animal)
     )
-
+    
     # Convertir de [-1, 1] a [0, 100]
     score = (cosine_sim + 1) * 50
     return round(score, 1)
 ```
-
-### Filtratge previ (opcional)
-
-Preferències de mida i edat s'apliquen com a **filtres previs** (no com a dimensions del vector). Primer es filtra per mida/edat si l'adoptant ha indicat preferència, i després es calcula la similitud del cosinus sobre el subconjunt resultant.
 
 ---
 
@@ -658,8 +648,8 @@ VITE_ENVIRONMENT=development
 - ✅ Sistema multi-tenant bàsic (per slug/subdomini)
 - ✅ Autenticació JWT
 - ✅ CRUD complet d'animals amb imatges
-- ✅ Qüestionari de matching (10 preguntes)
-- ✅ Algoritme vectorial de compatibilitat (similitud del cosinus, 7 dimensions)
+- ✅ Qüestionari de matching (15-20 preguntes)
+- ✅ Algoritme de ponderació per compatibilitat
 - ✅ Pàgina de resultats amb top 10
 - ✅ Captura de leads amb email
 - ✅ Dashboard admin bàsic
@@ -668,6 +658,7 @@ VITE_ENVIRONMENT=development
 
 ### EXCLÒS del MVP (v2 futura)
 
+- ❌ Machine Learning avançat (embeddings, neural networks)
 - ❌ Onboarding 100% automàtic de protectores
 - ❌ Sistema de pagaments/subscripcions
 - ❌ App mòbil nativa
@@ -786,13 +777,6 @@ terraform apply
 ---
 
 # DEFINICIÓ DEL QÜESTIONARI
-
-Cada pregunta acumula pesos sobre les 7 dimensions del vector de l'adoptant.
-Les dimensions corresponen als camps de matching dels animals: energy_level, sociability,
-attention_needs, good_with_children, good_with_dogs, good_with_cats, experience_required.
-
-Mida i edat són FILTRES PREVIS (no dimensions del vector).
-
 QUESTIONNAIRE = [
     # === CATEGORIA: HABITATGE ===
     Question(
@@ -801,13 +785,29 @@ QUESTIONNAIRE = [
         text="Quin tipus d'habitatge tens?",
         type=QuestionType.SINGLE_CHOICE,
         options=[
-            QuestionOption(value="apartment_small", label="Pis petit (menys de 60m²)", weights={"energy_level": 2.0}),
-            QuestionOption(value="apartment_large", label="Pis gran (més de 60m²)", weights={"energy_level": 5.0}),
-            QuestionOption(value="house_no_garden", label="Casa sense jardí", weights={"energy_level": 6.0}),
-            QuestionOption(value="house_garden", label="Casa amb jardí", weights={"energy_level": 9.0}),
+            QuestionOption(
+                value="apartment_small",
+                label="Pis petit (menys de 60m²)",
+                weights={"size_preference": -0.8, "energy_level": -0.5}
+            ),
+            QuestionOption(
+                value="apartment_large",
+                label="Pis gran (més de 60m²)",
+                weights={"size_preference": 0.0, "energy_level": 0.0}
+            ),
+            QuestionOption(
+                value="house_no_garden",
+                label="Casa sense jardí",
+                weights={"size_preference": 0.3, "energy_level": 0.2}
+            ),
+            QuestionOption(
+                value="house_garden",
+                label="Casa amb jardí",
+                weights={"size_preference": 0.8, "energy_level": 0.8}
+            ),
         ]
     ),
-
+    
     Question(
         id="outdoor_access",
         category="housing",
@@ -815,10 +815,10 @@ QUESTIONNAIRE = [
         description="Parcs, zones verdes, àrees per passejar",
         type=QuestionType.SINGLE_CHOICE,
         options=[
-            QuestionOption(value="none", label="No, visc en zona molt urbana", weights={"energy_level": 1.0}),
-            QuestionOption(value="limited", label="Sí, però limitats", weights={"energy_level": 4.0}),
-            QuestionOption(value="good", label="Sí, bastants a prop", weights={"energy_level": 7.0}),
-            QuestionOption(value="excellent", label="Sí, molts i amplis", weights={"energy_level": 9.0}),
+            QuestionOption(value="none", label="No, visc en zona molt urbana", weights={"exercise_needs": -0.7}),
+            QuestionOption(value="limited", label="Sí, però limitats", weights={"exercise_needs": -0.2}),
+            QuestionOption(value="good", label="Sí, bastants a prop", weights={"exercise_needs": 0.4}),
+            QuestionOption(value="excellent", label="Sí, molts i amplis", weights={"exercise_needs": 0.8}),
         ]
     ),
 
@@ -827,25 +827,22 @@ QUESTIONNAIRE = [
         id="hours_alone",
         category="time",
         text="Quantes hores al dia estarà sol l'animal?",
-        type=QuestionType.SINGLE_CHOICE,
-        options=[
-            QuestionOption(value="few", label="Menys de 4 hores", weights={"attention_needs": 9.0}),
-            QuestionOption(value="half_day", label="4 - 6 hores", weights={"attention_needs": 6.0}),
-            QuestionOption(value="work_day", label="6 - 8 hores", weights={"attention_needs": 3.0}),
-            QuestionOption(value="long", label="Més de 8 hores", weights={"attention_needs": 1.0}),
-        ]
+        type=QuestionType.SCALE,
+        min_value=0,
+        max_value=12,
+        # Això es processa diferent: a més hores, menys compatible amb animals dependents
     ),
-
+    
     Question(
         id="exercise_time",
         category="time",
         text="Quant de temps pots dedicar a passejar/jugar cada dia?",
         type=QuestionType.SINGLE_CHOICE,
         options=[
-            QuestionOption(value="minimal", label="Menys de 30 minuts", weights={"energy_level": 2.0}),
-            QuestionOption(value="moderate", label="30 min - 1 hora", weights={"energy_level": 5.0}),
-            QuestionOption(value="good", label="1 - 2 hores", weights={"energy_level": 7.0}),
-            QuestionOption(value="high", label="Més de 2 hores", weights={"energy_level": 10.0}),
+            QuestionOption(value="minimal", label="Menys de 30 minuts", weights={"exercise_needs": -0.8, "energy_level": -0.7}),
+            QuestionOption(value="moderate", label="30 min - 1 hora", weights={"exercise_needs": 0.0, "energy_level": 0.0}),
+            QuestionOption(value="good", label="1 - 2 hores", weights={"exercise_needs": 0.5, "energy_level": 0.5}),
+            QuestionOption(value="high", label="Més de 2 hores", weights={"exercise_needs": 0.9, "energy_level": 0.9}),
         ]
     ),
 
@@ -856,22 +853,23 @@ QUESTIONNAIRE = [
         text="Hi ha nens a casa?",
         type=QuestionType.SINGLE_CHOICE,
         options=[
-            QuestionOption(value="none", label="No", weights={"good_with_children": 0.0}),
-            QuestionOption(value="older", label="Sí, majors de 10 anys", weights={"good_with_children": 5.0}),
-            QuestionOption(value="young", label="Sí, entre 5 i 10 anys", weights={"good_with_children": 8.0}),
-            QuestionOption(value="toddler", label="Sí, menors de 5 anys", weights={"good_with_children": 10.0}),
+            QuestionOption(value="none", label="No", weights={"child_friendly": 0.0}),
+            QuestionOption(value="older", label="Sí, majors de 10 anys", weights={"child_friendly": 0.3}),
+            QuestionOption(value="young", label="Sí, entre 5 i 10 anys", weights={"child_friendly": 0.7}),
+            QuestionOption(value="toddler", label="Sí, menors de 5 anys", weights={"child_friendly": 1.0}),
         ]
     ),
-
+    
     Question(
         id="other_pets",
         category="family",
         text="Tens altres animals a casa?",
         type=QuestionType.MULTIPLE_CHOICE,
         options=[
-            QuestionOption(value="none", label="No", weights={"good_with_dogs": 0.0, "good_with_cats": 0.0}),
-            QuestionOption(value="dog", label="Gos/s", weights={"good_with_dogs": 10.0}),
-            QuestionOption(value="cat", label="Gat/s", weights={"good_with_cats": 10.0}),
+            QuestionOption(value="none", label="No", weights={}),
+            QuestionOption(value="dog", label="Gos/s", weights={"dog_friendly": 1.0}),
+            QuestionOption(value="cat", label="Gat/s", weights={"cat_friendly": 1.0}),
+            QuestionOption(value="small", label="Animals petits (conills, hàmsters...)", weights={"prey_drive": -1.0}),
         ]
     ),
 
@@ -882,67 +880,64 @@ QUESTIONNAIRE = [
         text="Quina experiència tens amb animals?",
         type=QuestionType.SINGLE_CHOICE,
         options=[
-            QuestionOption(value="none", label="Cap, seria el meu primer", weights={"experience_required": 1.0}),
-            QuestionOption(value="some", label="He tingut animals però fa temps", weights={"experience_required": 4.0}),
-            QuestionOption(value="current", label="Tinc o he tingut recentment", weights={"experience_required": 7.0}),
-            QuestionOption(value="expert", label="Molta experiència, incloent casos difícils", weights={"experience_required": 10.0}),
+            QuestionOption(value="none", label="Cap, seria el meu primer", weights={"training_difficulty": -0.8, "special_needs": -0.7}),
+            QuestionOption(value="some", label="He tingut animals però fa temps", weights={"training_difficulty": -0.3, "special_needs": -0.3}),
+            QuestionOption(value="current", label="Tinc o he tingut recentment", weights={"training_difficulty": 0.3, "special_needs": 0.2}),
+            QuestionOption(value="expert", label="Molta experiència, incloent casos difícils", weights={"training_difficulty": 0.9, "special_needs": 0.9}),
         ]
     ),
 
     # === CATEGORIA: PREFERÈNCIES ===
+    Question(
+        id="size_preference",
+        category="preferences",
+        text="Quina mida d'animal prefereixes?",
+        type=QuestionType.MULTIPLE_CHOICE,
+        options=[
+            QuestionOption(value="small", label="Petit (menys de 10kg)", weights={"size_small": 1.0}),
+            QuestionOption(value="medium", label="Mitjà (10-25kg)", weights={"size_medium": 1.0}),
+            QuestionOption(value="large", label="Gran (més de 25kg)", weights={"size_large": 1.0}),
+            QuestionOption(value="no_preference", label="M'és igual", weights={"size_small": 0.5, "size_medium": 0.5, "size_large": 0.5}),
+        ]
+    ),
+    
+    Question(
+        id="age_preference",
+        category="preferences",
+        text="Quina edat prefereixes?",
+        type=QuestionType.MULTIPLE_CHOICE,
+        options=[
+            QuestionOption(value="puppy", label="Cadell (menys d'1 any)", weights={"age_puppy": 1.0}),
+            QuestionOption(value="young", label="Jove (1-3 anys)", weights={"age_young": 1.0}),
+            QuestionOption(value="adult", label="Adult (3-8 anys)", weights={"age_adult": 1.0}),
+            QuestionOption(value="senior", label="Senior (més de 8 anys)", weights={"age_senior": 1.0}),
+            QuestionOption(value="no_preference", label="M'és igual", weights={"age_puppy": 0.5, "age_young": 0.5, "age_adult": 0.5, "age_senior": 0.5}),
+        ]
+    ),
+    
     Question(
         id="energy_preference",
         category="preferences",
         text="Quin nivell d'energia busques?",
         type=QuestionType.SINGLE_CHOICE,
         options=[
-            QuestionOption(value="calm", label="Tranquil, per fer companyia", weights={"energy_level": 2.0}),
-            QuestionOption(value="moderate", label="Moderat, equilibrat", weights={"energy_level": 5.0}),
-            QuestionOption(value="active", label="Actiu, per fer activitats", weights={"energy_level": 7.0}),
-            QuestionOption(value="very_active", label="Molt actiu, esportista", weights={"energy_level": 10.0}),
+            QuestionOption(value="calm", label="Tranquil, per fer companyia", weights={"energy_level": -0.8}),
+            QuestionOption(value="moderate", label="Moderat, equilibrat", weights={"energy_level": 0.0}),
+            QuestionOption(value="active", label="Actiu, per fer activitats", weights={"energy_level": 0.6}),
+            QuestionOption(value="very_active", label="Molt actiu, esportista", weights={"energy_level": 1.0}),
         ]
     ),
-
+    
     Question(
-        id="sociability_preference",
+        id="special_needs_ok",
         category="preferences",
-        text="Quin caràcter prefereixes?",
+        text="Estaries obert a adoptar un animal amb necessitats especials?",
+        description="Animals amb discapacitats, malalties cròniques o que necessitin medicació",
         type=QuestionType.SINGLE_CHOICE,
         options=[
-            QuestionOption(value="independent", label="Independent, que vagi a la seva", weights={"sociability": 2.0}),
-            QuestionOption(value="balanced", label="Equilibrat", weights={"sociability": 5.0}),
-            QuestionOption(value="affectionate", label="Afectuós i sociable", weights={"sociability": 8.0}),
-            QuestionOption(value="very_social", label="Molt sociable, sempre a prop", weights={"sociability": 10.0}),
-        ]
-    ),
-
-    # === FILTRES PREVIS (no afecten el vector, filtren animals abans del càlcul) ===
-    Question(
-        id="size_preference",
-        category="filters",
-        text="Quina mida d'animal prefereixes?",
-        type=QuestionType.MULTIPLE_CHOICE,
-        is_filter=True,  # No contribueix al vector, s'aplica com a filtre
-        options=[
-            QuestionOption(value="small", label="Petit (menys de 10kg)"),
-            QuestionOption(value="medium", label="Mitjà (10-25kg)"),
-            QuestionOption(value="large", label="Gran (més de 25kg)"),
-            QuestionOption(value="no_preference", label="M'és igual"),
-        ]
-    ),
-
-    Question(
-        id="age_preference",
-        category="filters",
-        text="Quina edat prefereixes?",
-        type=QuestionType.MULTIPLE_CHOICE,
-        is_filter=True,  # No contribueix al vector, s'aplica com a filtre
-        options=[
-            QuestionOption(value="puppy", label="Cadell (menys d'1 any)"),
-            QuestionOption(value="young", label="Jove (1-3 anys)"),
-            QuestionOption(value="adult", label="Adult (3-8 anys)"),
-            QuestionOption(value="senior", label="Senior (més de 8 anys)"),
-            QuestionOption(value="no_preference", label="M'és igual"),
+            QuestionOption(value="no", label="Prefereixo que no", weights={"special_needs": -1.0}),
+            QuestionOption(value="mild", label="Depèn, casos lleus sí", weights={"special_needs": 0.0}),
+            QuestionOption(value="yes", label="Sí, estic preparat", weights={"special_needs": 1.0}),
         ]
     ),
 ]
