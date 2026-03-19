@@ -6,6 +6,7 @@ const BARS = [
     { key: 'good_with_dogs', label: 'Bo amb gossos', color: 'bg-orange-500' },
     { key: 'good_with_cats', label: 'Bo amb gats', color: 'bg-pink-500' },
     { key: 'experience_required', label: 'Experiencia req.', color: 'bg-red-500' },
+    { key: 'maintenance_level', label: 'Manteniment', color: 'bg-teal-500' },
 ];
 
 export default function MatchingBars({ animal }) {
