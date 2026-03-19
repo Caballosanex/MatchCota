@@ -23,6 +23,30 @@ export default function AnimalsManager() {
     const api = useApi();
     const navigate = useNavigate();
 
+    // Mapes de traducció
+    const mapSpecies = (s) => {
+        if (!s) return '';
+        if (s.toLowerCase() === 'dog') return 'Gos';
+        if (s.toLowerCase() === 'cat') return 'Gat';
+        if (s.toLowerCase() === 'other') return 'Altre';
+        return s;
+    };
+
+    const mapSize = (s) => {
+        if (!s) return 'Desconeguda';
+        if (s.toLowerCase() === 'small') return 'Petita';
+        if (s.toLowerCase() === 'medium') return 'Mitjana';
+        if (s.toLowerCase() === 'large') return 'Gran';
+        return s; // Per si hi ha valors personalitzats com "Gegant"
+    };
+
+    const mapSex = (s) => {
+        if (!s) return 'No definit';
+        if (s.toLowerCase() === 'male') return 'Mascle';
+        if (s.toLowerCase() === 'female') return 'Femella';
+        return s;
+    };
+
     const toggleExpand = (e, animalId) => {
         if (e.target.closest('button') || e.target.closest('a')) return;
         setExpandedAnimalId(prev => prev === animalId ? null : animalId);
@@ -89,6 +113,7 @@ export default function AnimalsManager() {
     // B. Preparar filtres desplegables (extreure valors únics existents)
     const uniqueSpecies = [...new Set(animals.map(a => a.species).filter(Boolean))].sort();
     const uniqueSexes = [...new Set(animals.map(a => a.sex).filter(Boolean))].sort();
+    const uniqueSizes = [...new Set(animals.map(a => a.size).filter(Boolean))].sort();
 
     // C. PROCESSAR LES DADES (El cor de la nova funcionalitat)
     const filteredAndSortedAnimals = animals
@@ -197,7 +222,7 @@ export default function AnimalsManager() {
                             className="text-sm bg-white border border-gray-200 text-gray-700 py-2 px-3 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all cursor-pointer"
                         >
                             <option value="">Totes les espècies</option>
-                            {uniqueSpecies.map(s => <option key={s} value={s}>{s}</option>)}
+                            {uniqueSpecies.map(s => <option key={s} value={s}>{mapSpecies(s)}</option>)}
                         </select>
 
                         <select
@@ -206,7 +231,7 @@ export default function AnimalsManager() {
                             className="text-sm bg-white border border-gray-200 text-gray-700 py-2 px-3 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all cursor-pointer max-w-[200px] truncate"
                         >
                             <option value="">Tots els sexes</option>
-                            {uniqueSexes.map(s => <option key={s} value={s}>{s === 'male' ? 'Mascle' : s === 'female' ? 'Femella' : s}</option>)}
+                            {uniqueSexes.map(s => <option key={s} value={s}>{mapSex(s)}</option>)}
                         </select>
 
                         <select
@@ -215,9 +240,7 @@ export default function AnimalsManager() {
                             className="text-sm bg-white border border-gray-200 text-gray-700 py-2 px-3 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all cursor-pointer"
                         >
                             <option value="">Totes les mides</option>
-                            <option value="Petit">Petit</option>
-                            <option value="Mitjà">Mitjà</option>
-                            <option value="Gran">Gran</option>
+                            {uniqueSizes.map(s => <option key={s} value={s}>{mapSize(s)}</option>)}
                         </select>
 
                         <select
@@ -307,9 +330,9 @@ export default function AnimalsManager() {
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="flex flex-col gap-1 items-start">
                                                         <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 border border-blue-100 text-blue-700 w-fit">
-                                                            {animal.species} • {animal.size || 'Mida desconeguda'}
+                                                            {mapSpecies(animal.species)} • {mapSize(animal.size)}
                                                         </span>
-                                                        <span className="text-xs text-gray-500 ml-1">{animal.sex || 'Sexe no definit'}</span>
+                                                        <span className="text-xs text-gray-500 ml-1">{mapSex(animal.sex)}</span>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
