@@ -1,4 +1,5 @@
 import os
+import re
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -20,14 +21,35 @@ app = FastAPI(
 # Multi-tenant Middleware (inner layer)
 app.add_middleware(TenantMiddleware)
 
-# CORS - permetre requests des del frontend (outer layer)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.get_cors_origins(),
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+if settings.is_production():
+    # Producció: CORS dinàmic que accepta qualsevol subdomini de matchcota.com
+    # El wildcard "*" no funciona amb allow_credentials=True,
+    # així que validem l'origin dinàmicament amb regex.
+    _allowed_origin_re = re.compile(
+        r"^https://([a-z0-9\-]+\.)?matchcota\.com$"
+    )
+
+    @app.middleware("http")
+    async def dynamic_cors(request, call_next):
+        origin = request.headers.get("origin", "")
+        response = await call_next(request)
+
+        if _allowed_origin_re.match(origin):
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+            response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, X-Tenant-Slug, X-Tenant-ID"
+
+        return response
+else:
+    # Desenvolupament: CORS permissiu per localhost
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.get_cors_origins(),
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 @app.get("/")
 async def root():
