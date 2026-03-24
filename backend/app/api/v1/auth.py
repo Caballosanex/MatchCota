@@ -84,7 +84,12 @@ def get_current_user(
 
     # 2. Validar coincidència de tenant (JWT vs header/subdomini)
     header_tenant_id = getattr(request.state, "tenant_id", None)
-    if header_tenant_id and str(jwt_tenant_id) != str(header_tenant_id):
+    if not header_tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Tenant context missing"
+        )
+    if str(jwt_tenant_id) != str(header_tenant_id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Token no vàlid per aquest tenant"
