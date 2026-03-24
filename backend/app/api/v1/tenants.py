@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Any, List
 
 from app.database import get_db
+from app.config import settings
 from app.models.tenant import Tenant as TenantModel
 from app.schemas.tenant import TenantCreate, Tenant
 from app.core.tenant import get_current_tenant
@@ -20,9 +21,15 @@ def list_tenants(
     """
     Llistar tots els tenants (protectores) registrades.
 
-    [DEV] En producció, aquest endpoint serà privat o limitat.
-    Ara és públic per permetre la landing page de desenvolupament.
+    En producció retorna 403 — cada protectora viu al seu subdomini,
+    no cal llistar-les totes. En dev, obert per la landing page.
     """
+    if settings.is_production():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Endpoint no disponible en producció"
+        )
+
     from app.crud import tenants as crud_tenants
     return crud_tenants.get_tenants(db, skip=skip, limit=limit)
 
