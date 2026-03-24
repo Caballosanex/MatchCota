@@ -76,7 +76,8 @@ export default function Landing() {
      */
     useEffect(() => {
         // A. Comprovació de Salut (Health check) - Li demanem al backend si està actiu (sprint 6/7 info)
-        fetch('/api/v1/health')
+        const apiUrl = import.meta.env.VITE_API_URL || '/api/v1';
+        fetch(`${apiUrl}/health`)
             .then(res => res.json())
             .then(data => setApiStatus(data.status))
             .catch(() => setApiStatus('error')); // Si falla la petició de xarxa, guardem 'error'

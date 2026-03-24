@@ -25,7 +25,8 @@ export default function Home() {
      */
     useEffect(() => {
         // Trucada de xarxa a la ruta /health
-        fetch('/api/v1/health')
+        const apiUrl = import.meta.env.VITE_API_URL || '/api/v1';
+        fetch(`${apiUrl}/health`)
             .then(res => res.json())
             .then(data => setApiStatus(data.status)) // Si respon, guardem l'estatus (ex: 'ok')
             .catch(() => setApiStatus('error'))      // Si cau la petició, guardem 'error'

@@ -60,7 +60,8 @@ export function TenantProvider({ children }) {
 
                 if (subdomain) {
                     // Acabem de detectar que VOLEN veure una protectora. Anem al servidor a validar-la.
-                    const response = await fetch('/api/v1/tenants/current', {
+                    const apiUrl = import.meta.env.VITE_API_URL || '/api/v1';
+                    const response = await fetch(`${apiUrl}/tenants/current`, {
                         headers: {
                             'Content-Type': 'application/json',
                             // Enviem el subdomini detectat a la capçalera especial 'X-Tenant-Slug' perquè l'API darrere ens entengui
