@@ -181,7 +181,7 @@ def validate_settings():
 
     errors = []
 
-    # Producció: verificar secrets
+    # Producció: verificar secrets — SEMPRE crash si falta algo crític
     if settings.is_production():
         if "CHANGE-THIS" in settings.secret_key:
             errors.append("SECRET_KEY no està configurat per producció")
@@ -189,11 +189,17 @@ def validate_settings():
         if "CHANGE-THIS" in settings.jwt_secret_key:
             errors.append("JWT_SECRET_KEY no està configurat per producció")
 
-        if not settings.aws_access_key_id or not settings.aws_secret_access_key:
-            errors.append("AWS credentials no configurades per producció")
+        if not settings.s3_bucket_name or not settings.s3_enabled:
+            errors.append("S3 ha d'estar configurat i habilitat en producció")
 
-        if not settings.s3_bucket_name:
-            errors.append("S3_BUCKET_NAME no configurat per producció")
+        if settings.debug:
+            errors.append("DEBUG ha de ser False en producció")
+
+    # S3 habilitat: verificar credentials (qualsevol entorn)
+    # Nota: en EC2 amb IAM role, les credentials venen automàticament via boto3.
+    # Només validem si s'han configurat explícitament sense IAM role.
+    if settings.s3_enabled and not settings.s3_bucket_name:
+        errors.append("S3_BUCKET_NAME requerit quan S3 està habilitat")
 
     # Base de dades sempre necessària
     if not settings.database_url:
@@ -211,7 +217,7 @@ try:
     validate_settings()
 except ValueError as e:
     if settings.is_production():
-        # En producció, fer crash
+        # En producció, CRASH IMMEDIAT — mai arrencar amb config invàlida
         raise
     else:
         # En desenvolupament, només avisar
