@@ -151,13 +151,22 @@ class Settings(BaseSettings):
         return self.database_url
 
     def get_cors_origins(self) -> list[str]:
-        """Retorna els orígens permesos per CORS."""
+        """
+        Retorna els orígens permesos per CORS.
+
+        En producció, es llegeixen de la variable CORS_ORIGINS al .env.
+        Exemple: CORS_ORIGINS=["https://matchcota.com","https://demo.matchcota.com"]
+
+        IMPORTANT: Els wildcards (https://*.matchcota.com) NO funcionen amb
+        allow_credentials=True. Cal llistar els subdominis explícitament
+        o usar un middleware CORS custom que validi dinàmicament.
+        """
         if self.is_production():
-            # En producció, només dominis específics
-            return [
-                "https://matchcota.com",
-                "https://*.matchcota.com",
-            ]
+            # En producció, usar la llista de cors_origins del .env
+            # Si no s'ha configurat, retornar el domini principal com a mínim
+            if self.cors_origins and "localhost" not in self.cors_origins[0]:
+                return self.cors_origins
+            return ["https://matchcota.com"]
         return self.cors_origins
 
 
