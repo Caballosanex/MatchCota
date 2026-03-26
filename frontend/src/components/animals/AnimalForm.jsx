@@ -14,7 +14,7 @@ const INITIAL_STATE = {
     is_ppp: false,
     energy_level: '', sociability: '', attention_needs: '',
     good_with_children: '', good_with_dogs: '', good_with_cats: '',
-    experience_required: '',
+    experience_required: '', maintenance_level: '',
     photo_urls: [],
 };
 
@@ -33,6 +33,7 @@ function prepareInitialData(data) {
         good_with_dogs: data.good_with_dogs != null ? Number(data.good_with_dogs) : '',
         good_with_cats: data.good_with_cats != null ? Number(data.good_with_cats) : '',
         experience_required: data.experience_required != null ? Number(data.experience_required) : '',
+        maintenance_level: data.maintenance_level != null ? Number(data.maintenance_level) : '',
         photo_urls: data.photo_urls || [],
         is_ppp: data.is_ppp || false,
     };
@@ -114,6 +115,7 @@ export default function AnimalForm({ initialData = null, onSubmit, isLoading = f
             good_with_dogs: toNum(formData.good_with_dogs),
             good_with_cats: toNum(formData.good_with_cats),
             experience_required: toNum(formData.experience_required),
+            maintenance_level: toNum(formData.maintenance_level),
             photo_urls: formData.photo_urls.length > 0 ? formData.photo_urls : null,
         };
         onSubmit(body);

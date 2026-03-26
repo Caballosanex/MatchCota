@@ -31,6 +31,7 @@ class AnimalBase(BaseModel):
     good_with_dogs: Optional[Decimal] = None
     good_with_cats: Optional[Decimal] = None
     experience_required: Optional[Decimal] = None
+    maintenance_level: Optional[Decimal] = None
 
 
 class AnimalCreate(AnimalBase):
@@ -58,6 +59,7 @@ class AnimalUpdate(BaseModel):
     good_with_dogs: Optional[Decimal] = None
     good_with_cats: Optional[Decimal] = None
     experience_required: Optional[Decimal] = None
+    maintenance_level: Optional[Decimal] = None
     photo_urls: Optional[List[str]] = None
 
 
