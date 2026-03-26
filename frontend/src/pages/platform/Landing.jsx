@@ -22,8 +22,24 @@ const ClipboardIcon = () => (
 );
 
 const PawIcon = () => (
-    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M12 21.056c-3.14-1.298-5.32-3.116-6.613-5.334-1.47-2.52-1.396-5.465.176-7.382 1.34-1.63 3.615-1.604 5.253-1.02a4.4 4.4 0 011.184.6 4.39 4.39 0 011.185-.6c1.637-.584 3.913-.61 5.252 1.02 1.572 1.917 1.646 4.86.177 7.38-1.294 2.219-3.473 4.037-6.614 5.336zM3.46 8.52c-1.642 0-2.96-1.53-2.96-3.414 0-1.884 1.318-3.415 2.96-3.415 1.643 0 2.961 1.53 2.961 3.415 0 1.884-1.318 3.414-2.96 3.414zm4.61-4.733c-1.336 0-2.42-1.392-2.42-3.107S6.734.023 8.07.023c1.337 0 2.42 1.392 2.42 3.107s-1.083 3.107-2.42 3.107zm7.86 0c-1.337 0-2.42-1.392-2.42-3.107S14.594.023 15.93.023c1.336 0 2.42 1.392 2.42 3.107s-1.084 3.107-2.42 3.107zm4.61 4.733c-1.642 0-2.96-1.53-2.96-3.414 0-1.884 1.318-3.415 2.96-3.415 1.643 0 2.961 1.53 2.961 3.415 0 1.884-1.318 3.414-2.96 3.414z" />
+    <svg
+        className="w-8 h-8 text-white"
+        viewBox="0 0 100 100"
+        fill="currentColor"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        {/* Dits: Una mica més petits, desplaçats amunt i més oberts per donar espai */}
+        <ellipse cx="20" cy="42" rx="9" ry="14" transform="rotate(-35 20 42)" />
+        <ellipse cx="38" cy="22" rx="10" ry="16" transform="rotate(-12 38 22)" />
+        <ellipse cx="62" cy="22" rx="10" ry="16" transform="rotate(12 62 22)" />
+        <ellipse cx="80" cy="42" rx="9" ry="14" transform="rotate(35 80 42)" />
+
+        {/* Coixinet principal: Desplaçat cap avall (de la Y=48 a la Y=54) perquè respiri */}
+        <path d="M50 54 
+             C26 54 16 70 26 84 
+             C33 93 45 90 50 83 
+             C55 90 67 93 74 84 
+             C84 70 74 54 50 54 Z" />
     </svg>
 );
 
@@ -244,9 +260,9 @@ export default function Landing() {
                                 <PiggyBankIcon />
                             </div>
                             <div>
-                                <h3 className="text-lg font-bold text-gray-900 mb-2">100% gratuït</h3>
+                                <h3 className="text-lg font-bold text-gray-900 mb-2">Sostenible i assequible</h3>
                                 <p className="text-gray-500 text-sm leading-relaxed">
-                                    Per a protectores i associacions sense ànim de lucre. Sense costos ocults ni comissions.
+                                    Sabem que cada cèntim compta. Oferim un model ètic amb un cost de manteniment mínim, dissenyat específicament per a la realitat dels refugis.
                                 </p>
                             </div>
                         </div>
