@@ -58,6 +58,7 @@ Thumbs.db
 *.tfstate
 *.tfstate.*
 *.tfvars
+*.tfplan
 .terraform.lock.hcl
 
 # AWS
@@ -76,3 +77,6 @@ htmlcov/
 .coverage.*
 coverage.xml
 *.cover
+
+# GSD Planning (local-only)
+.planning/
