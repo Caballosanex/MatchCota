@@ -38,7 +38,11 @@
   3. RDS PostgreSQL 15 (db.t3.micro, 20GB, 7-day backups) operational in private subnet
   4. Database `matchcota` and user `matchcota` created with master password stored securely
   5. RDS endpoint accessible from VPC but not from public internet
-**Plans**: TBD
+**Plans**: 3 plans in 2 waves
+  Plans:
+  - [ ] 02-01-PLAN.md — Networking module (VPC, subnets, IGW, security groups) (Wave 1)
+  - [ ] 02-02-PLAN.md — Database module (RDS PostgreSQL 15, subnet group, random password) (Wave 1, parallel)
+  - [ ] 02-03-PLAN.md — Wire modules into prod env + terraform apply + verify (Wave 2)
 
 ### Phase 3: Storage & CDN
 **Goal**: CloudFront distribution serving both frontend (S3) and API (EC2) with HTTPS via ACM wildcard cert
@@ -70,8 +74,8 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. DNS & SSL Foundation | 1/3 | In Progress|  |
-| 2. Core Infrastructure | 0/0 | Not started | - |
+| 1. DNS & SSL Foundation | 3/3 | Complete | 2026-04-07 |
+| 2. Core Infrastructure | 0/3 | Not started | - |
 | 3. Storage & CDN | 0/0 | Not started | - |
 | 4. Compute & Deployment | 0/0 | Not started | - |
 
@@ -95,4 +99,4 @@ All requirements specify t3.micro (EC2) and db.t3.micro (RDS) to stay within $50
 CloudFront terminates ALL SSL (ACM certs are free but non-exportable). EC2 receives plain HTTP from CloudFront (secure because EC2 security group only allows CloudFront IPs).
 
 ---
-*Last updated: 2025-04-07 after roadmap creation*
+*Last updated: 2026-04-07 after Phase 2 planning*
