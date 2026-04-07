@@ -1,4 +1,4 @@
-# MatchCota Production Environment - Phase 1: DNS & SSL
+# MatchCota Production Environment - Phase 1+2: DNS & SSL + Networking & Database
 #
 # Terraform configuration for AWS infrastructure.
 # This file composes modules to build production environment.
@@ -43,4 +43,26 @@ module "ssl" {
 
   # SSL module depends on DNS module outputs
   depends_on = [module.dns]
+}
+
+# Networking Module - VPC, Subnets, Security Groups
+module "networking" {
+  source = "../../modules/networking"
+
+  # Uses module defaults: 10.0.0.0/16 VPC, us-east-1a/1b subnets
+  # Override here if needed; defaults match CONTEXT.md Claude's discretion decisions
+}
+
+# Database Module - RDS PostgreSQL 15
+module "database" {
+  source = "../../modules/database"
+
+  private_subnet_ids    = module.networking.private_subnet_ids
+  rds_security_group_id = module.networking.rds_security_group_id
+
+  db_name     = var.db_name
+  db_username = var.db_username
+
+  # Database depends on networking for subnet group and security group
+  depends_on = [module.networking]
 }

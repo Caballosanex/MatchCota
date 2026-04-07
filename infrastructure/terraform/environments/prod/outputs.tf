@@ -46,3 +46,51 @@ output "next_steps" {
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   EOT
 }
+
+# Phase 2 outputs: Networking
+output "vpc_id" {
+  description = "VPC ID (required by Phase 4 for EC2 placement)"
+  value       = module.networking.vpc_id
+}
+
+output "public_subnet_ids" {
+  description = "Public subnet IDs (required by Phase 4 for EC2 subnet)"
+  value       = module.networking.public_subnet_ids
+}
+
+output "private_subnet_ids" {
+  description = "Private subnet IDs (informational)"
+  value       = module.networking.private_subnet_ids
+}
+
+output "ec2_security_group_id" {
+  description = "EC2 security group ID (required by Phase 3 for CloudFront origin config and Phase 4 for EC2)"
+  value       = module.networking.ec2_security_group_id
+}
+
+# Phase 2 outputs: Database
+output "rds_endpoint" {
+  description = "RDS endpoint (host:port) — used to build DATABASE_URL in Phase 4 backend .env"
+  value       = module.database.rds_endpoint
+}
+
+output "rds_address" {
+  description = "RDS hostname only (without port)"
+  value       = module.database.rds_address
+}
+
+output "db_password" {
+  description = "RDS master password. Retrieve with: terraform output -raw db_password"
+  value       = module.database.db_password
+  sensitive   = true
+}
+
+output "db_name" {
+  description = "PostgreSQL database name"
+  value       = module.database.db_name
+}
+
+output "db_username" {
+  description = "PostgreSQL master username"
+  value       = module.database.db_username
+}

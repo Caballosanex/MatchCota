@@ -6,3 +6,5 @@
 aws_region  = "us-east-1"
 aws_profile = "matchcota"
 domain_name = "matchcota.tech"
+db_name     = "matchcota"
+db_username = "matchcota"

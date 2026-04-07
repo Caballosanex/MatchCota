@@ -14,3 +14,15 @@ variable "domain_name" {
   description = "Domain name for MatchCota (e.g., matchcota.tech)"
   type        = string
 }
+
+variable "db_name" {
+  description = "PostgreSQL database name"
+  type        = string
+  default     = "matchcota"
+}
+
+variable "db_username" {
+  description = "PostgreSQL master username"
+  type        = string
+  default     = "matchcota"
+}
