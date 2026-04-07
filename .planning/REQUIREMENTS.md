@@ -32,11 +32,11 @@ Requirements for AWS production deployment. Each maps to roadmap phases.
 
 ### Database
 
-- [ ] **DB-01**: RDS PostgreSQL 15 instance created (db.t3.micro, 20GB)
-- [ ] **DB-02**: RDS placed in private subnets with RDS security group
-- [ ] **DB-03**: Database name `matchcota` and username `matchcota` configured
-- [ ] **DB-04**: Master password generated and stored securely
-- [ ] **DB-05**: 7-day backup retention enabled
+- [x] **DB-01**: RDS PostgreSQL 15 instance created (db.t3.micro, 20GB)
+- [x] **DB-02**: RDS placed in private subnets with RDS security group
+- [x] **DB-03**: Database name `matchcota` and username `matchcota` configured
+- [x] **DB-04**: Master password generated and stored securely
+- [x] **DB-05**: 7-day backup retention enabled
 
 ### Storage and CDN
 
@@ -166,11 +166,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | NET-04 | Phase 2 | Complete |
 | NET-05 | Phase 2 | Complete |
 | NET-06 | Phase 2 | Complete |
-| DB-01 | Phase 2 | Pending |
-| DB-02 | Phase 2 | Pending |
-| DB-03 | Phase 2 | Pending |
-| DB-04 | Phase 2 | Pending |
-| DB-05 | Phase 2 | Pending |
+| DB-01 | Phase 2 | Complete |
+| DB-02 | Phase 2 | Complete |
+| DB-03 | Phase 2 | Complete |
+| DB-04 | Phase 2 | Complete |
+| DB-05 | Phase 2 | Complete |
 | CDN-01 | Phase 3 | Pending |
 | CDN-02 | Phase 3 | Pending |
 | CDN-03 | Phase 3 | Pending |
