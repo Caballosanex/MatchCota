@@ -23,12 +23,12 @@ Requirements for AWS production deployment. Each maps to roadmap phases.
 
 ### Networking
 
-- [ ] **NET-01**: VPC created with CIDR 10.0.0.0/16
-- [ ] **NET-02**: 2 public subnets created (for EC2)
-- [ ] **NET-03**: 2 private subnets created (for RDS)
-- [ ] **NET-04**: Internet Gateway attached to VPC
-- [ ] **NET-05**: Security group for EC2 (HTTP from CloudFront IPs, SSH from admin IP)
-- [ ] **NET-06**: Security group for RDS (PostgreSQL from EC2 security group only)
+- [x] **NET-01**: VPC created with CIDR 10.0.0.0/16
+- [x] **NET-02**: 2 public subnets created (for EC2)
+- [x] **NET-03**: 2 private subnets created (for RDS)
+- [x] **NET-04**: Internet Gateway attached to VPC
+- [x] **NET-05**: Security group for EC2 (HTTP from CloudFront IPs, SSH from admin IP)
+- [x] **NET-06**: Security group for RDS (PostgreSQL from EC2 security group only)
 
 ### Database
 
@@ -160,12 +160,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DNS-03 | Phase 1 | Complete |
 | DNS-04 | Phase 1 | Complete |
 | DNS-05 | Phase 1 | Complete |
-| NET-01 | Phase 2 | Pending |
-| NET-02 | Phase 2 | Pending |
-| NET-03 | Phase 2 | Pending |
-| NET-04 | Phase 2 | Pending |
-| NET-05 | Phase 2 | Pending |
-| NET-06 | Phase 2 | Pending |
+| NET-01 | Phase 2 | Complete |
+| NET-02 | Phase 2 | Complete |
+| NET-03 | Phase 2 | Complete |
+| NET-04 | Phase 2 | Complete |
+| NET-05 | Phase 2 | Complete |
+| NET-06 | Phase 2 | Complete |
 | DB-01 | Phase 2 | Pending |
 | DB-02 | Phase 2 | Pending |
 | DB-03 | Phase 2 | Pending |
