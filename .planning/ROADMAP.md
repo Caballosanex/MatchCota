@@ -71,16 +71,21 @@
   8. Visitor can access `https://matchcota.tech` landing page and `https://protectora-pilot.matchcota.tech` tenant app
   9. Admin can log in, perform CRUD on animals (including S3 uploads), and matching test completes end-to-end
   10. boto3 Route 53 integration tested - new tenant registration creates A record automatically (DNS propagates in 5-15min)
-**Plans**: TBD (~6h estimated, includes SSL setup, Route 53 automation, frontend build on EC2)
+**Plans**: 5 plans in 5 waves (~3.5h estimated)
+  - [ ] 04-01-PLAN.md — EC2 provisioning + Elastic IP + Route 53 A records (Wave 1, ~30min)
+  - [ ] 04-02-PLAN.md — Let's Encrypt SSL + nginx configuration (Wave 2, ~35min)
+  - [ ] 04-03-PLAN.md — Backend deployment + CORS fix + migrations + systemd (Wave 3, ~45min)
+  - [ ] 04-04-PLAN.md — Frontend build + test data seeding (Wave 4, ~30min)
+  - [ ] 04-05-PLAN.md — E2E verification + boto3 Route 53 integration (Wave 5, ~40min)
 
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. DNS & SSL Foundation | 3/3 | Complete | 2026-04-07 |
-| 2. Core Infrastructure | 3/3 | Complete   | 2026-04-07 |
-| 3. Storage Infrastructure | 0/1 | Revised (CloudFront removed) | - |
-| 4. Compute & Deployment | 0/0 | Not planned yet | - |
+| 2. Core Infrastructure | 3/3 | Complete | 2026-04-07 |
+| 3. Storage Infrastructure | 1/1 | Complete | 2026-04-08 |
+| 4. Compute & Deployment | 0/5 | Planned | - |
 
 ## Notes
 
@@ -105,4 +110,4 @@ All requirements specify t3.micro (EC2) and db.t3.micro (RDS) to stay within $50
 **Reason for Change:** AWS Academy Lab accounts have no CloudFront IAM permissions (`cloudfront:CreateOriginAccessControl` denied). Cannot proceed with original architecture without instructor intervention.
 
 ---
-*Last updated: 2026-04-08 after CloudFront → Let's Encrypt architecture change*
+*Last updated: 2026-04-08 — Phase 4 planning complete (5 plans created)*
