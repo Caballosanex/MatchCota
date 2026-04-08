@@ -7,7 +7,7 @@
 ## Phases
 
 - [ ] **Phase 1: DNS & SSL Foundation** - Route 53 hosted zone, NS delegation, ACM wildcard certificate
-- [ ] **Phase 2: Core Infrastructure** - VPC networking, security groups, RDS PostgreSQL database
+- [x] **Phase 2: Core Infrastructure** - VPC networking, security groups, RDS PostgreSQL database (completed 2026-04-07)
 - [ ] **Phase 3: Storage & CDN** - S3 bucket, CloudFront distribution with dual origins (API + static)
 - [ ] **Phase 4: Compute & Deployment** - EC2 instance, backend/frontend deployment, verification
 
@@ -42,7 +42,7 @@
   Plans:
   - [x] 02-01-PLAN.md — Networking module (VPC, subnets, IGW, security groups) (Wave 1)
   - [x] 02-02-PLAN.md — Database module (RDS PostgreSQL 15, subnet group, random password) (Wave 1, parallel)
-  - [ ] 02-03-PLAN.md — Wire modules into prod env + terraform apply + verify (Wave 2)
+  - [x] 02-03-PLAN.md — Wire modules into prod env + terraform apply + verify (Wave 2)
 
 ### Phase 3: Storage & CDN
 **Goal**: CloudFront distribution serving both frontend (S3) and API (EC2) with HTTPS via ACM wildcard cert
@@ -75,7 +75,7 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. DNS & SSL Foundation | 3/3 | Complete | 2026-04-07 |
-| 2. Core Infrastructure | 2/3 | In Progress|  |
+| 2. Core Infrastructure | 3/3 | Complete   | 2026-04-07 |
 | 3. Storage & CDN | 0/0 | Not started | - |
 | 4. Compute & Deployment | 0/0 | Not started | - |
 
