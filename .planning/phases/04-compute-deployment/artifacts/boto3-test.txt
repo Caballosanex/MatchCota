@@ -1,0 +1,85 @@
+=== boto3 Route 53 Integration Test ===
+Date: Wed Apr  8 17:31:08 CEST 2026
+
+=== Direct boto3 test on EC2 (using IAM instance profile) ===
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+   ,     #_
+   ~\_  ####_        Amazon Linux 2023
+  ~~  \_#####\
+  ~~     \###|
+  ~~       \#/ ___   https://aws.amazon.com/linux/amazon-linux-2023
+   ~~       V~' '->
+    ~~~         /
+      ~~._.   _/
+         _/ _/
+       _/m/'
+--- Testing create_tenant_dns_record ---
+Create result: {
+  "success": false,
+  "error": "ELASTIC_IP not configured",
+  "record": null
+}
+boto3 test failed - ELASTIC_IP or AWS credentials issue
+Error: ELASTIC_IP not configured
+
+=== Re-test with ELASTIC_IP set ===
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+   ,     #_
+   ~\_  ####_        Amazon Linux 2023
+  ~~  \_#####\
+  ~~     \###|
+  ~~       \#/ ___   https://aws.amazon.com/linux/amazon-linux-2023
+   ~~       V~' '->
+    ~~~         /
+      ~~._.   _/
+         _/ _/
+       _/m/'
+-bash: line 4: /opt/matchcota/backend/.env: Permission denied
+ELASTIC_IP: 32.194.157.15
+
+--- Testing create_tenant_dns_record ---
+Create result: {
+  "success": true,
+  "error": null,
+  "record": {
+    "fqdn": "boto3-direct-test.matchcota.tech",
+    "ip": "32.194.157.15",
+    "change_id": "/change/C052948628R3IC0W5857B",
+    "status": "PENDING"
+  }
+}
+
+--- Testing check_dns_propagation ---
+Check result: {
+  "exists": true,
+  "record": {
+    "Name": "boto3-direct-test.matchcota.tech.",
+    "Type": "A",
+    "TTL": 300,
+    "ResourceRecords": [
+      {
+        "Value": "32.194.157.15"
+      }
+    ]
+  }
+}
+
+--- Cleanup: delete test record ---
+Delete result: {
+  "success": true,
+  "error": null,
+  "record": {
+    "fqdn": "boto3-direct-test.matchcota.tech",
+    "action": "deleted"
+  }
+}
+
+=== boto3 Route53 integration: PASS ===
+
+=== TEST COMPLETE ===
