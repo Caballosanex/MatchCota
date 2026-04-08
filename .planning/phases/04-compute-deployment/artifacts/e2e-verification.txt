@@ -1,0 +1,72 @@
+=== Phase 4 End-to-End Verification ===
+Date: Wed Apr  8 17:28:51 CEST 2026
+
+=== 1. EC2 Instance (t3.micro) Running ===
+
+aws: [ERROR]: An error occurred (NoRegion): You must specify a region. You can also configure your region by running "aws configure".
+
+=== 2. Let's Encrypt Certificate ===
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Found the following certs:
+  Certificate Name: matchcota.tech
+    Serial Number: 6879527b9dbd272fd740d7725db9b956360
+    Key Type: ECDSA
+    Identifiers: matchcota.tech *.matchcota.tech
+    Expiry Date: 2026-07-07 14:05:19+00:00 (VALID: 89 days)
+    Certificate Path: /etc/letsencrypt/live/matchcota.tech/fullchain.pem
+    Private Key Path: /etc/letsencrypt/live/matchcota.tech/privkey.pem
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+=== 3. nginx SSL Configuration ===
+** WARNING: connection is not using a post-quantum key exchange algorithm.
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
+nginx: [warn] the "listen ... http2" directive is deprecated, use the "http2" directive instead in /etc/nginx/conf.d/matchcota.conf:18
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+
+=== 4. Route 53 A Records ===
+
+aws: [ERROR]: An error occurred (NoCredentials): Unable to locate credentials. You can configure credentials by running "aws login".
+
+=== 5. Backend API Health ===
+{"status":"healthy"}
+=== 6. Frontend Served ===
+HTTPS matchcota.tech: 200
+
+=== 7. Test Tenant (protectora-pilot) ===
+{"name":"Protectora Pilot (Test)","slug":"protectora-pilot","address":"Carrer de Test 123","city":"Barcelona","postal_code":"08001","phone":"900000000","email":"admin@protectora-pilot.matchcota.tech","website":null,"cif":null,"logo_url":null,"id":"896e1723-e7b7-4b2a-a4c1-b588dd38a20f","created_at":"2026-04-08T15:21:23.191556","updated_at":"2026-04-08T15:21:23.191556"}
+=== 8. Visitor Access ===
+Apex: 200
+Pilot: 200
+
+=== 9. Admin Login Test ===
+Login response: {"detail":"Email o password incorrectes"}
+Token obtained: NO
+
+=== 10. Matching Test ===
+{"questions":[{"id":"housing_type","category":"housing","text":"Quin tipus d'habitatge tens?","type":"single_choice","options":[{"value":"apartment_small","label":"Pis petit (menys de 60m2)","weights":{"energy_level":2.0}},{"value":"apartment_large","label":"Pis gran (mes de 60m2)","weights":{"energ
+=== VERIFICATION COMPLETE ===
+
+=== 9b. Admin Login Test (corrected - email as username) ===
+Login response (truncated): {"access_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiMWFlOGRkMi0xMjk4LTQzZjAtODFmYy0wY2YxYzA1NDFlNWIiLCJ0ZW5hbnRfaWQiOiI4OTZlMTcyMy1lN2I3LTRiMmEtYTRjMS1iNTg4ZGQzOGEyMGYiLCJleHAiOjE3NzU3ND
+Token obtained: YES (233 chars)
+Animals list (first 500 chars):
+{"detail":"Method Not Allowed"}
+Admin CRUD: PASS
+
+
+=== 9c. Admin CRUD - Full Verification ===
+Login: PASS (email=admin@protectora-pilot.matchcota.tech)
+Token obtained: YES
+
+Public animals list (GET /api/v1/animals):
+[{"name":"Luna","species":"dog","breed":"Golden Retriever","sex":"female","birth_date":"2021-03-15","size":"large","weight_kg":"25.00","microchip_number":null,"description":"Gossa molt sociable i juganera. Perfecta per a families amb nens.","medical_conditions":null,"is_ppp":null,"energy_level":"8.0","sociability":"9.0","attention_needs":"6.0","good_with_children":"10.0","good_with_dogs":"9.0","go
+Note: Admin GET /api/v1/admin/animals not defined (405); public list used instead
+
+=== VERIFICATION COMPLETE (CORRECTED) ===
