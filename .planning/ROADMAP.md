@@ -54,7 +54,7 @@
   3. Bucket policy allows EC2 instance profile to PutObject
   4. S3 bucket ARN and name captured for Phase 4 backend configuration
 **Plans**: 1 plan in single wave
-  - [ ] 03-01-PLAN.md — S3 bucket + IAM instance profile (~30min, simplified from original CloudFront plan)
+  - [x] 03-01-PLAN.md — S3 bucket + IAM instance profile (~30min, simplified from original CloudFront plan)
 
 ### Phase 4: Compute & Deployment
 **Goal**: Production environment fully operational with Let's Encrypt SSL - visitors can access `https://matchcota.tech` and test tenant can manage animals

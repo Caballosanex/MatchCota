@@ -40,9 +40,9 @@ Requirements for AWS production deployment. Each maps to roadmap phases.
 
 ### Storage
 
-- [ ] **STG-01**: S3 bucket created for image uploads
-- [ ] **STG-02**: S3 bucket configured with block public access + IAM instance profile policy
-- [ ] **STG-03**: IAM instance profile allows EC2 to write uploads to S3 bucket
+- [x] **STG-01**: S3 bucket created for image uploads
+- [x] **STG-02**: S3 bucket configured with block public access + IAM instance profile policy
+- [x] **STG-03**: IAM instance profile allows EC2 to write uploads to S3 bucket
 
 ### SSL and DNS (Let's Encrypt)
 
