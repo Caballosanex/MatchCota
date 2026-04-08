@@ -38,17 +38,25 @@ Requirements for AWS production deployment. Each maps to roadmap phases.
 - [x] **DB-04**: Master password generated and stored securely
 - [x] **DB-05**: 7-day backup retention enabled
 
-### Storage and CDN
+### Storage
 
-- [ ] **CDN-01**: S3 bucket created for frontend and uploads
-- [ ] **CDN-02**: S3 bucket configured with block public access + OAC policy
-- [ ] **CDN-03**: CloudFront distribution created with ACM certificate
-- [ ] **CDN-04**: CloudFront origin 1 configured (S3 bucket with OAC)
-- [ ] **CDN-05**: CloudFront origin 2 configured (EC2 Elastic IP, HTTP port 80)
-- [ ] **CDN-06**: CloudFront behavior `/api/*` routes to EC2 origin
-- [ ] **CDN-07**: CloudFront default behavior `/*` routes to S3 origin
-- [ ] **CDN-08**: CloudFront alternate domains `matchcota.tech` and `*.matchcota.tech` configured
-- [ ] **CDN-09**: Route 53 ALIAS records point to CloudFront distribution
+- [ ] **STG-01**: S3 bucket created for image uploads
+- [ ] **STG-02**: S3 bucket configured with block public access + IAM instance profile policy
+- [ ] **STG-03**: IAM instance profile allows EC2 to write uploads to S3 bucket
+
+### SSL and DNS (Let's Encrypt)
+
+- [ ] **SSL-01**: certbot installed with Route 53 DNS plugin on EC2
+- [ ] **SSL-02**: Let's Encrypt certificate issued for `matchcota.tech` (apex domain)
+- [ ] **SSL-03**: Certificate auto-renewal cron job configured (runs every 60 days)
+- [ ] **SSL-04**: nginx SSL configuration tested (HTTPS handshake succeeds on port 443)
+- [ ] **DNS-06**: Route 53 A record created for apex domain (`matchcota.tech` → Elastic IP)
+- [ ] **DNS-07**: Route 53 A record created for pilot tenant (`protectora-pilot.matchcota.tech` → Elastic IP)
+- [ ] **DNS-08**: boto3 Route 53 integration in backend for automated tenant subdomain creation
+
+### CloudFront (REMOVED - AWS Academy IAM Restriction)
+
+~~CloudFront requirements CDN-03 through CDN-09 removed due to AWS Academy Lab account blocking all CloudFront IAM permissions. Replaced with Let's Encrypt SSL on EC2.~~
 
 ### Compute
 
@@ -60,7 +68,7 @@ Requirements for AWS production deployment. Each maps to roadmap phases.
 
 ### Backend Deployment
 
-- [ ] **BE-01**: Python 3.11, pip, nginx, git installed on EC2
+- [ ] **BE-01**: Python 3.11, Node.js 20, pip, nginx, git, certbot installed on EC2
 - [ ] **BE-02**: System user `matchcota` created on EC2
 - [ ] **BE-03**: App directory `/opt/matchcota` created with correct ownership
 - [ ] **BE-04**: Python venv created at `/opt/matchcota/venv`
@@ -68,16 +76,16 @@ Requirements for AWS production deployment. Each maps to roadmap phases.
 - [ ] **BE-06**: Backend dependencies installed in venv
 - [ ] **BE-07**: Production .env file created with RDS endpoint, S3 config, secrets
 - [ ] **BE-08**: systemd service file installed for uvicorn
-- [ ] **BE-09**: nginx config installed for reverse proxy + subdomain extraction
+- [ ] **BE-09**: nginx config installed for SSL (443), HTTP redirect (80), reverse proxy, static file serving, subdomain extraction
 - [ ] **BE-10**: Alembic migrations run against RDS (create schema)
 - [ ] **BE-11**: systemd matchcota service started and enabled
 - [ ] **BE-12**: nginx service started and enabled
 
 ### Frontend Deployment
 
-- [ ] **FE-01**: Frontend built with production VITE_API_URL
-- [ ] **FE-02**: Frontend dist/ synced to S3 bucket
-- [ ] **FE-03**: CloudFront cache invalidated after deployment
+- [ ] **FE-01**: Frontend built on EC2 with production VITE_API_URL
+- [ ] **FE-02**: Frontend dist/ served by nginx from `/opt/matchcota/frontend/dist`
+- [ ] **FE-03**: nginx reloaded to pick up frontend build
 
 ### Data Migration
 
@@ -87,13 +95,13 @@ Requirements for AWS production deployment. Each maps to roadmap phases.
 
 ### Verification
 
-- [ ] **VER-01**: `https://matchcota.tech` loads landing page via CloudFront
-- [ ] **VER-02**: `https://protectora-pilot.matchcota.tech` loads tenant app
+- [ ] **VER-01**: `https://matchcota.tech` loads landing page via nginx
+- [ ] **VER-02**: `https://protectora-pilot.matchcota.tech` loads tenant app via nginx
 - [ ] **VER-03**: Admin login works at tenant subdomain
-- [ ] **VER-04**: Animal CRUD operations work (including S3 image upload)
+- [ ] **VER-04**: Animal CRUD operations work (including S3 image upload via EC2 IAM role)
 - [ ] **VER-05**: Matching test completes end-to-end
 - [ ] **VER-06**: Lead capture creates database record
-- [ ] **VER-07**: New tenant registration creates working subdomain
+- [ ] **VER-07**: New tenant registration creates working subdomain (Route 53 A record via boto3, 5-15min DNS propagation)
 
 ## v2 Requirements
 

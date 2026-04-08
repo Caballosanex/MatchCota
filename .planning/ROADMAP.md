@@ -6,10 +6,10 @@
 
 ## Phases
 
-- [ ] **Phase 1: DNS & SSL Foundation** - Route 53 hosted zone, NS delegation, ACM wildcard certificate
+- [x] **Phase 1: DNS & SSL Foundation** - Route 53 hosted zone, NS delegation, ACM wildcard certificate (completed 2026-04-07)
 - [x] **Phase 2: Core Infrastructure** - VPC networking, security groups, RDS PostgreSQL database (completed 2026-04-07)
-- [ ] **Phase 3: Storage & CDN** - S3 bucket, CloudFront distribution with dual origins (API + static)
-- [ ] **Phase 4: Compute & Deployment** - EC2 instance, backend/frontend deployment, verification
+- [ ] **Phase 3: Storage Infrastructure** - S3 bucket for image uploads with IAM instance profile policy
+- [ ] **Phase 4: Compute & Deployment** - EC2 instance, Let's Encrypt SSL, backend/frontend deployment, Route 53 automation, verification
 
 ## Phase Details
 
@@ -44,31 +44,34 @@
   - [x] 02-02-PLAN.md — Database module (RDS PostgreSQL 15, subnet group, random password) (Wave 1, parallel)
   - [x] 02-03-PLAN.md — Wire modules into prod env + terraform apply + verify (Wave 2)
 
-### Phase 3: Storage & CDN
-**Goal**: CloudFront distribution serving both frontend (S3) and API (EC2) with HTTPS via ACM wildcard cert
-**Depends on**: Phase 1 (ACM certificate validated), Phase 2 (EC2 security group exists for origin config)
-**Requirements**: CDN-01, CDN-02, CDN-03, CDN-04, CDN-05, CDN-06, CDN-07, CDN-08, CDN-09
+### Phase 3: Storage Infrastructure
+**Goal**: S3 bucket for image uploads accessible by EC2 via IAM instance profile
+**Depends on**: Phase 2 (VPC created for IAM instance profile attachment)
+**Requirements**: STG-01, STG-02, STG-03
 **Success Criteria** (what must be TRUE):
-  1. S3 bucket created with block public access enabled and OAC policy for CloudFront
-  2. CloudFront distribution deployed with ACM wildcard certificate attached
-  3. CloudFront behavior `/api/*` routes to EC2 origin (HTTP, port 80) with no caching
-  4. CloudFront default behavior `/*` routes to S3 origin with caching for static assets
-  5. Route 53 ALIAS records point `matchcota.tech` and `*.matchcota.tech` to CloudFront distribution
-**Plans**: TBD
+  1. S3 bucket created with block public access enabled
+  2. IAM instance profile created with S3 write permissions
+  3. Bucket policy allows EC2 instance profile to PutObject
+  4. S3 bucket ARN and name captured for Phase 4 backend configuration
+**Plans**: 1 plan in single wave
+  - [ ] 03-01-PLAN.md — S3 bucket + IAM instance profile (~30min, simplified from original CloudFront plan)
 
 ### Phase 4: Compute & Deployment
-**Goal**: Production environment fully operational - visitors can access `https://matchcota.tech` and test tenant can manage animals
-**Depends on**: Phase 2 (VPC + RDS ready), Phase 3 (CloudFront + S3 ready for origins)
-**Requirements**: EC2-01, EC2-02, EC2-03, EC2-04, EC2-05, BE-01, BE-02, BE-03, BE-04, BE-05, BE-06, BE-07, BE-08, BE-09, BE-10, BE-11, BE-12, FE-01, FE-02, FE-03, DATA-01, DATA-02, DATA-03, VER-01, VER-02, VER-03, VER-04, VER-05, VER-06, VER-07
+**Goal**: Production environment fully operational with Let's Encrypt SSL - visitors can access `https://matchcota.tech` and test tenant can manage animals
+**Depends on**: Phase 2 (VPC + RDS ready), Phase 3 (S3 + IAM instance profile ready)
+**Requirements**: EC2-01, EC2-02, EC2-03, EC2-04, EC2-05, SSL-01, SSL-02, SSL-03, SSL-04, DNS-06, DNS-07, DNS-08, BE-01, BE-02, BE-03, BE-04, BE-05, BE-06, BE-07, BE-08, BE-09, BE-10, BE-11, BE-12, FE-01, FE-02, FE-03, DATA-01, DATA-02, DATA-03, VER-01, VER-02, VER-03, VER-04, VER-05, VER-06, VER-07
 **Success Criteria** (what must be TRUE):
   1. EC2 instance (t3.micro) running with Elastic IP, nginx, uvicorn systemd service operational
-  2. Backend deployed with production .env (RDS endpoint, S3 config, secrets), Alembic migrations completed
-  3. Frontend built and synced to S3 bucket, CloudFront cache invalidated
-  4. Test tenant `protectora-pilot` created with admin user and sample animals data
-  5. Visitor can access `https://matchcota.tech` landing page and `https://protectora-pilot.matchcota.tech` tenant app via CloudFront
-  6. Admin can log in, perform CRUD on animals (including S3 uploads), and matching test completes end-to-end
-  7. New tenant registration creates working subdomain instantly (wildcard DNS + existing API endpoint)
-**Plans**: TBD
+  2. certbot installed with Route 53 DNS plugin, Let's Encrypt cert issued for `matchcota.tech`
+  3. nginx configured with SSL (443) and HTTP redirect (80), serving frontend from local disk
+  4. Route 53 A records created for apex and pilot tenant pointing to Elastic IP
+  5. Backend deployed with production .env (RDS endpoint, S3 config, secrets), Alembic migrations completed
+  6. Frontend built on EC2 and served by nginx from `/opt/matchcota/frontend/dist`
+  7. Test tenant `protectora-pilot` created with admin user and sample animals data
+  8. Visitor can access `https://matchcota.tech` landing page and `https://protectora-pilot.matchcota.tech` tenant app
+  9. Admin can log in, perform CRUD on animals (including S3 uploads), and matching test completes end-to-end
+  10. boto3 Route 53 integration tested - new tenant registration creates A record automatically (DNS propagates in 5-15min)
+**Plans**: TBD (~6h estimated, includes SSL setup, Route 53 automation, frontend build on EC2)
 
 ## Progress
 
@@ -76,27 +79,30 @@
 |-------|----------------|--------|-----------|
 | 1. DNS & SSL Foundation | 3/3 | Complete | 2026-04-07 |
 | 2. Core Infrastructure | 3/3 | Complete   | 2026-04-07 |
-| 3. Storage & CDN | 0/0 | Not started | - |
-| 4. Compute & Deployment | 0/0 | Not started | - |
+| 3. Storage Infrastructure | 0/1 | Revised (CloudFront removed) | - |
+| 4. Compute & Deployment | 0/0 | Not planned yet | - |
 
 ## Notes
 
 ### Critical Path
-Phase 1 is the critical path. ACM certificate validation depends on DNS propagation (15min-48hrs) and blocks CloudFront deployment in Phase 3. **Start DNS/ACM immediately.**
+Phase 1 was the critical path for DNS propagation. **Architecture changed on 2026-04-08:** AWS Academy Lab accounts block CloudFront IAM permissions, switched to Let's Encrypt SSL on EC2 with per-tenant Route 53 A records.
 
 ### Dependency Chain
 ```
-Phase 1 (DNS/ACM) 
-  ├─→ Phase 2 (Network/DB) - Can start in parallel, needs AWS creds
-  ├─→ Phase 3 (Storage/CDN) - BLOCKED until ACM validated
-  └─→ Phase 4 (Compute/Deploy) - Needs Phase 2 (RDS) + Phase 3 (S3/CloudFront)
+Phase 1 (DNS/ACM) ✅ COMPLETE
+  ├─→ Phase 2 (Network/DB) ✅ COMPLETE
+  ├─→ Phase 3 (Storage) - S3 bucket only, no CloudFront
+  └─→ Phase 4 (Compute/Deploy) - Needs Phase 2 (RDS) + Phase 3 (S3)
 ```
 
 ### Budget Compliance
-All requirements specify t3.micro (EC2) and db.t3.micro (RDS) to stay within $50 budget. No multi-AZ, no NAT Gateway, no load balancer.
+All requirements specify t3.micro (EC2) and db.t3.micro (RDS) to stay within $50 budget. No multi-AZ, no NAT Gateway, no load balancer, no CloudFront.
 
-### SSL Architecture
-CloudFront terminates ALL SSL (ACM certs are free but non-exportable). EC2 receives plain HTTP from CloudFront (secure because EC2 security group only allows CloudFront IPs).
+### SSL Architecture (REVISED 2026-04-08)
+**Original:** CloudFront terminates ALL SSL (ACM certs free but non-exportable), EC2 receives plain HTTP
+**Revised:** Let's Encrypt certificates on EC2 with nginx SSL termination, certbot with Route 53 DNS plugin for domain validation, 90-day renewal via cron job, per-tenant A records automated via boto3
+
+**Reason for Change:** AWS Academy Lab accounts have no CloudFront IAM permissions (`cloudfront:CreateOriginAccessControl` denied). Cannot proceed with original architecture without instructor intervention.
 
 ---
-*Last updated: 2026-04-07 after Phase 2 planning*
+*Last updated: 2026-04-08 after CloudFront → Let's Encrypt architecture change*
