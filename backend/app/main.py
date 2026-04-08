@@ -22,11 +22,11 @@ app = FastAPI(
 app.add_middleware(TenantMiddleware)
 
 if settings.is_production():
-    # Producció: CORS dinàmic que accepta qualsevol subdomini de matchcota.com
+    # Producció: CORS dinàmic que accepta qualsevol subdomini de matchcota.tech
     # El wildcard "*" no funciona amb allow_credentials=True,
     # així que validem l'origin dinàmicament amb regex.
     _allowed_origin_re = re.compile(
-        r"^https://([a-z0-9\-]+\.)?matchcota\.com$"
+        r"^https://([a-z0-9\-]+\.)?matchcota\.tech$"
     )
 
     @app.middleware("http")
