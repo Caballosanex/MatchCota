@@ -94,3 +94,29 @@ output "db_username" {
   description = "PostgreSQL master username"
   value       = module.database.db_username
 }
+
+# Phase 3 outputs: Storage & CDN
+output "s3_bucket_name" {
+  description = "S3 bucket name for frontend and uploads"
+  value       = module.storage.bucket_name
+}
+
+output "cloudfront_distribution_id" {
+  description = "CloudFront distribution ID"
+  value       = module.cdn.distribution_id
+}
+
+output "cloudfront_distribution_arn" {
+  description = "CloudFront distribution ARN"
+  value       = module.cdn.distribution_arn
+}
+
+output "cloudfront_domain_name" {
+  description = "CloudFront distribution domain name"
+  value       = module.cdn.distribution_domain_name
+}
+
+output "site_url" {
+  description = "Production site URL"
+  value       = "https://${var.domain_name}"
+}
