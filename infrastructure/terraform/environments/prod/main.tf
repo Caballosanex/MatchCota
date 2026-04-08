@@ -76,3 +76,17 @@ module "storage" {
 
   bucket_name = "matchcota-uploads-${data.aws_caller_identity.current.account_id}"
 }
+
+# Compute Module - EC2 instance with Elastic IP and Route 53 A records
+module "compute" {
+  source = "../../modules/compute"
+
+  subnet_id            = module.networking.public_subnet_ids[0]
+  security_group_id    = module.networking.ec2_security_group_id
+  key_name             = "matchcota"
+  iam_instance_profile = "LabInstanceProfile"
+  zone_id              = module.dns.zone_id
+  domain_name          = "matchcota.tech"
+
+  depends_on = [module.networking, module.storage]
+}

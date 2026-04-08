@@ -110,3 +110,29 @@ output "iam_instance_profile_name" {
   description = "IAM instance profile name (attach to EC2 in Phase 4)"
   value       = module.storage.instance_profile_name
 }
+
+# Phase 4 outputs: Compute
+output "ec2_instance_id" {
+  description = "EC2 instance ID"
+  value       = module.compute.instance_id
+}
+
+output "elastic_ip" {
+  description = "Elastic IP address"
+  value       = module.compute.elastic_ip
+}
+
+output "ec2_private_ip" {
+  description = "EC2 private IP"
+  value       = module.compute.private_ip
+}
+
+output "apex_fqdn" {
+  description = "Apex domain FQDN"
+  value       = module.compute.apex_fqdn
+}
+
+output "pilot_fqdn" {
+  description = "Pilot tenant FQDN"
+  value       = module.compute.pilot_fqdn
+}
