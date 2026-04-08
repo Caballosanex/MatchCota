@@ -35,3 +35,4 @@ This directory contains the production Terraform root for MatchCota in AWS Acade
 Run budget gate before full apply or after estimate refresh:
 
 - `python3 infrastructure/scripts/terraform-budget-check.py --max-usd 50 --input infrastructure/terraform/environments/prod/cost-estimate.sample.json`
+- `python3 infrastructure/scripts/terraform-budget-check.py --max-usd 50 --input <path-to-generated-cost-estimate.json>`

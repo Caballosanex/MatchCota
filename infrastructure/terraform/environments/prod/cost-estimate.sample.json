@@ -1,0 +1,30 @@
+{
+  "currency": "USD",
+  "monthly_total_usd": 47.35,
+  "line_items": [
+    {
+      "name": "ec2_t3_micro_frontend",
+      "monthly_usd": 8.76
+    },
+    {
+      "name": "rds_postgres_t3_micro_single_az",
+      "monthly_usd": 15.24
+    },
+    {
+      "name": "api_gateway_http_api",
+      "monthly_usd": 4.5
+    },
+    {
+      "name": "lambda_backend_requests",
+      "monthly_usd": 6.1
+    },
+    {
+      "name": "s3_storage_and_requests",
+      "monthly_usd": 2.75
+    },
+    {
+      "name": "route53_hosted_zone_and_dns_queries",
+      "monthly_usd": 10.0
+    }
+  ]
+}
