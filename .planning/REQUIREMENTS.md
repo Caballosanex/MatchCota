@@ -83,15 +83,15 @@ Requirements for AWS production deployment. Each maps to roadmap phases.
 
 ### Frontend Deployment
 
-- [ ] **FE-01**: Frontend built on EC2 with production VITE_API_URL
-- [ ] **FE-02**: Frontend dist/ served by nginx from `/opt/matchcota/frontend/dist`
-- [ ] **FE-03**: nginx reloaded to pick up frontend build
+- [x] **FE-01**: Frontend built on EC2 with production VITE_API_URL
+- [x] **FE-02**: Frontend dist/ served by nginx from `/opt/matchcota/frontend/dist`
+- [x] **FE-03**: nginx reloaded to pick up frontend build
 
 ### Data Migration
 
-- [ ] **DATA-01**: Test tenant `protectora-pilot` created in RDS
-- [ ] **DATA-02**: Admin user created for test tenant
-- [ ] **DATA-03**: Sample animals data loaded for testing
+- [x] **DATA-01**: Test tenant `protectora-pilot` created in RDS
+- [x] **DATA-02**: Admin user created for test tenant
+- [x] **DATA-03**: Sample animals data loaded for testing
 
 ### Verification
 
@@ -205,12 +205,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BE-10 | Phase 4 | Pending |
 | BE-11 | Phase 4 | Pending |
 | BE-12 | Phase 4 | Pending |
-| FE-01 | Phase 4 | Pending |
-| FE-02 | Phase 4 | Pending |
-| FE-03 | Phase 4 | Pending |
-| DATA-01 | Phase 4 | Pending |
-| DATA-02 | Phase 4 | Pending |
-| DATA-03 | Phase 4 | Pending |
+| FE-01 | Phase 4 | Complete |
+| FE-02 | Phase 4 | Complete |
+| FE-03 | Phase 4 | Complete |
+| DATA-01 | Phase 4 | Complete |
+| DATA-02 | Phase 4 | Complete |
+| DATA-03 | Phase 4 | Complete |
 | VER-01 | Phase 4 | Pending |
 | VER-02 | Phase 4 | Pending |
 | VER-03 | Phase 4 | Pending |

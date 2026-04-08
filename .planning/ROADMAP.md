@@ -9,7 +9,7 @@
 - [x] **Phase 1: DNS & SSL Foundation** - Route 53 hosted zone, NS delegation, ACM wildcard certificate (completed 2026-04-07)
 - [x] **Phase 2: Core Infrastructure** - VPC networking, security groups, RDS PostgreSQL database (completed 2026-04-07)
 - [ ] **Phase 3: Storage Infrastructure** - S3 bucket for image uploads with IAM instance profile policy
-- [ ] **Phase 4: Compute & Deployment** - EC2 instance, Let's Encrypt SSL, backend/frontend deployment, Route 53 automation, verification
+- [x] **Phase 4: Compute & Deployment** - EC2 instance, Let's Encrypt SSL, backend/frontend deployment, Route 53 automation, verification (completed 2026-04-08)
 
 ## Phase Details
 
@@ -72,10 +72,10 @@
   9. Admin can log in, perform CRUD on animals (including S3 uploads), and matching test completes end-to-end
   10. boto3 Route 53 integration tested - new tenant registration creates A record automatically (DNS propagates in 5-15min)
 **Plans**: 5 plans in 5 waves (~3.5h estimated)
-  - [ ] 04-01-PLAN.md — EC2 provisioning + Elastic IP + Route 53 A records (Wave 1, ~30min)
-  - [ ] 04-02-PLAN.md — Let's Encrypt SSL + nginx configuration (Wave 2, ~35min)
-  - [ ] 04-03-PLAN.md — Backend deployment + CORS fix + migrations + systemd (Wave 3, ~45min)
-  - [ ] 04-04-PLAN.md — Frontend build + test data seeding (Wave 4, ~30min)
+  - [x] 04-01-PLAN.md — EC2 provisioning + Elastic IP + Route 53 A records (Wave 1, ~30min)
+  - [x] 04-02-PLAN.md — Let's Encrypt SSL + nginx configuration (Wave 2, ~35min)
+  - [x] 04-03-PLAN.md — Backend deployment + CORS fix + migrations + systemd (Wave 3, ~45min)
+  - [x] 04-04-PLAN.md — Frontend build + test data seeding (Wave 4, ~30min)
   - [ ] 04-05-PLAN.md — E2E verification + boto3 Route 53 integration (Wave 5, ~40min)
 
 ## Progress
@@ -85,7 +85,7 @@
 | 1. DNS & SSL Foundation | 3/3 | Complete | 2026-04-07 |
 | 2. Core Infrastructure | 3/3 | Complete | 2026-04-07 |
 | 3. Storage Infrastructure | 1/1 | Complete | 2026-04-08 |
-| 4. Compute & Deployment | 0/5 | Planned | - |
+| 4. Compute & Deployment | 5/5 | Complete   | 2026-04-08 |
 
 ## Notes
 
