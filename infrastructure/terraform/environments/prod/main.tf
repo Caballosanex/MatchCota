@@ -70,27 +70,9 @@ module "database" {
 # Data source for account ID (needed for S3 bucket name uniqueness)
 data "aws_caller_identity" "current" {}
 
-# Storage Module - S3 bucket for static assets
+# Storage Module - S3 bucket for image uploads with IAM instance profile
 module "storage" {
   source = "../../modules/storage"
 
-  bucket_name = "matchcota-static-${data.aws_caller_identity.current.account_id}"
-
-  # Circular dependency: bucket policy needs CloudFront ARN
-  # Terraform handles this automatically - bucket policy applies after CloudFront creation
-  cloudfront_distribution_arn = module.cdn.distribution_arn
-}
-
-# CDN Module - CloudFront distribution with dual origins
-module "cdn" {
-  source = "../../modules/cdn"
-
-  domain_name           = var.domain_name
-  acm_certificate_arn   = module.ssl.certificate_arn
-  route53_zone_id       = module.dns.zone_id
-  s3_bucket_domain_name = module.storage.bucket_domain_name
-  s3_oac_id             = module.storage.oac_id
-  ec2_origin_domain     = "127.0.0.1" # Placeholder - will be replaced in Phase 4 with Elastic IP
-
-  depends_on = [module.ssl]
+  bucket_name = "matchcota-uploads-${data.aws_caller_identity.current.account_id}"
 }

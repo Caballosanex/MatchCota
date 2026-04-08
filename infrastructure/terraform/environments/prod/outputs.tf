@@ -95,28 +95,18 @@ output "db_username" {
   value       = module.database.db_username
 }
 
-# Phase 3 outputs: Storage & CDN
+# Phase 3 outputs: Storage & IAM
 output "s3_bucket_name" {
-  description = "S3 bucket name for frontend and uploads"
+  description = "S3 bucket name for image uploads"
   value       = module.storage.bucket_name
 }
 
-output "cloudfront_distribution_id" {
-  description = "CloudFront distribution ID"
-  value       = module.cdn.distribution_id
+output "s3_bucket_arn" {
+  description = "S3 bucket ARN"
+  value       = module.storage.bucket_arn
 }
 
-output "cloudfront_distribution_arn" {
-  description = "CloudFront distribution ARN"
-  value       = module.cdn.distribution_arn
-}
-
-output "cloudfront_domain_name" {
-  description = "CloudFront distribution domain name"
-  value       = module.cdn.distribution_domain_name
-}
-
-output "site_url" {
-  description = "Production site URL"
-  value       = "https://${var.domain_name}"
+output "iam_instance_profile_name" {
+  description = "IAM instance profile name (attach to EC2 in Phase 4)"
+  value       = module.storage.instance_profile_name
 }
