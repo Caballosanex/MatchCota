@@ -1,9 +1,11 @@
 terraform {
   backend "s3" {
-    bucket         = "REPLACE_WITH_STATE_BUCKET"
-    key            = "prod/terraform.tfstate"
-    region         = "us-east-1"
-    dynamodb_table = "REPLACE_WITH_LOCK_TABLE"
+    # Supply via -backend-config at init time (no hardcoded environment names)
+    bucket = ""
+    key    = "prod/terraform.tfstate"
+    region = "us-east-1"
+    # Supply via -backend-config at init time (no hardcoded environment names)
+    dynamodb_table = ""
     encrypt        = true
   }
 }
