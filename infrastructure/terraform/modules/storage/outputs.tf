@@ -16,16 +16,11 @@ output "bucket_domain_name" {
 }
 
 output "instance_profile_name" {
-  description = "IAM instance profile name (attach to EC2 in Phase 4)"
-  value       = aws_iam_instance_profile.ec2.name
-}
-
-output "instance_profile_arn" {
-  description = "IAM instance profile ARN"
-  value       = aws_iam_instance_profile.ec2.arn
+  description = "IAM instance profile name (LabInstanceProfile - pre-provisioned in AWS Lab)"
+  value       = "LabInstanceProfile"
 }
 
 output "iam_role_arn" {
-  description = "IAM role ARN for EC2"
-  value       = aws_iam_role.ec2.arn
+  description = "IAM role ARN for EC2 (LabRole)"
+  value       = data.aws_iam_role.lab.arn
 }
