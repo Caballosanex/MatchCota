@@ -33,3 +33,44 @@ resource "terraform_data" "academy_guardrails" {
     }
   }
 }
+
+resource "aws_route53_zone" "primary" {
+  name = var.base_domain
+}
+
+resource "aws_route53_record" "apex_a" {
+  zone_id = aws_route53_zone.primary.zone_id
+  name    = local.apex_record_name
+  type    = "A"
+  ttl     = local.apex_wildcard_ttl
+  records = [var.frontend_elastic_ip]
+}
+
+resource "aws_route53_record" "wildcard_a" {
+  zone_id = aws_route53_zone.primary.zone_id
+  name    = local.wildcard_record_name
+  type    = "A"
+  ttl     = local.apex_wildcard_ttl
+  records = [var.frontend_elastic_ip]
+}
+
+resource "aws_route53_record" "api_alias_a" {
+  zone_id = aws_route53_zone.primary.zone_id
+  name    = var.api_custom_domain_name
+  type    = "A"
+
+  alias {
+    name                   = var.api_gateway_alias_target_name
+    zone_id                = var.api_gateway_alias_target_zone_id
+    evaluate_target_health = false
+  }
+}
+
+resource "aws_acm_certificate" "api_custom_domain" {
+  domain_name       = var.api_custom_domain_name
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
