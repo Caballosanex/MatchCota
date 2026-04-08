@@ -37,3 +37,30 @@ variable "enabled_services" {
   type        = list(string)
   default     = []
 }
+
+variable "base_domain" {
+  description = "Primary apex domain served by Route53"
+  type        = string
+  default     = "matchcota.tech"
+}
+
+variable "frontend_elastic_ip" {
+  description = "Elastic IP address for apex and wildcard frontend A records"
+  type        = string
+}
+
+variable "api_custom_domain_name" {
+  description = "Custom domain name used by API Gateway"
+  type        = string
+  default     = "api.matchcota.tech"
+}
+
+variable "api_gateway_alias_target_name" {
+  description = "API Gateway custom domain alias DNS name for Route53 alias record"
+  type        = string
+}
+
+variable "api_gateway_alias_target_zone_id" {
+  description = "Route53 hosted zone ID for the API Gateway alias target"
+  type        = string
+}
