@@ -42,7 +42,58 @@ bash infrastructure/scripts/terraform-preflight.sh
    bash infrastructure/scripts/terraform-apply-layer.sh runtime
    ```
 
-5. Save command output logs for each layer and smoke run as execution evidence.
+5. Capture Route53 delegation checkpoint after hosted zone output:
+
+   ```bash
+   terraform -chdir=infrastructure/terraform/environments/prod output route53_hosted_zone_name_servers
+   ```
+
+   - Update DotTech registrar NS records with the exact Route53 values.
+   - While waiting for propagation, record status as `blocked-waiting-for-delegation`.
+   - Resume gate (must pass before continuing):
+
+     ```bash
+     bash infrastructure/scripts/dns-delegation-check.sh \
+       --domain matchcota.tech \
+       --wildcard-sample smoke.matchcota.tech \
+       --api-host api.matchcota.tech \
+       --timeout 900 \
+       --interval 30
+     ```
+
+   - Timeout policy: if the script exits `2`, treat this as propagation wait, keep status `blocked-waiting-for-delegation`, and rerun the same command after registrar update confirmation.
+
+6. Validate TLS readiness after delegation passes:
+
+   ```bash
+   bash infrastructure/scripts/tls-readiness-check.sh \
+     --apex matchcota.tech \
+     --wildcard-sample smoke.matchcota.tech \
+     --api api.matchcota.tech \
+     --timeout 900 \
+     --interval 30
+   ```
+
+   - Timeout policy: if the script exits `2`, continue certificate issuance/attachment steps below, then rerun until PASS.
+
+7. Save command output logs for each layer, smoke run, delegation check, and TLS check as execution evidence.
+
+## Edge TLS issuance (EC2 nginx)
+
+Use Let's Encrypt for `matchcota.tech` and `*.matchcota.tech` at the nginx edge.
+
+1. SSH to the frontend EC2 instance serving nginx.
+2. Install certbot + nginx plugin if not present.
+3. Issue edge certificate:
+
+   ```bash
+   sudo certbot --nginx -d matchcota.tech -d '*.matchcota.tech'
+   ```
+
+4. Reload nginx and verify HTTPS handshake for apex and wildcard sample host.
+5. Confirm API domain certificate remains ACM-managed on API Gateway (`api.matchcota.tech`) per split strategy.
+
+> Milestone note: automated renewal is intentionally out of scope for this phase window; renewals are operator-managed for the current lifecycle.
 
 ## Expired credential recovery
 
@@ -67,6 +118,7 @@ bash infrastructure/scripts/terraform-preflight.sh
    ```
 
 6. Continue remaining layers in order.
+7. If previously paused at delegation checkpoint, rerun `dns-delegation-check.sh` and `tls-readiness-check.sh` before proceeding.
 
 ## Rollback and drift response
 
