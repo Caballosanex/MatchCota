@@ -8,8 +8,11 @@
 
 - [x] **Phase 1: DNS & SSL Foundation** - Route 53 hosted zone, NS delegation, ACM wildcard certificate (completed 2026-04-07)
 - [x] **Phase 2: Core Infrastructure** - VPC networking, security groups, RDS PostgreSQL database (completed 2026-04-07)
-- [ ] **Phase 3: Storage Infrastructure** - S3 bucket for image uploads with IAM instance profile policy
-- [x] **Phase 4: Compute & Deployment** - EC2 instance, Let's Encrypt SSL, backend/frontend deployment, Route 53 automation, verification (completed 2026-04-08)
+- [x] **Phase 3: Storage Infrastructure** - S3 bucket for image uploads with IAM instance profile policy (completed 2026-04-08)
+- [x] **Phase 4: Compute & Deployment** - ⚠️ SUPERSEDED — cloned dev repo to EC2, no Lambda, wrong architecture. EC2 and Route 53 records destroyed. Terraform state stale. See Phases 5-7.
+- [ ] **Phase 5: Code Revision** - Remove all dev content from frontend, adapt backend for Lambda (Mangum), tenant registration creates admin user
+- [ ] **Phase 6: Lambda + API Gateway** - Terraform Lambda function + API Gateway HTTP API at api.matchcota.tech, VPC S3 endpoint
+- [ ] **Phase 7: EC2 Frontend + Verification** - Simplified EC2 (nginx only), Let's Encrypt wildcard, deploy built React app, full E2E verification
 
 ## Phase Details
 
@@ -78,6 +81,53 @@
   - [x] 04-04-PLAN.md — Frontend build + test data seeding (Wave 4, ~30min)
   - [ ] 04-05-PLAN.md — E2E verification + boto3 Route 53 integration (Wave 5, ~40min)
 
+### Phase 5: Code Revision
+**Goal**: Production-ready code committed to repo. All dev content removed from frontend. Backend adapted for Lambda (Mangum handler). Tenant registration creates admin user atomically.
+**Depends on**: Phase 2 (VPC/RDS architecture — Lambda connects to same RDS), Phase 3 (S3 bucket name)
+**Success Criteria** (what must be TRUE):
+  1. `frontend/src/pages/platform/DemoTest.jsx` deleted
+  2. `frontend/src/pages/public/RegisterAnimal.jsx` deleted
+  3. `App.jsx` has no `/demo` or `/register-animal` routes or their imports
+  4. `Landing.jsx` has no DEVICE AREA, no apiStatus, no tenants list, no "Veure demo" button; footer email=info@matchcota.tech, year=2026
+  5. `backend/app/lambda_handler.py` exists: `handler = Mangum(app, lifespan="off")`
+  6. `mangum` in `backend/requirements.txt`
+  7. SQLAlchemy engine uses `NullPool` when `ENVIRONMENT=production`
+  8. `RegisterTenant.jsx` has `password` + `confirm_password` Zod-validated fields
+  9. `create_tenant()` service creates admin `User` record atomically after tenant creation
+  10. CORS allows `https://matchcota.tech` and `https://*.matchcota.tech` in production
+  11. `route53.py` NOT called from tenant registration (wildcard DNS handles subdomains)
+  12. All changes committed and pushed to main
+
+### Phase 6: Lambda + API Gateway
+**Goal**: FastAPI backend accessible at `https://api.matchcota.tech` via API Gateway HTTP API + Lambda in VPC
+**Depends on**: Phase 5 (clean + Lambda-adapted code), Phase 2 (VPC + private subnets + RDS), Phase 3 (S3 + IAM)
+**Success Criteria** (what must be TRUE):
+  1. Terraform `lambda` module created (function, IAM, VPC config, env vars)
+  2. Terraform `api_gateway` module created (HTTP API, Lambda integration, custom domain)
+  3. Lambda deployment package (zip) built from clean backend code + dependencies
+  4. Lambda deployed in VPC private subnet — can reach RDS directly
+  5. S3 VPC Gateway endpoint attached to private route table (free, no NAT needed)
+  6. Lambda IAM uses LabRole with S3 read/write permissions
+  7. API Gateway HTTP API: all routes proxy to Lambda
+  8. Custom domain `api.matchcota.tech` on API Gateway using ACM wildcard cert
+  9. Route 53 A record (or ALIAS): `api.matchcota.tech` → API Gateway endpoint
+  10. `curl https://api.matchcota.tech/api/v1/health` returns `{"status":"healthy"}`
+
+### Phase 7: EC2 Frontend + Verification
+**Goal**: Frontend deployed on EC2, full production environment verified end-to-end with real tenant registration
+**Depends on**: Phase 5 (clean code), Phase 6 (API operational at api.matchcota.tech)
+**Success Criteria** (what must be TRUE):
+  1. EC2 (t3.micro, nginx only — no uvicorn/Python) provisioned via Terraform with Elastic IP
+  2. Let's Encrypt wildcard cert issued for `matchcota.tech` + `*.matchcota.tech`
+  3. Route 53 A records: `matchcota.tech` → EC2 Elastic IP; `*.matchcota.tech` → EC2 Elastic IP (wildcard)
+  4. React app built with `VITE_API_URL=https://api.matchcota.tech` and served from nginx
+  5. `https://matchcota.tech/` loads clean landing — no dev content visible
+  6. `https://matchcota.tech/register-tenant` shows form with password field
+  7. Register new tenant → `{slug}.matchcota.tech` resolves → admin can log in with registration password
+  8. Admin: CRUD on animals with S3 photo upload returning S3 URL
+  9. Matching test completes end-to-end with scored results at `{slug}.matchcota.tech/test`
+  10. `infrastructure/scripts/deploy-backend.sh` and `deploy-frontend.sh` implemented
+
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
@@ -85,29 +135,50 @@
 | 1. DNS & SSL Foundation | 3/3 | Complete | 2026-04-07 |
 | 2. Core Infrastructure | 3/3 | Complete | 2026-04-07 |
 | 3. Storage Infrastructure | 1/1 | Complete | 2026-04-08 |
-| 4. Compute & Deployment | 5/5 | Complete   | 2026-04-08 |
+| 4. Compute & Deployment | —/— | Superseded — wrong approach | 2026-04-08 |
+| 5. Code Revision | 0/? | Not started | — |
+| 6. Lambda + API Gateway | 0/? | Not started | — |
+| 7. EC2 Frontend + Verification | 0/? | Not started | — |
 
 ## Notes
 
-### Critical Path
-Phase 1 was the critical path for DNS propagation. **Architecture changed on 2026-04-08:** AWS Academy Lab accounts block CloudFront IAM permissions, switched to Let's Encrypt SSL on EC2 with per-tenant Route 53 A records.
+### Architecture (FINAL — 2026-04-08)
+
+```
+Route 53:
+  matchcota.tech       → EC2 Elastic IP (A record)
+  *.matchcota.tech     → EC2 Elastic IP (wildcard A record)
+  api.matchcota.tech   → API Gateway (ALIAS/A record)
+
+EC2 (t3.micro):
+  nginx + Let's Encrypt wildcard SSL
+  Serves: built React SPA only (no backend, no Python)
+
+API Gateway (HTTP API):
+  Custom domain: api.matchcota.tech (ACM wildcard cert)
+  → Lambda (FastAPI + Mangum, VPC private subnet)
+       ├── RDS PostgreSQL (private subnet, same VPC)
+       └── S3 (via VPC Gateway endpoint — free)
+```
+
+### Why Phase 4 was superseded
+Phase 4 cloned the dev repository directly to EC2 and ran it without removing dev-only code. The approach had no Lambda, no API Gateway, and deployed a dev-mode application. EC2 and Route 53 records were destroyed after identifying the wrong approach.
+
+### Terraform State Note
+After Phase 4 destruction, `terraform.tfstate` is stale — it still references the destroyed EC2 and Route 53 A records. Phase 6/7 planning must account for state reconciliation (`terraform plan` will detect drift and offer to recreate).
 
 ### Dependency Chain
 ```
 Phase 1 (DNS/ACM) ✅ COMPLETE
-  ├─→ Phase 2 (Network/DB) ✅ COMPLETE
-  ├─→ Phase 3 (Storage) - S3 bucket only, no CloudFront
-  └─→ Phase 4 (Compute/Deploy) - Needs Phase 2 (RDS) + Phase 3 (S3)
+  └─→ Phase 2 (Network/DB) ✅ COMPLETE
+        └─→ Phase 3 (Storage) ✅ COMPLETE
+              ├─→ Phase 5 (Code Revision) — no infra, code only
+              ├─→ Phase 6 (Lambda + API GW) — needs VPC, RDS, S3
+              └─→ Phase 7 (EC2 Frontend) — needs Phase 5 + 6 complete
 ```
 
 ### Budget Compliance
-All requirements specify t3.micro (EC2) and db.t3.micro (RDS) to stay within $50 budget. No multi-AZ, no NAT Gateway, no load balancer, no CloudFront.
-
-### SSL Architecture (REVISED 2026-04-08)
-**Original:** CloudFront terminates ALL SSL (ACM certs free but non-exportable), EC2 receives plain HTTP
-**Revised:** Let's Encrypt certificates on EC2 with nginx SSL termination, certbot with Route 53 DNS plugin for domain validation, 90-day renewal via cron job, per-tenant A records automated via boto3
-
-**Reason for Change:** AWS Academy Lab accounts have no CloudFront IAM permissions (`cloudfront:CreateOriginAccessControl` denied). Cannot proceed with original architecture without instructor intervention.
+t3.micro (EC2) + db.t3.micro (RDS) + Lambda (free tier) + API Gateway HTTP API (~$1/M requests) + S3 VPC endpoint (free). No NAT Gateway, no CloudFront, no load balancer. Estimated: ~$22/month.
 
 ---
-*Last updated: 2026-04-08 — Phase 4 planning complete (5 plans created)*
+*Last updated: 2026-04-08 — Architecture revised: API Gateway + Lambda + EC2 (nginx frontend only)*
