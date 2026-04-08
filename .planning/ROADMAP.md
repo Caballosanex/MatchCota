@@ -97,6 +97,10 @@
   10. CORS allows `https://matchcota.tech` and `https://*.matchcota.tech` in production
   11. `route53.py` NOT called from tenant registration (wildcard DNS handles subdomains)
   12. All changes committed and pushed to main
+**Plans**: 3 plans in 1 wave
+  - [ ] 05-01-PLAN.md — Frontend cleanup: delete DemoTest/RegisterAnimal, clean App.jsx, clean Landing.jsx (Wave 1)
+  - [ ] 05-02-PLAN.md — Backend Lambda adaptation: lambda_handler.py, NullPool, requirements.txt, .env.production (Wave 1)
+  - [ ] 05-03-PLAN.md — Tenant registration: password fields in RegisterTenant.jsx, admin user creation, remove Route53 call (Wave 1)
 
 ### Phase 6: Lambda + API Gateway
 **Goal**: FastAPI backend accessible at `https://api.matchcota.tech` via API Gateway HTTP API + Lambda in VPC
@@ -136,7 +140,7 @@
 | 2. Core Infrastructure | 3/3 | Complete | 2026-04-07 |
 | 3. Storage Infrastructure | 1/1 | Complete | 2026-04-08 |
 | 4. Compute & Deployment | —/— | Superseded — wrong approach | 2026-04-08 |
-| 5. Code Revision | 0/? | Not started | — |
+| 5. Code Revision | 0/3 | Planned | — |
 | 6. Lambda + API Gateway | 0/? | Not started | — |
 | 7. EC2 Frontend + Verification | 0/? | Not started | — |
 
