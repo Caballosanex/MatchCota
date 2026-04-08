@@ -5,6 +5,17 @@ set -euo pipefail
 TF_ENV_DIR="infrastructure/terraform/environments/prod"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PREFLIGHT_SCRIPT="${SCRIPT_DIR}/terraform-preflight.sh"
+DNS_DELEGATION_CHECK_SCRIPT="${SCRIPT_DIR}/dns-delegation-check.sh"
+TLS_READINESS_CHECK_SCRIPT="${SCRIPT_DIR}/tls-readiness-check.sh"
+
+SMOKE_DOMAIN="${SMOKE_DOMAIN:-matchcota.tech}"
+SMOKE_WILDCARD_SAMPLE="${SMOKE_WILDCARD_SAMPLE:-smoke.matchcota.tech}"
+SMOKE_API_HOST="${SMOKE_API_HOST:-api.matchcota.tech}"
+SMOKE_DNS_TIMEOUT="${SMOKE_DNS_TIMEOUT:-900}"
+SMOKE_DNS_INTERVAL="${SMOKE_DNS_INTERVAL:-30}"
+SMOKE_TLS_TIMEOUT="${SMOKE_TLS_TIMEOUT:-900}"
+SMOKE_TLS_INTERVAL="${SMOKE_TLS_INTERVAL:-30}"
+
 SMOKE_TMP_ENV_DIR=""
 
 cleanup() {
@@ -57,7 +68,25 @@ EOF
     -out=tfplan-smoke >/dev/null
   stage "stage=plan pass"
 
-  stage "PASS all smoke checks"
+  stage "stage=dns_delegation start (dns-delegation-check.sh)"
+  bash "${DNS_DELEGATION_CHECK_SCRIPT}" \
+    --domain "${SMOKE_DOMAIN}" \
+    --wildcard-sample "${SMOKE_WILDCARD_SAMPLE}" \
+    --api-host "${SMOKE_API_HOST}" \
+    --timeout "${SMOKE_DNS_TIMEOUT}" \
+    --interval "${SMOKE_DNS_INTERVAL}"
+  stage "stage=dns_delegation pass"
+
+  stage "stage=tls_readiness start (tls-readiness-check.sh)"
+  bash "${TLS_READINESS_CHECK_SCRIPT}" \
+    --apex "${SMOKE_DOMAIN}" \
+    --wildcard-sample "${SMOKE_WILDCARD_SAMPLE}" \
+    --api "${SMOKE_API_HOST}" \
+    --timeout "${SMOKE_TLS_TIMEOUT}" \
+    --interval "${SMOKE_TLS_INTERVAL}"
+  stage "stage=tls_readiness pass"
+
+  stage "stage=complete pass"
 }
 
 main "$@"
