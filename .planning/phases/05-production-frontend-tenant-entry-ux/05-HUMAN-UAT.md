@@ -3,12 +3,12 @@ status: partial
 phase: 05-production-frontend-tenant-entry-ux
 source: [05-VERIFICATION.md]
 started: 2026-04-09T15:56:00Z
-updated: 2026-04-09T17:15:09Z
+updated: 2026-04-09T17:24:36Z
 ---
 
 ## Current Test
 
-[live execution performed; automated backend remediation evidence captured, browser verification pending]
+[live execution rerun after user-reported registration failure; frontend API base path mismatch diagnosed and remediated]
 
 ## Tests
 
@@ -32,10 +32,18 @@ result: [passed] Authoritative DB password sourced from Terraform remote state (
 }
 ```
 
+### 4. Frontend registration endpoint contract (Task 3 checkpoint failure diagnosis)
+expected: RegisterTenant posts to `https://api.matchcota.tech/api/v1/tenants/` in production
+result: [fixed] User-reported failure reproduced from code path analysis: `VITE_API_URL=https://api.matchcota.tech` combined with `createTenant()` using `${API_URL}/tenants/` produced `https://api.matchcota.tech/tenants/` (missing `/api/v1`) and backend returned `Tenant 'api' not found` (404). Remediation applied via shared `getApiBaseUrl()` normalizer and wired into tenant/auth/tenant-context/animals/matching API callers so production origin appends `/api/v1` exactly once.
+
+### 5. Frontend production redeploy after endpoint fix
+expected: New production build serves corrected API route contract without backend runtime coupling
+result: [passed] `infrastructure/scripts/deploy-frontend.sh` deployed via SSM to `i-0f3f9d6ae388f7746`; static-only guard passed; `https://matchcota.tech/register-tenant` returned SPA shell post-deploy.
+
 ## Summary
 
-total: 3
-passed: 2
+total: 5
+passed: 4
 issues: 0
 pending: 1
 skipped: 0
