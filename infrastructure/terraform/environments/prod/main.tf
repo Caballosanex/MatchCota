@@ -54,6 +54,79 @@ resource "aws_route53_record" "wildcard_a" {
   records = [var.frontend_elastic_ip]
 }
 
+resource "aws_vpc" "data_plane" {
+  cidr_block           = var.vpc_cidr
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = merge(local.default_tags, {
+    Name = "matchcota-prod-vpc"
+  })
+}
+
+resource "aws_internet_gateway" "data_plane" {
+  vpc_id = aws_vpc.data_plane.id
+
+  tags = merge(local.default_tags, {
+    Name = "matchcota-prod-igw"
+  })
+}
+
+resource "aws_subnet" "data_plane" {
+  for_each = local.subnet_layout
+
+  vpc_id                  = aws_vpc.data_plane.id
+  cidr_block              = each.value.cidr_block
+  availability_zone       = each.value.az
+  map_public_ip_on_launch = each.value.tier == "public"
+
+  tags = merge(local.default_tags, {
+    Name = "matchcota-prod-${each.key}"
+    Tier = each.value.tier
+  })
+}
+
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.data_plane.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.data_plane.id
+  }
+
+  tags = merge(local.default_tags, {
+    Name = "matchcota-prod-public-rt"
+  })
+}
+
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.data_plane.id
+
+  tags = merge(local.default_tags, {
+    Name = "matchcota-prod-private-rt"
+  })
+}
+
+resource "aws_route_table_association" "public" {
+  for_each = {
+    for subnet_name, subnet in local.subnet_layout : subnet_name => subnet
+    if subnet.tier == "public"
+  }
+
+  subnet_id      = aws_subnet.data_plane[each.key].id
+  route_table_id = aws_route_table.public.id
+}
+
+resource "aws_route_table_association" "private" {
+  for_each = {
+    for subnet_name, subnet in local.subnet_layout : subnet_name => subnet
+    if subnet.tier == "private"
+  }
+
+  subnet_id      = aws_subnet.data_plane[each.key].id
+  route_table_id = aws_route_table.private.id
+}
+
 resource "aws_route53_record" "api_alias_a" {
   zone_id = aws_route53_zone.primary.zone_id
   name    = var.api_custom_domain_name
