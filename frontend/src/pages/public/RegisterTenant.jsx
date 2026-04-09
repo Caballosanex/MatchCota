@@ -32,6 +32,18 @@ export const tenantSchema = z
 
 const normalizeTenantSlug = (value) => value.trim().toLowerCase();
 
+export const buildTenantRootUrl = (tenantSlug) => `https://${tenantSlug}.matchcota.tech/`;
+
+export const buildRedirectFallback = (tenantSlug, registrationEmail) => ({
+  destinationUrl: buildTenantRootUrl(tenantSlug),
+  registrationEmail,
+});
+
+export const buildRedirectMessage = ({ destinationUrl, registrationEmail }) => (
+  `Redirecting you to your tenant root (${destinationUrl}). ` +
+  `From there, you can continue with public setup and sign in later using ${registrationEmail}.`
+);
+
 export const buildTenantPayload = (formData) => {
   const { confirm_password, ...payload } = formData;
   return payload;
@@ -87,16 +99,13 @@ export default function RegisterTenant() {
       });
 
       const tenantSlug = normalizeTenantSlug(createdTenant?.slug || data.slug);
-      const loginUrl = `https://${tenantSlug}.matchcota.tech/login`;
+      const destinationUrl = buildTenantRootUrl(tenantSlug);
       const registrationEmail = createdTenant?.email || data.email;
 
       try {
-        window.location.assign(loginUrl);
+        window.location.assign(destinationUrl);
       } catch {
-        setRedirectFallback({
-          loginUrl,
-          registrationEmail,
-        });
+        setRedirectFallback(buildRedirectFallback(tenantSlug, registrationEmail));
       }
 
       reset();
@@ -108,14 +117,14 @@ export default function RegisterTenant() {
   const showConfirmError = touchedFields.confirm_password || submitCount > 0;
 
   const handleRetryRedirect = () => {
-    if (!redirectFallback?.loginUrl) {
+    if (!redirectFallback?.destinationUrl) {
       return;
     }
 
     try {
-      window.location.assign(redirectFallback.loginUrl);
+      window.location.assign(redirectFallback.destinationUrl);
     } catch {
-      setApiError('No hem pogut iniciar la redirecció al login del teu shelter. Torna-ho a provar.');
+      setApiError('No hem pogut iniciar la redirecció a la pàgina principal del teu shelter. Torna-ho a provar.');
     }
   };
 
@@ -344,9 +353,9 @@ export default function RegisterTenant() {
                 <div className="text-[#4A90A4] text-sm font-bold bg-[#4A90A4]/10 p-4 rounded-xl border border-[#4A90A4]/20 space-y-3">
                   <p className="text-base">Shelter created successfully</p>
                   <p>
-                    Redirecting you to {redirectFallback.loginUrl}. Sign in with your registration email ({redirectFallback.registrationEmail}) and the password you just created.
+                    {buildRedirectMessage(redirectFallback)}
                   </p>
-                  <p className="break-all text-xs text-gray-700 font-semibold">{redirectFallback.loginUrl}</p>
+                  <p className="break-all text-xs text-gray-700 font-semibold">{redirectFallback.destinationUrl}</p>
                   <div className="flex gap-3">
                     <button
                       type="button"
@@ -356,10 +365,10 @@ export default function RegisterTenant() {
                       Retry redirect
                     </button>
                     <a
-                      href={redirectFallback.loginUrl}
+                      href={redirectFallback.destinationUrl}
                       className="text-xs uppercase tracking-wider underline"
                     >
-                      Open login URL
+                      Open shelter root
                     </a>
                   </div>
                 </div>
