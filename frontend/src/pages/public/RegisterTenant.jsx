@@ -62,7 +62,7 @@ export default function RegisterTenant() {
   });
 
   const [apiError, setApiError] = useState(null);
-  const [success, setSuccess] = useState(false);
+  const [redirectFallback, setRedirectFallback] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -77,16 +77,28 @@ export default function RegisterTenant() {
 
   const onSubmit = async (data) => {
     setApiError(null);
-    setSuccess(false);
+    setRedirectFallback(null);
 
     try {
       const payload = buildTenantPayload(data);
-      await createTenant({
+      const createdTenant = await createTenant({
         ...payload,
         slug: normalizeTenantSlug(payload.slug),
       });
 
-      setSuccess(true);
+      const tenantSlug = normalizeTenantSlug(createdTenant?.slug || data.slug);
+      const loginUrl = `https://${tenantSlug}.matchcota.tech/login`;
+      const registrationEmail = createdTenant?.email || data.email;
+
+      try {
+        window.location.assign(loginUrl);
+      } catch {
+        setRedirectFallback({
+          loginUrl,
+          registrationEmail,
+        });
+      }
+
       reset();
     } catch (err) {
       setApiError(err.message || 'Hi ha hagut un error en el registre.');
@@ -94,6 +106,18 @@ export default function RegisterTenant() {
   };
 
   const showConfirmError = touchedFields.confirm_password || submitCount > 0;
+
+  const handleRetryRedirect = () => {
+    if (!redirectFallback?.loginUrl) {
+      return;
+    }
+
+    try {
+      window.location.assign(redirectFallback.loginUrl);
+    } catch {
+      setApiError('No hem pogut iniciar la redirecció al login del teu shelter. Torna-ho a provar.');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white flex font-sans overflow-hidden">
@@ -314,12 +338,28 @@ export default function RegisterTenant() {
                 </div>
               )}
 
-              {success && (
-                <div className="text-[#4A90A4] text-sm font-bold bg-[#4A90A4]/10 p-4 rounded-xl border border-[#4A90A4]/20 flex gap-3 items-center">
-                  <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  Protectora creada correctament! Pots procedir a Iniciar Sessió.
+              {redirectFallback && (
+                <div className="text-[#4A90A4] text-sm font-bold bg-[#4A90A4]/10 p-4 rounded-xl border border-[#4A90A4]/20 space-y-3">
+                  <p className="text-base">Shelter created successfully</p>
+                  <p>
+                    Redirecting you to {redirectFallback.loginUrl}. Sign in with your registration email ({redirectFallback.registrationEmail}) and the password you just created.
+                  </p>
+                  <p className="break-all text-xs text-gray-700 font-semibold">{redirectFallback.loginUrl}</p>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={handleRetryRedirect}
+                      className="bg-[#4A90A4] text-white text-xs uppercase tracking-wider px-4 py-2 rounded-lg hover:bg-[#3a7c8d] transition-colors"
+                    >
+                      Retry redirect
+                    </button>
+                    <a
+                      href={redirectFallback.loginUrl}
+                      className="text-xs uppercase tracking-wider underline"
+                    >
+                      Open login URL
+                    </a>
+                  </div>
                 </div>
               )}
 
