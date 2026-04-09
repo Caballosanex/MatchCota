@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   tenantSchema,
   buildTenantPayload,
+  buildTenantRootUrl,
+  buildRedirectFallback,
+  buildRedirectMessage,
 } from './RegisterTenant';
 
 describe('RegisterTenant validation contract', () => {
@@ -43,5 +46,33 @@ describe('RegisterTenant validation contract', () => {
     });
 
     expect(payload).toHaveProperty('admin_password', 'password-123');
+  });
+
+  it('builds root redirect URL for successful registration (never /login)', () => {
+    const url = buildTenantRootUrl('my-shelter');
+
+    expect(url).toBe('https://my-shelter.matchcota.tech/');
+    expect(url).not.toContain('/login');
+  });
+
+  it('builds fallback state with root URL and uses same URL for retry/open-link contract', () => {
+    const fallback = buildRedirectFallback('new-shelter', 'admin@new-shelter.org');
+
+    expect(fallback).toEqual({
+      destinationUrl: 'https://new-shelter.matchcota.tech/',
+      registrationEmail: 'admin@new-shelter.org',
+    });
+    expect(fallback.destinationUrl).not.toContain('/login');
+  });
+
+  it('returns public-first handoff messaging referencing tenant root destination', () => {
+    const copy = buildRedirectMessage({
+      destinationUrl: 'https://new-shelter.matchcota.tech/',
+      registrationEmail: 'admin@new-shelter.org',
+    });
+
+    expect(copy).toContain('tenant root');
+    expect(copy).toContain('https://new-shelter.matchcota.tech/');
+    expect(copy).not.toContain('login');
   });
 });
