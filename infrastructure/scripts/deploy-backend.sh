@@ -109,19 +109,30 @@ main() {
   build_lambda_zip
 
   stage "resolve Terraform runtime outputs"
-  local lambda_function_name api_gateway_invoke_url
+  local lambda_function_name api_gateway_invoke_url lambda_artifact_bucket_name lambda_artifact_object_key
   lambda_function_name="$(terraform -chdir="$TF_ENV_DIR" output -raw lambda_function_name)"
   api_gateway_invoke_url="$(terraform -chdir="$TF_ENV_DIR" output -raw api_gateway_invoke_url)"
+  lambda_artifact_bucket_name="$(terraform -chdir="$TF_ENV_DIR" output -raw lambda_artifact_bucket_name)"
+  lambda_artifact_object_key="$(terraform -chdir="$TF_ENV_DIR" output -raw lambda_artifact_object_key)"
 
   if [[ -z "$lambda_function_name" ]]; then
     echo "ERROR: Terraform output lambda_function_name is empty" >&2
     exit 1
   fi
 
+  if [[ -z "$lambda_artifact_bucket_name" || -z "$lambda_artifact_object_key" ]]; then
+    echo "ERROR: Terraform outputs for lambda artifact bucket/key are empty" >&2
+    exit 1
+  fi
+
+  stage "upload Lambda artifact to S3: s3://${lambda_artifact_bucket_name}/${lambda_artifact_object_key}"
+  aws s3 cp "$LAMBDA_ARTIFACT_PATH" "s3://${lambda_artifact_bucket_name}/${lambda_artifact_object_key}" >/dev/null
+
   stage "update Lambda function code: ${lambda_function_name}"
   aws lambda update-function-code \
     --function-name "$lambda_function_name" \
-    --zip-file "fileb://${LAMBDA_ARTIFACT_PATH}" \
+    --s3-bucket "$lambda_artifact_bucket_name" \
+    --s3-key "$lambda_artifact_object_key" \
     --publish >/dev/null
 
   stage "wait for Lambda function update to complete"
@@ -129,6 +140,8 @@ main() {
 
   stage "deploy complete"
   echo "lambda_function_name=${lambda_function_name}"
+  echo "lambda_artifact_bucket_name=${lambda_artifact_bucket_name}"
+  echo "lambda_artifact_object_key=${lambda_artifact_object_key}"
   echo "api_gateway_invoke_url=${api_gateway_invoke_url}"
 }
 

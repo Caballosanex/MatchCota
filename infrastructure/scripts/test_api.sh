@@ -55,8 +55,21 @@ run_health_check() {
   body="$(mktemp)"
 
   status="$(curl -sS -m 20 -D "$headers" -o "$body" -w "%{http_code}" "$BASE_URL/health")"
+  if [[ "$status" == "404" ]]; then
+    echo "[test-api] ERROR: ${label} returned HTTP 404 (likely API mapping/stage/path mismatch)" >&2
+    echo "[test-api] diagnostics headers:" >&2
+    cat "$headers" >&2 || true
+    echo "[test-api] diagnostics body:" >&2
+    cat "$body" >&2 || true
+    rm -f "$headers" "$body"
+    exit 1
+  fi
+
   if [[ "$status" != "200" ]]; then
     echo "[test-api] ERROR: ${label} failed with HTTP ${status}" >&2
+    echo "[test-api] diagnostics headers:" >&2
+    cat "$headers" >&2 || true
+    echo "[test-api] diagnostics body:" >&2
     cat "$body" >&2 || true
     rm -f "$headers" "$body"
     exit 1

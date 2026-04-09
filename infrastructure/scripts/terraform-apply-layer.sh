@@ -69,6 +69,7 @@ TARGETS
       ;;
     runtime)
       cat <<'TARGETS'
+aws_s3_object.lambda_runtime_artifact
 aws_lambda_function.runtime
 aws_apigatewayv2_api.runtime
 aws_apigatewayv2_integration.runtime_lambda_proxy
