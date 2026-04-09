@@ -55,12 +55,50 @@ variable "api_custom_domain_name" {
   default     = "api.matchcota.tech"
 }
 
-variable "api_gateway_alias_target_name" {
-  description = "API Gateway custom domain alias DNS name for Route53 alias record"
+variable "api_custom_domain_bootstrap_enabled" {
+  description = "When true, Terraform creates ACM DNS validation records, API Gateway custom domain, and default mapping"
+  type        = bool
+  default     = true
+}
+
+variable "api_gateway_http_api_id" {
+  description = "HTTP API ID used for api.matchcota.tech base path mapping (optional before runtime phase)"
   type        = string
+  default     = ""
+}
+
+variable "api_gateway_stage_name" {
+  description = "HTTP API stage name used for custom domain mapping"
+  type        = string
+  default     = "$default"
+}
+
+variable "api_gateway_alias_target_name" {
+  description = "Legacy API alias target DNS name used only when api_custom_domain_bootstrap_enabled=false"
+  type        = string
+  default     = ""
 }
 
 variable "api_gateway_alias_target_zone_id" {
-  description = "Route53 hosted zone ID for the API Gateway alias target"
+  description = "Legacy API alias target zone ID used only when api_custom_domain_bootstrap_enabled=false"
   type        = string
+  default     = ""
+}
+
+variable "edge_tls_bootstrap_enabled" {
+  description = "When true, Terraform emits edge TLS bootstrap contract artifacts for nginx+certbot"
+  type        = bool
+  default     = false
+}
+
+variable "edge_tls_acme_email" {
+  description = "Email used for Let's Encrypt registration on edge nginx bootstrap"
+  type        = string
+  default     = ""
+}
+
+variable "edge_tls_certbot_package" {
+  description = "Certbot package install selector used by edge bootstrap script"
+  type        = string
+  default     = "python3-certbot-nginx"
 }

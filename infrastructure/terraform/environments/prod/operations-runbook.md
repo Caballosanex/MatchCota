@@ -82,16 +82,19 @@ bash infrastructure/scripts/terraform-preflight.sh
 
 Use Let's Encrypt for `matchcota.tech` and `*.matchcota.tech` at the nginx edge.
 
+Wildcard issuance requires DNS-01 challenge. `certbot --nginx` is not valid for wildcard certificates.
+
 1. SSH to the frontend EC2 instance serving nginx.
-2. Install certbot + nginx plugin if not present.
-3. Issue edge certificate:
+2. Install certbot if not present.
+3. Issue edge certificate with DNS-01:
 
    ```bash
-   sudo certbot --nginx -d matchcota.tech -d '*.matchcota.tech'
+   sudo certbot certonly --manual --preferred-challenges dns --agree-tos --email <ops-email> --manual-public-ip-logging-ok -d matchcota.tech -d '*.matchcota.tech'
    ```
 
-4. Reload nginx and verify HTTPS handshake for apex and wildcard sample host.
-5. Confirm API domain certificate remains ACM-managed on API Gateway (`api.matchcota.tech`) per split strategy.
+4. Configure nginx TLS paths to `/etc/letsencrypt/live/matchcota.tech/fullchain.pem` and `/etc/letsencrypt/live/matchcota.tech/privkey.pem`.
+5. Reload nginx and verify HTTPS handshake for apex and wildcard sample host.
+6. Confirm API domain certificate remains ACM-managed on API Gateway (`api.matchcota.tech`) per split strategy.
 
 > Milestone note: automated renewal is intentionally out of scope for this phase window; renewals are operator-managed for the current lifecycle.
 
