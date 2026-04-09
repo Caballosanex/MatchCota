@@ -69,10 +69,11 @@ async def root():
 async def health():
     return {"status": "healthy"}
 
-# Mount local uploads directory for dev
-uploads_path = os.path.join(os.path.dirname(__file__), "..", "uploads")
-os.makedirs(uploads_path, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=uploads_path), name="uploads")
+# Mount local uploads directory only for non-production local runtime
+if not settings.is_production():
+    uploads_path = os.path.join(os.path.dirname(__file__), "..", "uploads")
+    os.makedirs(uploads_path, exist_ok=True)
+    app.mount("/uploads", StaticFiles(directory=uploads_path), name="uploads")
 
 # Register Routers
 from app.api.v1 import tenants, auth, animals, users, upload, matching
