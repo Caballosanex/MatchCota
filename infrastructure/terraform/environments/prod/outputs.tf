@@ -180,6 +180,16 @@ output "rds_port" {
   value       = aws_db_instance.postgres.port
 }
 
+output "db_name" {
+  description = "RDS database name used by runtime DATABASE_URL construction"
+  value       = var.db_name
+}
+
+output "db_username" {
+  description = "RDS username used by runtime DATABASE_URL construction"
+  value       = var.db_username
+}
+
 output "uploads_bucket_name" {
   description = "Private uploads bucket name used by runtime object storage"
   value       = aws_s3_bucket.uploads.bucket
