@@ -150,6 +150,70 @@ Wildcard issuance requires DNS-01 challenge. `certbot --nginx` is not valid for 
 
 9. If previously paused at delegation checkpoint, rerun `dns-delegation-check.sh` and `tls-readiness-check.sh` before proceeding.
 
+## Post-reset recovery and launch verification
+
+Use this sequence after AWS Academy lab reset or whenever production needs full recovery verification.
+
+- Keep `AWS_PROFILE=matchcota` and region `us-east-1` for all commands.
+- Preserve locked AWS Academy constraints throughout recovery: no CloudFront, CloudWatch, SES, NAT Gateway, or Multi-AZ RDS assumptions.
+
+1. Run preflight checks:
+
+   ```bash
+   AWS_PROFILE=matchcota bash infrastructure/scripts/terraform-preflight.sh
+   ```
+
+2. Apply Terraform layers in strict order (resume-safe):
+
+   ```bash
+   AWS_PROFILE=matchcota bash infrastructure/scripts/terraform-apply-layer.sh foundation
+   AWS_PROFILE=matchcota bash infrastructure/scripts/terraform-apply-layer.sh network
+   AWS_PROFILE=matchcota bash infrastructure/scripts/terraform-apply-layer.sh data
+   AWS_PROFILE=matchcota bash infrastructure/scripts/terraform-apply-layer.sh runtime
+   ```
+
+3. Publish backend Lambda runtime (required secrets in shell):
+
+   ```bash
+   export AWS_PROFILE=matchcota
+   export AWS_REGION=us-east-1
+   export DB_PASSWORD='<rds-password>'
+   export APP_SECRET_KEY='<fastapi-secret-key>'
+   export JWT_SECRET_KEY='<jwt-secret-key>'
+   bash infrastructure/scripts/deploy-backend.sh
+   ```
+
+4. Publish frontend static SPA (required host contract):
+
+   ```bash
+   export AWS_PROFILE=matchcota
+   export AWS_REGION=us-east-1
+   export FRONTEND_HOST='<frontend-ec2-host-or-ip>'
+   bash infrastructure/scripts/deploy-frontend.sh
+   ```
+
+5. Run post-deploy readiness gate (DNS → TLS → API):
+
+   ```bash
+   AWS_PROFILE=matchcota bash infrastructure/scripts/post-deploy-readiness.sh
+   ```
+
+6. Run production fixture leakage audit:
+
+   ```bash
+   AWS_PROFILE=matchcota bash infrastructure/scripts/production-data-audit.sh
+   ```
+
+7. Complete owner launch UAT evidence capture:
+
+   ```bash
+   # Fill the evidence artifact with timestamps, pass/fail, and notes.
+   # This is owner-run verification of real registration -> tenant login flow.
+   ${EDITOR:-vi} .planning/phases/06-production-verification-operations-runbook/06-HUMAN-UAT.md
+   ```
+
+   Use the checklist in `06-HUMAN-UAT.md` to prove `https://matchcota.tech/register-tenant` → `https://{slug}.matchcota.tech/login` works with real credentials (no fixture/demo identities).
+
 ## Rollback and drift response
 
 Rules:

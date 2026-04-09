@@ -53,6 +53,25 @@ This directory contains the production Terraform root for MatchCota in AWS Acade
     - `bash infrastructure/scripts/tls-readiness-check.sh --apex matchcota.tech --wildcard-sample smoke.matchcota.tech --api api.matchcota.tech --timeout 900 --interval 30`
 8. Save command output logs for execution evidence and troubleshooting.
 
+## Post-reset recovery quick-start (run in this exact order)
+
+Use this command order after lab reset or full redeploy, keeping `AWS_PROFILE=matchcota` in `us-east-1`.
+
+1. `AWS_PROFILE=matchcota bash infrastructure/scripts/terraform-preflight.sh`
+2. `AWS_PROFILE=matchcota bash infrastructure/scripts/terraform-apply-layer.sh foundation`
+3. `AWS_PROFILE=matchcota bash infrastructure/scripts/terraform-apply-layer.sh network`
+4. `AWS_PROFILE=matchcota bash infrastructure/scripts/terraform-apply-layer.sh data`
+5. `AWS_PROFILE=matchcota bash infrastructure/scripts/terraform-apply-layer.sh runtime`
+6. `AWS_PROFILE=matchcota DB_PASSWORD='<rds-password>' APP_SECRET_KEY='<fastapi-secret-key>' JWT_SECRET_KEY='<jwt-secret-key>' bash infrastructure/scripts/deploy-backend.sh`
+7. `AWS_PROFILE=matchcota FRONTEND_HOST='<frontend-ec2-host-or-ip>' bash infrastructure/scripts/deploy-frontend.sh`
+8. `AWS_PROFILE=matchcota bash infrastructure/scripts/post-deploy-readiness.sh`
+9. `AWS_PROFILE=matchcota bash infrastructure/scripts/production-data-audit.sh`
+10. Complete owner evidence in `.planning/phases/06-production-verification-operations-runbook/06-HUMAN-UAT.md`
+
+Required deploy variables in this sequence: `DB_PASSWORD`, `APP_SECRET_KEY`, `JWT_SECRET_KEY`, and `FRONTEND_HOST`.
+
+AWS Academy constraints remain mandatory during recovery: no CloudFront, CloudWatch, SES, NAT Gateway, or Multi-AZ RDS assumptions.
+
 ## Budget Check
 
 Run budget gate before full apply or after estimate refresh:
