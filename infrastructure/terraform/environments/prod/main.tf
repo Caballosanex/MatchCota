@@ -207,6 +207,69 @@ resource "aws_db_instance" "postgres" {
   })
 }
 
+resource "aws_s3_bucket" "uploads" {
+  bucket = var.uploads_bucket_name
+
+  tags = merge(local.default_tags, {
+    Name = "matchcota-prod-uploads"
+  })
+}
+
+resource "aws_s3_bucket_public_access_block" "uploads" {
+  bucket = aws_s3_bucket.uploads.id
+
+  block_public_acls       = true
+  ignore_public_acls      = true
+  block_public_policy     = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_ownership_controls" "uploads" {
+  bucket = aws_s3_bucket.uploads.id
+
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
+}
+
+resource "aws_vpc_endpoint" "s3_gateway" {
+  vpc_id            = aws_vpc.data_plane.id
+  service_name      = "com.amazonaws.us-east-1.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = [aws_route_table.private.id]
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowListBucket"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = ["s3:ListBucket"]
+        Resource = aws_s3_bucket.uploads.arn
+      },
+      {
+        Sid    = "AllowObjectReadWrite"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+        ]
+        Resource = "${aws_s3_bucket.uploads.arn}/*"
+      },
+    ]
+  })
+
+  tags = merge(local.default_tags, {
+    Name = "matchcota-prod-s3-gateway-endpoint"
+  })
+}
+
 resource "aws_route53_record" "api_alias_a" {
   zone_id = aws_route53_zone.primary.zone_id
   name    = var.api_custom_domain_name

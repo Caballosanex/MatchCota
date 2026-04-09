@@ -165,3 +165,9 @@ variable "db_allocated_storage" {
   type        = number
   default     = 20
 }
+
+variable "uploads_bucket_name" {
+  description = "Private S3 bucket name for tenant uploads"
+  type        = string
+  default     = "matchcota-prod-uploads"
+}
