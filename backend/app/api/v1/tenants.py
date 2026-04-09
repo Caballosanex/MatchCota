@@ -45,6 +45,7 @@ def get_current_tenant_info(tenant: TenantModel = Depends(get_current_tenant)):
     return tenant
 
 
+@router.post("", response_model=Tenant, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 @router.post("/", response_model=Tenant, status_code=status.HTTP_201_CREATED)
 def create_tenant(
     tenant_in: TenantCreate,

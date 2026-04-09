@@ -9,6 +9,10 @@ from app.config import settings
 from app.core.tenant import TenantMiddleware
 
 
+def _is_lambda_runtime() -> bool:
+    return bool(os.getenv("AWS_LAMBDA_FUNCTION_NAME")) or os.getenv("AWS_EXECUTION_ENV", "").startswith("AWS_Lambda")
+
+
 app = FastAPI(
     title="MatchCota API",
     description="API per connectar protectores amb adoptants",
@@ -70,7 +74,7 @@ async def health():
     return {"status": "healthy"}
 
 # Mount local uploads directory only for non-production local runtime
-if not settings.is_production():
+if not settings.is_production() and not _is_lambda_runtime():
     uploads_path = os.path.join(os.path.dirname(__file__), "..", "uploads")
     os.makedirs(uploads_path, exist_ok=True)
     app.mount("/uploads", StaticFiles(directory=uploads_path), name="uploads")

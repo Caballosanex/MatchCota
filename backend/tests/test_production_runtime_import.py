@@ -25,3 +25,21 @@ def test_production_import_does_not_write_local_uploads_on_read_only_filesystem(
         importlib.reload(main_module)
     finally:
         settings.environment = original_env
+
+
+def test_lambda_runtime_import_does_not_write_local_uploads_in_development_env(monkeypatch):
+    original_env = settings.environment
+    settings.environment = "development"
+
+    monkeypatch.setenv("AWS_LAMBDA_FUNCTION_NAME", "matchcota-prod-api")
+
+    def _raise_read_only(_path, *_args, **_kwargs):
+        raise OSError(errno.EROFS, "Read-only file system")
+
+    monkeypatch.setattr(os, "makedirs", _raise_read_only)
+
+    try:
+        main_module = importlib.import_module("app.main")
+        importlib.reload(main_module)
+    finally:
+        settings.environment = original_env
