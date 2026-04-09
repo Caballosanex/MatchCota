@@ -1,11 +1,12 @@
 import { useAuth } from './useAuth';
 import { useTenant } from './useTenant';
+import { getApiBaseUrl } from '../api/baseUrl';
 
 export function useApi() {
     const { user } = useAuth();
     const { tenant } = useTenant();
 
-    const baseUrl = import.meta.env.VITE_API_URL || '/api/v1';
+    const baseUrl = getApiBaseUrl();
 
     const request = async (endpoint, options = {}) => {
         // Guard: si no hi ha tenant, les requests fallaran al backend

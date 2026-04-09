@@ -1,4 +1,6 @@
-const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
+import { getApiBaseUrl } from './baseUrl';
+
+const API_URL = getApiBaseUrl();
 
 export const getAnimals = async (tenantSlug) => {
     const headers = { 'Content-Type': 'application/json' };

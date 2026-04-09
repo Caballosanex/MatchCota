@@ -2,7 +2,9 @@
  * API client per al sistema de Matching.
  */
 
-const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
+import { getApiBaseUrl } from './baseUrl';
+
+const API_URL = getApiBaseUrl();
 
 /**
  * Obte el questionari de matching.

@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect } from 'react';
+import { getApiBaseUrl } from '../api/baseUrl';
 
 const TenantContext = createContext();
 
@@ -83,7 +84,7 @@ export function TenantProvider({ children }) {
                 }
 
                 if (subdomain) {
-                    const apiUrl = import.meta.env.VITE_API_URL || '/api/v1';
+                    const apiUrl = getApiBaseUrl();
                     const response = await fetch(`${apiUrl}/tenants/current`, {
                         headers: {
                             'Content-Type': 'application/json',
