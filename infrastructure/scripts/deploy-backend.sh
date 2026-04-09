@@ -55,6 +55,21 @@ require_env() {
   fi
 }
 
+terraform_output_or_state_attr() {
+  local output_name="$1"
+  local state_resource="$2"
+  local state_attr="$3"
+  local value=""
+
+  if value="$(terraform -chdir="$TF_ENV_DIR" output -raw "$output_name" 2>/dev/null)" && [[ -n "$value" ]]; then
+    printf "%s" "$value"
+    return 0
+  fi
+
+  value="$(terraform -chdir="$TF_ENV_DIR" state show "$state_resource" 2>/dev/null | awk -F' = ' -v key="$state_attr" '$1 ~ "^[[:space:]]*" key "[[:space:]]*$" {gsub(/\"/, "", $2); print $2; exit}')"
+  printf "%s" "$value"
+}
+
 cleanup() {
   if [[ -n "$BUILD_TMP_DIR" && -d "$BUILD_TMP_DIR" ]]; then
     rm -rf "$BUILD_TMP_DIR"
@@ -138,8 +153,8 @@ main() {
   lambda_artifact_object_key="$(terraform -chdir="$TF_ENV_DIR" output -raw lambda_artifact_object_key)"
   rds_endpoint="$(terraform -chdir="$TF_ENV_DIR" output -raw rds_endpoint)"
   rds_port="$(terraform -chdir="$TF_ENV_DIR" output -raw rds_port)"
-  db_name="$(terraform -chdir="$TF_ENV_DIR" output -raw db_name)"
-  db_username="$(terraform -chdir="$TF_ENV_DIR" output -raw db_username)"
+  db_name="$(terraform_output_or_state_attr db_name aws_db_instance.postgres db_name)"
+  db_username="$(terraform_output_or_state_attr db_username aws_db_instance.postgres username)"
   uploads_bucket_name="$(terraform -chdir="$TF_ENV_DIR" output -raw uploads_bucket_name)"
 
   if [[ -z "$lambda_function_name" ]]; then
@@ -162,13 +177,13 @@ main() {
     exit 1
   fi
 
-  database_url="postgresql://${db_username}:${DB_PASSWORD}@${rds_endpoint}:${rds_port}/${db_name}"
+  database_url="postgresql://${db_username}:${DB_PASSWORD}@${rds_endpoint}:${rds_port}/${db_name}?sslmode=require"
 
   stage "lambda_function_name=${lambda_function_name}"
   stage "update Lambda runtime environment"
   aws lambda update-function-configuration \
     --function-name "$lambda_function_name" \
-    --environment "Variables={ENVIRONMENT=production,DEBUG=false,DATABASE_URL=${database_url},SECRET_KEY=${APP_SECRET_KEY},JWT_SECRET_KEY=${JWT_SECRET_KEY},S3_ENABLED=true,S3_BUCKET_NAME=${uploads_bucket_name},WILDCARD_DOMAIN=matchcota.tech,AWS_REGION=us-east-1}" >/dev/null
+    --environment "Variables={ENVIRONMENT=production,DEBUG=false,DATABASE_URL=${database_url},SECRET_KEY=${APP_SECRET_KEY},JWT_SECRET_KEY=${JWT_SECRET_KEY},S3_ENABLED=true,S3_BUCKET_NAME=${uploads_bucket_name},WILDCARD_DOMAIN=matchcota.tech,APP_AWS_REGION=us-east-1}" >/dev/null
 
   stage "wait for Lambda runtime environment update"
   aws lambda wait function-updated --function-name "$lambda_function_name"

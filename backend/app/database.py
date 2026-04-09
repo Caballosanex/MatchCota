@@ -2,7 +2,10 @@
 Configuration for the database connection.
 """
 
+from threading import Lock
+
 from sqlalchemy import create_engine
+from sqlalchemy import inspect
 from sqlalchemy.pool import NullPool, QueuePool
 from sqlalchemy.orm import sessionmaker, declarative_base
 
@@ -36,6 +39,37 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # Base for models - IMPORTANT: Alembic uses this Base
 Base = declarative_base()
 
+_schema_bootstrap_lock = Lock()
+_schema_bootstrap_checked = False
+
+
+def ensure_production_schema_bootstrap() -> None:
+    """
+    In production, bootstrap core schema once if tables are missing.
+
+    This is a one-time, process-local fallback for environments where
+    migrations could not be run from the operator host.
+    """
+
+    global _schema_bootstrap_checked
+
+    if not settings.is_production() or _schema_bootstrap_checked:
+        return
+
+    with _schema_bootstrap_lock:
+        if _schema_bootstrap_checked:
+            return
+
+        tenants_table_exists = inspect(engine).has_table("tenants")
+
+        if not tenants_table_exists:
+            # Import registers model metadata on Base before create_all.
+            from app.models import animal, lead, questionnaire, tenant, user  # noqa: F401
+
+            Base.metadata.create_all(bind=engine)
+
+        _schema_bootstrap_checked = True
+
 
 def get_db():
     """
@@ -46,6 +80,8 @@ def get_db():
         def read_items(db: Session = Depends(get_db)):
             ...
     """
+    ensure_production_schema_bootstrap()
+
     db = SessionLocal()
     try:
         yield db

@@ -46,6 +46,7 @@ created: 2026-04-09
 | 05-03-02 | 03 | 2 | FRONT-05 | T-05-04 | Production env contract points to API/base domain production values | grep/build | `npm run lint && npm run build` | ✅ | ⬜ pending |
 | 05-04-01 | 04 | 3 | INFRA-11, ONBD-06 | T-05-05 | EC2 frontend remains static-only and tenant login path is reachable | script/manual | `bash infrastructure/scripts/deploy-frontend.sh --help` | ✅ | ⬜ pending |
 | 05-04-02 | 04 | 3 | INFRA-11, ONBD-06 | T-05-10, T-05-11 | Validation artifact remains executable and Nyquist-compliant for production frontend verification loops | lint/build | `cd frontend && npm run lint && npm run build` | ✅ | ⬜ pending |
+| 05-05-02 | 05 | 3 | ONBD-06 | T-05-13, T-05-14, T-05-15 | Lambda runtime env injected deterministically and onboarding API smoke validated in production | deploy/smoke | `AWS_PROFILE=matchcota AWS_REGION=us-east-1 DB_PASSWORD=<state> APP_SECRET_KEY=<env SECRET_KEY> JWT_SECRET_KEY=<env JWT_SECRET_KEY> bash infrastructure/scripts/deploy-backend.sh && AWS_PROFILE=matchcota AWS_REGION=us-east-1 aws lambda get-function-configuration --function-name "$(terraform -chdir=infrastructure/terraform/environments/prod output -raw lambda_function_name)" --query "Environment.Variables" --output json && curl -s -o /dev/null -w "%{http_code}" -X POST https://api.matchcota.tech/api/v1/tenants/ ... && curl -s -o /dev/null -w "%{http_code}" https://api.matchcota.tech/api/v1/tenants/current -H "X-Tenant-Slug: <slug>"` | ✅ | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
