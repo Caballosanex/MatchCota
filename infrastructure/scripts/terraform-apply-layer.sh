@@ -35,16 +35,47 @@ require_layer() {
 layer_selector() {
   case "$1" in
     foundation)
-      echo "terraform_data.academy_guardrails"
+      cat <<'TARGETS'
+terraform_data.academy_guardrails
+TARGETS
       ;;
     network)
-      echo "aws_route53_zone.primary"
+      cat <<'TARGETS'
+aws_route53_zone.primary
+aws_vpc.data_plane
+aws_internet_gateway.data_plane
+aws_subnet.data_plane
+aws_route_table.public
+aws_route_table.private
+aws_route_table_association.public
+aws_route_table_association.private
+TARGETS
       ;;
     data)
-      echo "aws_route53_record.apex_a,aws_route53_record.wildcard_a,aws_route53_record.api_alias_a"
+      cat <<'TARGETS'
+aws_security_group.lambda_runtime
+aws_security_group.rds_postgres
+aws_vpc_security_group_ingress_rule.rds_postgres_from_lambda
+aws_db_subnet_group.postgres_private
+aws_db_instance.postgres
+aws_s3_bucket.uploads
+aws_s3_bucket_public_access_block.uploads
+aws_s3_bucket_ownership_controls.uploads
+aws_vpc_endpoint.s3_gateway
+TARGETS
       ;;
     runtime)
-      echo "aws_acm_certificate.api_custom_domain"
+      cat <<'TARGETS'
+aws_route53_record.apex_a
+aws_route53_record.wildcard_a
+aws_route53_record.api_alias_a
+aws_acm_certificate.api_custom_domain
+aws_route53_record.api_acm_validation
+aws_acm_certificate_validation.api_custom_domain
+aws_apigatewayv2_domain_name.api_custom_domain
+aws_apigatewayv2_api_mapping.api_default
+terraform_data.edge_tls_bootstrap_contract
+TARGETS
       ;;
     *)
       echo "ERROR: Unknown layer '$1'" >&2
@@ -56,8 +87,9 @@ layer_selector() {
 
 main() {
   require_layer
-  local tf_target plan_file
-  tf_target="$(layer_selector "$LAYER")"
+  local plan_file
+  local -a tf_targets plan_args
+  mapfile -t tf_targets < <(layer_selector "$LAYER")
   plan_file="tfplan-${LAYER}"
 
   if [[ -z "$TF_BACKEND_BUCKET" ]] || [[ -z "$TF_BACKEND_DYNAMODB_TABLE" ]]; then
@@ -65,7 +97,12 @@ main() {
     exit 1
   fi
 
-  echo "[apply-layer] layer=${LAYER} target=${tf_target}"
+  if [[ "${#tf_targets[@]}" -eq 0 ]]; then
+    echo "ERROR: No targets resolved for layer '${LAYER}'" >&2
+    exit 1
+  fi
+
+  echo "[apply-layer] layer=${LAYER} targets=${tf_targets[*]}"
   echo "[apply-layer] terraform init -reconfigure"
   terraform -chdir="$TF_ENV_DIR" init -reconfigure \
     -backend-config="bucket=${TF_BACKEND_BUCKET}" \
@@ -73,21 +110,17 @@ main() {
     -backend-config="region=${TF_BACKEND_REGION}"
 
   echo "[apply-layer] terraform plan -out=${plan_file}"
-  if [[ "$LAYER" == "data" ]]; then
-    terraform -chdir="$TF_ENV_DIR" plan \
-      -lock=true \
-      -lock-timeout="$TF_LOCK_TIMEOUT" \
-      -target="aws_route53_record.apex_a" \
-      -target="aws_route53_record.wildcard_a" \
-      -target="aws_route53_record.api_alias_a" \
-      -out="$plan_file"
-  else
-    terraform -chdir="$TF_ENV_DIR" plan \
-      -lock=true \
-      -lock-timeout="$TF_LOCK_TIMEOUT" \
-      -target="$tf_target" \
-      -out="$plan_file"
-  fi
+  plan_args=(
+    -lock=true
+    -lock-timeout="$TF_LOCK_TIMEOUT"
+    -out="$plan_file"
+  )
+
+  for tf_target in "${tf_targets[@]}"; do
+    plan_args+=("-target=${tf_target}")
+  done
+
+  terraform -chdir="$TF_ENV_DIR" plan "${plan_args[@]}"
 
   echo "[apply-layer] terraform apply ${plan_file}"
   terraform -chdir=infrastructure/terraform/environments/prod apply \
