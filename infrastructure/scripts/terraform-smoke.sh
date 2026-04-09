@@ -81,8 +81,21 @@ assert_matchcota_runtime_fingerprint() {
   local status_code
   status_code="$(curl -sS -m 20 -D "$tmp_headers" -o "$tmp_body" -w "%{http_code}" "${SMOKE_API_BASE_URL}/health")"
 
+  if [[ "$status_code" == "404" ]]; then
+    echo "[smoke] ERROR: runtime health returned HTTP 404 — likely API Gateway stage/base-path mapping mismatch for ${SMOKE_API_BASE_URL}/health" >&2
+    echo "[smoke] diagnostics: response headers" >&2
+    cat "$tmp_headers" >&2 || true
+    echo "[smoke] diagnostics: response body" >&2
+    cat "$tmp_body" >&2 || true
+    rm -f "$tmp_headers" "$tmp_body"
+    exit 1
+  fi
+
   if [[ "$status_code" != "200" ]]; then
     echo "[smoke] ERROR: runtime health check returned HTTP ${status_code}" >&2
+    echo "[smoke] diagnostics: response headers" >&2
+    cat "$tmp_headers" >&2 || true
+    echo "[smoke] diagnostics: response body" >&2
     cat "$tmp_body" >&2 || true
     rm -f "$tmp_headers" "$tmp_body"
     exit 1
@@ -165,12 +178,16 @@ EOF
   require_pattern "${SMOKE_TMP_ENV_DIR}/tfplan-smoke.txt" "aws_db_instance\\.postgres" "missing aws_db_instance.postgres in plan output"
   require_pattern "${SMOKE_TMP_ENV_DIR}/tfplan-smoke.txt" "aws_s3_bucket_public_access_block\\.uploads" "missing aws_s3_bucket_public_access_block.uploads in plan output"
   require_pattern "${SMOKE_TMP_ENV_DIR}/tfplan-smoke.txt" "aws_vpc_endpoint\\.s3_gateway" "missing aws_vpc_endpoint.s3_gateway in plan output"
+  require_pattern "${SMOKE_TMP_ENV_DIR}/tfplan-smoke.txt" "aws_s3_object\\.lambda_runtime_artifact" "missing aws_s3_object.lambda_runtime_artifact in plan output"
+  require_pattern "${SMOKE_TMP_ENV_DIR}/tfplan-smoke.txt" "s3_bucket|s3_key" "missing S3-backed lambda code source fields in plan output"
 
   require_pattern "${SMOKE_TMP_ENV_DIR}/outputs.tf" "output \"vpc_id\"" "missing vpc_id output contract"
   require_pattern "${SMOKE_TMP_ENV_DIR}/outputs.tf" "output \"private_subnet_ids\"" "missing private_subnet_ids output contract"
   require_pattern "${SMOKE_TMP_ENV_DIR}/outputs.tf" "output \"rds_endpoint\"" "missing rds_endpoint output contract"
   require_pattern "${SMOKE_TMP_ENV_DIR}/outputs.tf" "output \"uploads_bucket_name\"" "missing uploads_bucket_name output contract"
   require_pattern "${SMOKE_TMP_ENV_DIR}/outputs.tf" "output \"s3_gateway_endpoint_id\"" "missing s3_gateway_endpoint_id output contract"
+  require_pattern "${SMOKE_TMP_ENV_DIR}/outputs.tf" "output \"lambda_artifact_bucket_name\"" "missing lambda_artifact_bucket_name output contract"
+  require_pattern "${SMOKE_TMP_ENV_DIR}/outputs.tf" "output \"lambda_artifact_object_key\"" "missing lambda_artifact_object_key output contract"
   stage "stage=data_plane_contract pass"
 
   stage "stage=dns_delegation start (dns-delegation-check.sh)"

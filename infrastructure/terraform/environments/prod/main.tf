@@ -291,10 +291,15 @@ resource "aws_route53_record" "api_alias_a" {
 
 data "aws_caller_identity" "current" {}
 
-data "archive_file" "lambda_runtime_zip" {
-  type        = "zip"
-  source_file = var.lambda_artifact_path
-  output_path = "${path.module}/.terraform/build/matchcota-runtime.zip"
+resource "aws_s3_object" "lambda_runtime_artifact" {
+  bucket      = aws_s3_bucket.uploads.id
+  key         = var.lambda_artifact_object_key
+  source      = var.lambda_artifact_path
+  source_hash = filemd5(var.lambda_artifact_path)
+
+  tags = merge(local.default_tags, {
+    Name = "matchcota-runtime-artifact"
+  })
 }
 
 resource "aws_lambda_function" "runtime" {
@@ -304,8 +309,9 @@ resource "aws_lambda_function" "runtime" {
   runtime          = var.lambda_runtime
   timeout          = var.lambda_timeout
   memory_size      = var.lambda_memory_size
-  filename         = data.archive_file.lambda_runtime_zip.output_path
-  source_code_hash = data.archive_file.lambda_runtime_zip.output_base64sha256
+  s3_bucket        = aws_s3_object.lambda_runtime_artifact.bucket
+  s3_key           = aws_s3_object.lambda_runtime_artifact.key
+  source_code_hash = filebase64sha256(var.lambda_artifact_path)
 
   vpc_config {
     subnet_ids         = local.lambda_runtime_subnet_ids

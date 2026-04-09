@@ -88,6 +88,16 @@ output "lambda_function_arn" {
   value       = aws_lambda_function.runtime.arn
 }
 
+output "lambda_artifact_bucket_name" {
+  description = "S3 bucket storing the runtime Lambda artifact"
+  value       = aws_s3_object.lambda_runtime_artifact.bucket
+}
+
+output "lambda_artifact_object_key" {
+  description = "S3 object key storing the runtime Lambda artifact"
+  value       = aws_s3_object.lambda_runtime_artifact.key
+}
+
 output "api_gateway_http_api_id" {
   description = "HTTP API ID fronting Lambda runtime"
   value       = aws_apigatewayv2_api.runtime.id

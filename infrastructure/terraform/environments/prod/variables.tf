@@ -79,6 +79,12 @@ variable "lambda_artifact_path" {
   default     = "../../../../backend/dist/lambda.zip"
 }
 
+variable "lambda_artifact_object_key" {
+  description = "S3 object key used by Terraform-managed Lambda artifact contract"
+  type        = string
+  default     = "runtime/lambda.zip"
+}
+
 variable "lambda_function_name" {
   description = "Lambda function name for MatchCota backend runtime"
   type        = string
