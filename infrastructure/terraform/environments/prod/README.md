@@ -17,29 +17,39 @@ This directory contains the production Terraform root for MatchCota in AWS Acade
 3. Run smoke harness (includes DNS/TLS readiness stages):
    - `bash infrastructure/scripts/terraform-smoke.sh`
 4. Apply layers in order:
-   - `bash infrastructure/scripts/terraform-apply-layer.sh foundation`
-   - `bash infrastructure/scripts/terraform-apply-layer.sh network`
-   - `bash infrastructure/scripts/terraform-apply-layer.sh data`
-   - `bash infrastructure/scripts/terraform-apply-layer.sh runtime`
-5. Pause for registrar delegation after hosted zone NS output:
-   - status: `blocked-waiting-for-delegation`
-   - `bash infrastructure/scripts/dns-delegation-check.sh --domain matchcota.tech --wildcard-sample smoke.matchcota.tech --api-host api.matchcota.tech --timeout 900 --interval 30`
-6. Run TLS readiness gate:
-   - `bash infrastructure/scripts/tls-readiness-check.sh --apex matchcota.tech --wildcard-sample smoke.matchcota.tech --api api.matchcota.tech --timeout 900 --interval 30`
-7. Follow full operator details in `operations-runbook.md` (includes EC2 nginx Let's Encrypt issuance for apex/wildcard and timeout/resume behavior).
+    - `bash infrastructure/scripts/terraform-apply-layer.sh foundation`
+    - `bash infrastructure/scripts/terraform-apply-layer.sh network`
+    - `bash infrastructure/scripts/terraform-apply-layer.sh data`
+    - `bash infrastructure/scripts/terraform-apply-layer.sh runtime`
+5. Verify Phase 3 private data-plane state (RDS/S3/endpoint):
+   - `terraform -chdir=infrastructure/terraform/environments/prod state show aws_db_instance.postgres | grep -E "postgres|15|db.t3.micro|allocated_storage\s+=\s+20|backup_retention_period\s+=\s+7|multi_az\s+=\s+false|publicly_accessible\s+=\s+false"`
+   - `terraform -chdir=infrastructure/terraform/environments/prod state show aws_s3_bucket_public_access_block.uploads | grep -E "block_public_acls\s+=\s+true|ignore_public_acls\s+=\s+true|block_public_policy\s+=\s+true|restrict_public_buckets\s+=\s+true"`
+   - `terraform -chdir=infrastructure/terraform/environments/prod state show aws_vpc_endpoint.s3_gateway | grep -E "com.amazonaws.us-east-1.s3|Gateway"`
+6. Pause for registrar delegation after hosted zone NS output:
+    - status: `blocked-waiting-for-delegation`
+    - `bash infrastructure/scripts/dns-delegation-check.sh --domain matchcota.tech --wildcard-sample smoke.matchcota.tech --api-host api.matchcota.tech --timeout 900 --interval 30`
+7. Run TLS readiness gate:
+    - `bash infrastructure/scripts/tls-readiness-check.sh --apex matchcota.tech --wildcard-sample smoke.matchcota.tech --api api.matchcota.tech --timeout 900 --interval 30`
+8. Follow full operator details in `operations-runbook.md` (includes EC2 nginx Let's Encrypt issuance for apex/wildcard and timeout/resume behavior).
 
 ## Resume after credential expiry
 
 1. Refresh AWS Academy credentials and export/update your AWS CLI session.
 2. Re-run preflight checks:
    - `bash infrastructure/scripts/terraform-preflight.sh`
-3. Resume from the failed/pending layer only:
-   - `bash infrastructure/scripts/terraform-apply-layer.sh <foundation|network|data|runtime>`
-4. Continue remaining layers in order until runtime is complete.
-5. Re-run delegation + TLS gates if pending:
-   - `bash infrastructure/scripts/dns-delegation-check.sh --domain matchcota.tech --wildcard-sample smoke.matchcota.tech --api-host api.matchcota.tech --timeout 900 --interval 30`
-   - `bash infrastructure/scripts/tls-readiness-check.sh --apex matchcota.tech --wildcard-sample smoke.matchcota.tech --api api.matchcota.tech --timeout 900 --interval 30`
-6. Save command output logs for execution evidence and troubleshooting.
+3. Re-run smoke harness before any apply resume:
+   - `bash infrastructure/scripts/terraform-smoke.sh`
+4. Resume from the failed/pending layer only:
+    - `bash infrastructure/scripts/terraform-apply-layer.sh <foundation|network|data|runtime>`
+5. If private data-plane work is pending, rerun and verify data layer:
+   - `bash infrastructure/scripts/terraform-apply-layer.sh data`
+   - `terraform -chdir=infrastructure/terraform/environments/prod state show aws_db_instance.postgres | grep -E "db.t3.micro|backup_retention_period\s+=\s+7"`
+   - `terraform -chdir=infrastructure/terraform/environments/prod state show aws_vpc_endpoint.s3_gateway | grep -E "com.amazonaws.us-east-1.s3"`
+6. Continue remaining layers in order until runtime is complete.
+7. Re-run delegation + TLS gates if pending:
+    - `bash infrastructure/scripts/dns-delegation-check.sh --domain matchcota.tech --wildcard-sample smoke.matchcota.tech --api-host api.matchcota.tech --timeout 900 --interval 30`
+    - `bash infrastructure/scripts/tls-readiness-check.sh --apex matchcota.tech --wildcard-sample smoke.matchcota.tech --api api.matchcota.tech --timeout 900 --interval 30`
+8. Save command output logs for execution evidence and troubleshooting.
 
 ## Budget Check
 

@@ -42,7 +42,17 @@ bash infrastructure/scripts/terraform-preflight.sh
    bash infrastructure/scripts/terraform-apply-layer.sh runtime
    ```
 
-5. Capture Route53 delegation checkpoint after hosted zone output:
+5. Verify Phase 3 private data-plane contract before release decision:
+
+   ```bash
+   terraform -chdir=infrastructure/terraform/environments/prod state show aws_db_instance.postgres | grep -E "engine\s+=\s+\"postgres\"|engine_version\s+=\s+\"15\"|instance_class\s+=\s+\"db.t3.micro\"|backup_retention_period\s+=\s+7|allocated_storage\s+=\s+20|multi_az\s+=\s+false|publicly_accessible\s+=\s+false"
+   terraform -chdir=infrastructure/terraform/environments/prod state show aws_s3_bucket_public_access_block.uploads | grep -E "block_public_acls\s+=\s+true|ignore_public_acls\s+=\s+true|block_public_policy\s+=\s+true|restrict_public_buckets\s+=\s+true"
+   terraform -chdir=infrastructure/terraform/environments/prod state show aws_vpc_endpoint.s3_gateway | grep -E "service_name\s+=\s+\"com.amazonaws.us-east-1.s3\"|vpc_endpoint_type\s+=\s+\"Gateway\""
+   ```
+
+   If any command above fails, stop rollout and re-run `bash infrastructure/scripts/terraform-apply-layer.sh data`.
+
+6. Capture Route53 delegation checkpoint after hosted zone output:
 
    ```bash
    terraform -chdir=infrastructure/terraform/environments/prod output route53_hosted_zone_name_servers
@@ -63,7 +73,7 @@ bash infrastructure/scripts/terraform-preflight.sh
 
    - Timeout policy: if the script exits `2`, treat this as propagation wait, keep status `blocked-waiting-for-delegation`, and rerun the same command after registrar update confirmation.
 
-6. Validate TLS readiness after delegation passes:
+7. Validate TLS readiness after delegation passes:
 
    ```bash
    bash infrastructure/scripts/tls-readiness-check.sh \
@@ -76,7 +86,7 @@ bash infrastructure/scripts/terraform-preflight.sh
 
    - Timeout policy: if the script exits `2`, continue certificate issuance/attachment steps below, then rerun until PASS.
 
-7. Save command output logs for each layer, smoke run, delegation check, and TLS check as execution evidence.
+8. Save command output logs for each layer, smoke run, data-plane verification, delegation check, and TLS check as execution evidence.
 
 ## Edge TLS issuance (EC2 nginx)
 
@@ -114,14 +124,28 @@ Wildcard issuance requires DNS-01 challenge. `certbot --nginx` is not valid for 
    bash infrastructure/scripts/terraform-smoke.sh
    ```
 
-5. Resume from failed or pending layer only:
+5. Re-run smoke harness to restore stage contract confidence:
 
    ```bash
-   bash infrastructure/scripts/terraform-apply-layer.sh <foundation|network|data|runtime>
+   bash infrastructure/scripts/terraform-smoke.sh
    ```
 
-6. Continue remaining layers in order.
-7. If previously paused at delegation checkpoint, rerun `dns-delegation-check.sh` and `tls-readiness-check.sh` before proceeding.
+6. Resume from failed or pending layer only:
+
+   ```bash
+    bash infrastructure/scripts/terraform-apply-layer.sh <foundation|network|data|runtime>
+   ```
+
+7. Continue remaining layers in order.
+8. If pending/failed scope includes private data-plane resources, rerun and confirm:
+
+   ```bash
+   bash infrastructure/scripts/terraform-apply-layer.sh data
+   terraform -chdir=infrastructure/terraform/environments/prod state show aws_db_instance.postgres | grep -E "db.t3.micro|backup_retention_period\s+=\s+7"
+   terraform -chdir=infrastructure/terraform/environments/prod state show aws_vpc_endpoint.s3_gateway | grep -E "com.amazonaws.us-east-1.s3"
+   ```
+
+9. If previously paused at delegation checkpoint, rerun `dns-delegation-check.sh` and `tls-readiness-check.sh` before proceeding.
 
 ## Rollback and drift response
 
