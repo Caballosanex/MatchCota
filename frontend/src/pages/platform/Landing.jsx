@@ -1,19 +1,5 @@
-/**
- * [DEV] Landing page de la plataforma MatchCota.
- * ----------------------------------------------------------------------
- * Aquesta pàgina es mostra quan algú accedeix a la web principal (sense protectora).
- * Funciona com un aparador per convèncer a les protectores que utilitzin el nostre software.
- */
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-// Importem la funció per cridar al backend i saber quines protectores hi han
-import { getTenants } from '../../api/tenants';
 import heroImage from '../../assets/hero-image.jpg';
-
-// ==========================================
-// ICONS (Components visuals purs)
-// Han estat fets amb SVG pel dissenyador.
-// ==========================================
 
 const ClipboardIcon = () => (
     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -28,13 +14,10 @@ const PawIcon = () => (
         fill="currentColor"
         xmlns="http://www.w3.org/2000/svg"
     >
-        {/* Dits: Una mica més petits, desplaçats amunt i més oberts per donar espai */}
         <ellipse cx="20" cy="42" rx="9" ry="14" transform="rotate(-35 20 42)" />
         <ellipse cx="38" cy="22" rx="10" ry="16" transform="rotate(-12 38 22)" />
         <ellipse cx="62" cy="22" rx="10" ry="16" transform="rotate(12 62 22)" />
         <ellipse cx="80" cy="42" rx="9" ry="14" transform="rotate(35 80 42)" />
-
-        {/* Coixinet principal: Desplaçat cap avall (de la Y=48 a la Y=54) perquè respiri */}
         <path d="M50 54 
              C26 54 16 70 26 84 
              C33 93 45 90 50 83 
@@ -49,7 +32,6 @@ const HeartIcon = () => (
     </svg>
 );
 
-// Feature Icons (Colored backgrounds in design)
 const TrendDownIcon = () => (
     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
@@ -74,47 +56,12 @@ const DiamondIcon = () => (
     </svg>
 );
 
-// ==========================================
-// COMPONENT PRINCIPAL
-// ==========================================
 export default function Landing() {
-    // Estat local de la Landing
-    // 1. Array per guardar la llista de protectores que baixarem del servidor
-    const [tenants, setTenants] = useState([]);
-    // 2. Control de càrrega per mostrar un text de "Carregant..." mentre arriben les dades
-    const [loadingTenants, setLoadingTenants] = useState(true);
-    // 3. Estatus de l'API (per veure si el servidor en general està viu)
-    const [apiStatus, setApiStatus] = useState('checking...');
-
-    /**
-     * EFECTE D'INICIACIÓ
-     * El useEffect s'executa automàticament just quan s'obre la landing.
-     */
-    useEffect(() => {
-        // A. Comprovació de Salut (Health check) - Li demanem al backend si està actiu (sprint 6/7 info)
-        const apiUrl = import.meta.env.VITE_API_URL || '/api/v1';
-        fetch(`${apiUrl}/health`)
-            .then(res => res.json())
-            .then(data => setApiStatus(data.status))
-            .catch(() => setApiStatus('error')); // Si falla la petició de xarxa, guardem 'error'
-
-        // B. Carregar la llista de protectores (Tenants)
-        getTenants()
-            .then(data => {
-                setTenants(data); // Guardem les protectores rebudes a l'estat local
-                setLoadingTenants(false); // Ja no estem "carregant"
-            })
-            .catch(() => setLoadingTenants(false)); // Si dóna error, almenys apaguem el "carregant"
-    }, []); // Array buit vol dir que això NOMÉS passarà 1 cop a l'inci
-
     return (
         <div className="min-h-screen bg-white font-sans text-gray-900 selection:bg-indigo-100 selection:text-indigo-900">
-            {/* --- SECCIÓ 0: NAVEGACIÓ (HEADER) --- */}
-            {/* 'fixed' fa que es quedi ancorat dalt de tot. 'backdrop-blur-md' li dóna aquell toc vidre matisat (glassmorphism) modern */}
             <header className="fixed w-full top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        {/* Logo from Figma seems to be a magnifying glass/paw icon in a circle */}
                         <div className="w-10 h-10 bg-indigo-200 rounded-full flex items-center justify-center">
                             <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -122,7 +69,6 @@ export default function Landing() {
                         </div>
                         <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-indigo-800">MatchCota</span>
                     </div>
-                    {/* Botó de Registre de nova protectora */}
                     <Link
                         to="/register-tenant"
                         className="px-6 py-2.5 border border-indigo-200 text-indigo-600 rounded-full hover:bg-indigo-50 hover:border-indigo-300 transition-all font-medium text-sm shadow-sm"
@@ -132,11 +78,8 @@ export default function Landing() {
                 </div>
             </header>
 
-            {/* Espaiat "fantasma" de 20px (h-20) perquè el contingut no es col·loqui darrere la capçalera (ja que és 'fixed') */}
             <div className="h-20"></div>
 
-            {/* --- SECCIÓ 1: HERO (Presentació Principal) --- */}
-            {/*  Fem un Grid que mostrarà 2 columnes ('lg:grid-cols-2') en dispositius grans, text a l'esquerra, imatge a la dreta */}
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 grid lg:grid-cols-2 gap-12 items-center">
                 <div className="text-left space-y-8">
                     <h1 className="text-5xl lg:text-7xl font-extrabold text-gray-900 leading-[1.1] tracking-tight">
@@ -148,23 +91,14 @@ export default function Landing() {
                         Plataforma intel·ligent que connecta protectores amb adoptants mitjançant matching per compatibilitat.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                        {/* Botó principal - Crida a l'acció (CTA) */}
                         <Link
                             to="/register-tenant"
                             className="px-8 py-4 bg-[#B4C0FF] text-indigo-900 rounded-full font-bold hover:bg-[#A3B0FF] transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 text-center"
                         >
                             Registra la teva protectora &rarr;
                         </Link>
-                        {/* Botó secundari - Porta a la plana falsa d'enquesta React que acabem d'explicar (DemoTest) */}
-                        <Link
-                            to="/demo"
-                            className="px-8 py-4 bg-white border-2 border-indigo-100 text-indigo-600 rounded-full font-bold hover:bg-indigo-50 hover:border-indigo-200 transition-all text-center"
-                        >
-                            Veure demo
-                        </Link>
                     </div>
                 </div>
-                {/* Hero Illustration */}
                 <div className="relative h-[500px] rounded-[40px] overflow-hidden shadow-2xl">
                     <img
                         src={heroImage}
@@ -174,7 +108,6 @@ export default function Landing() {
                 </div>
             </section>
 
-            {/* --- SECCIÓ 2: HOW IT WORKS (Passos) --- */}
             <section className="bg-white py-24">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-20">
@@ -183,9 +116,7 @@ export default function Landing() {
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-10">
-                        {/* Step 1 */}
                         <div className="bg-white border border-gray-100 rounded-[30px] p-10 hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col items-center text-center">
-                            {/* Icon Blue Circle */}
                             <div className="w-16 h-16 bg-[#6C8DCA] rounded-full flex items-center justify-center mb-8 shadow-blue-200 shadow-lg">
                                 <ClipboardIcon />
                             </div>
@@ -195,9 +126,7 @@ export default function Landing() {
                             </p>
                         </div>
 
-                        {/* Step 2 */}
                         <div className="bg-white border border-gray-100 rounded-[30px] p-10 hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col items-center text-center">
-                            {/* Icon Yellow Circle */}
                             <div className="w-16 h-16 bg-[#FFC555] rounded-full flex items-center justify-center mb-8 shadow-yellow-200 shadow-lg">
                                 <PawIcon />
                             </div>
@@ -207,9 +136,7 @@ export default function Landing() {
                             </p>
                         </div>
 
-                        {/* Step 3 */}
                         <div className="bg-white border border-gray-100 rounded-[30px] p-10 hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col items-center text-center">
-                            {/* Icon Red Circle */}
                             <div className="w-16 h-16 bg-[#FF6B6B] rounded-full flex items-center justify-center mb-8 shadow-red-200 shadow-lg">
                                 <HeartIcon />
                             </div>
@@ -222,13 +149,11 @@ export default function Landing() {
                 </div>
             </section>
 
-            {/* --- SECCIÓ 3: CARACTERÍSTIQUES (FEATURES) --- */}
             <section className="bg-gray-50/50 py-24">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <h2 className="text-3xl font-bold text-center text-gray-900 mb-16">Per què MatchCota?</h2>
 
                     <div className="grid md:grid-cols-2 gap-8">
-                        {/* Card 1: Menys devolucions (Green) */}
                         <div className="bg-white p-6 rounded-[24px] shadow-sm hover:shadow-md transition-all flex items-start gap-6 border border-gray-100">
                             <div className="w-14 h-14 bg-[#C1E1C1] rounded-2xl flex items-center justify-center flex-shrink-0">
                                 <TrendDownIcon />
@@ -241,7 +166,6 @@ export default function Landing() {
                             </div>
                         </div>
 
-                        {/* Card 2: Estalvia temps (Blue) */}
                         <div className="bg-white p-6 rounded-[24px] shadow-sm hover:shadow-md transition-all flex items-start gap-6 border border-gray-100">
                             <div className="w-14 h-14 bg-[#BFD3E6] rounded-2xl flex items-center justify-center flex-shrink-0">
                                 <ClockIcon />
@@ -254,7 +178,6 @@ export default function Landing() {
                             </div>
                         </div>
 
-                        {/* Card 3: 100% gratuït (Yellow) */}
                         <div className="bg-white p-6 rounded-[24px] shadow-sm hover:shadow-md transition-all flex items-start gap-6 border border-gray-100">
                             <div className="w-14 h-14 bg-[#F2C94C] rounded-2xl flex items-center justify-center flex-shrink-0">
                                 <PiggyBankIcon />
@@ -267,7 +190,6 @@ export default function Landing() {
                             </div>
                         </div>
 
-                        {/* Card 4: Fàcil d'usar (Red) */}
                         <div className="bg-white p-6 rounded-[24px] shadow-sm hover:shadow-md transition-all flex items-start gap-6 border border-gray-100">
                             <div className="w-14 h-14 bg-[#F28B82] rounded-2xl flex items-center justify-center flex-shrink-0">
                                 <DiamondIcon />
@@ -283,7 +205,6 @@ export default function Landing() {
                 </div>
             </section>
 
-            {/* --- SECCIÓ 4: PEU DE PÀGINA (FOOTER) --- */}
             <footer className="bg-white border-t border-gray-100 pt-20 pb-10">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid md:grid-cols-4 gap-12 mb-16">
@@ -313,7 +234,7 @@ export default function Landing() {
                             <ul className="space-y-4 text-sm text-gray-500">
                                 <li className="flex items-center gap-3">
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                                    info@matchcota.com
+                                    info@matchcota.tech
                                 </li>
                                 <li className="flex items-center gap-3">
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
@@ -323,52 +244,10 @@ export default function Landing() {
                         </div>
                     </div>
                     <div className="border-t border-gray-100 pt-8 text-center text-xs text-gray-400 font-medium">
-                        2025 MatchCota. Tots els drets reservats.
+                        2026 MatchCota. Tots els drets reservats.
                     </div>
                 </div>
             </footer>
-
-            {/* --- SECCIÓ Z: ÀREA SE DEV (Amagada sota el disseny normal però útil per als autors) --- */}
-            {/* Això serveix per llistar directament les protectores i que l'usuari pugui entrar-hi directament.
-                Està vinculada a l'estat local 'tenants' carregat del useEffect. */}
-            <div className="bg-slate-900 text-slate-400 py-12 border-t-4 border-indigo-500">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-xl font-mono text-white">DEVICE AREA / TENANT LIST</h2>
-                        <span className="px-3 py-1 bg-indigo-900 text-indigo-300 rounded text-xs font-mono">
-                            API: {apiStatus}
-                        </span>
-                    </div>
-
-                    {/* Si trigem a rebre dades de l'API: */}
-                    {loadingTenants ? (
-                        <div className="font-mono text-sm">Carregant protectores...</div>
-                        // Si l'array està buit:
-                    ) : tenants.length === 0 ? (
-                        <div className="font-mono text-sm text-yellow-500">
-                            No hi ha protectores registrades. Ves a "Registra't" per crear-ne una.
-                        </div>
-                        // Si tenim almenys un element dins l'array, pintem cada element (cadascun serà t):
-                    ) : (
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {tenants.map((t) => (
-                                <a
-                                    key={t.id}
-                                    href={`/home?tenant=${t.slug}`}
-                                    className="block bg-slate-800 rounded border border-slate-700 p-4 hover:border-indigo-500 transition-colors"
-                                >
-                                    <div className="flex justify-between items-start mb-2">
-                                        <h3 className="font-bold text-white">{t.name}</h3>
-                                        <span className="text-xs font-mono bg-black px-2 py-1 rounded text-gray-500">{t.slug}</span>
-                                    </div>
-                                    <p className="text-xs mb-3">{t.city || 'No location'}</p>
-                                    <div className="text-xs text-indigo-400">Accedir al tenant &rarr;</div>
-                                </a>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
         </div>
     );
 }
