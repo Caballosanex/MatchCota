@@ -96,7 +96,10 @@ def get_current_user(
         )
 
     # 3. Carregar usuari de BD
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(
+        User.id == user_id,
+        User.tenant_id == header_tenant_id,
+    ).first()
     if user is None:
         raise credentials_exception
 

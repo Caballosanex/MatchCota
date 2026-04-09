@@ -42,7 +42,26 @@ class _DummyColumn:
         self.name = name
 
     def __eq__(self, _other):
-        return ("eq", self.name)
+        return _DummyExpression("eq", self.name)
+
+
+class _DummyExpression:
+    def __init__(self, op: str, field: str):
+        self.op = op
+        self.field = field
+
+    def __or__(self, other):
+        return _DummyExpression("or", f"{self.field}|{other.field}")
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, _DummyExpression)
+            and self.op == other.op
+            and self.field == other.field
+        )
+
+    def __repr__(self):
+        return f"Expr({self.op},{self.field})"
 
 
 class _DummyUserModel:
@@ -94,19 +113,20 @@ def test_crud_identity_lookup_functions_require_tenant_id_argument():
     finally:
         crud_users.User = original_user_model
 
-    assert ("eq", "tenant_id") in email_filters
-    assert ("eq", "email") in email_filters
+    assert _DummyExpression("eq", "tenant_id") in email_filters
+    assert _DummyExpression("eq", "email") in email_filters
 
-    assert ("eq", "tenant_id") in username_filters
-    assert ("eq", "username") in username_filters
+    assert _DummyExpression("eq", "tenant_id") in username_filters
+    assert _DummyExpression("eq", "username") in username_filters
 
-    assert ("eq", "tenant_id") in existing_filters
+    assert _DummyExpression("eq", "tenant_id") in existing_filters
 
 
 def test_auth_module_uses_tenant_scoped_current_user_query_and_login_query():
     auth_file = PROJECT_ROOT / "app/api/v1/auth.py"
     auth_content = auth_file.read_text(encoding="utf-8")
 
-    assert "User.id == user_id, User.tenant_id == header_tenant_id" in auth_content
+    assert "User.id == user_id" in auth_content
+    assert "User.tenant_id == header_tenant_id" in auth_content
     assert "User.email == form_data.username," in auth_content
     assert "User.tenant_id == tenant.id" in auth_content

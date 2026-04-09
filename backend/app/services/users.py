@@ -22,7 +22,7 @@ def get_user(db: Session, user_id: UUID, tenant_id: UUID) -> User:
 
 def create_user(db: Session, user_data: UserCreate, tenant_id: UUID) -> User:
     # Verify existing
-    if crud_users.check_existing_user(db, user_data.username, user_data.email):
+    if crud_users.check_existing_user(db, user_data.username, user_data.email, tenant_id):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username o email ja existeix"

@@ -8,11 +8,11 @@ from app.schemas.user import UserCreate, UserUpdate
 def get_user(db: Session, user_id: UUID) -> Optional[User]:
     return db.query(User).filter(User.id == user_id).first()
 
-def get_user_by_email(db: Session, email: str) -> Optional[User]:
-    return db.query(User).filter(User.email == email).first()
+def get_user_by_email(db: Session, email: str, tenant_id: UUID) -> Optional[User]:
+    return db.query(User).filter(User.email == email, User.tenant_id == tenant_id).first()
 
-def get_user_by_username(db: Session, username: str) -> Optional[User]:
-    return db.query(User).filter(User.username == username).first()
+def get_user_by_username(db: Session, username: str, tenant_id: UUID) -> Optional[User]:
+    return db.query(User).filter(User.username == username, User.tenant_id == tenant_id).first()
 
 def get_users_by_tenant(db: Session, tenant_id: UUID, skip: int = 0, limit: int = 100) -> List[User]:
     return db.query(User).filter(User.tenant_id == tenant_id).offset(skip).limit(limit).all()
@@ -20,8 +20,11 @@ def get_users_by_tenant(db: Session, tenant_id: UUID, skip: int = 0, limit: int 
 def get_user_by_tenant(db: Session, user_id: UUID, tenant_id: UUID) -> Optional[User]:
     return db.query(User).filter(User.id == user_id, User.tenant_id == tenant_id).first()
 
-def check_existing_user(db: Session, username: str, email: str) -> Optional[User]:
-    return db.query(User).filter((User.username == username) | (User.email == email)).first()
+def check_existing_user(db: Session, username: str, email: str, tenant_id: UUID) -> Optional[User]:
+    return db.query(User).filter(
+        User.tenant_id == tenant_id,
+        (User.username == username) | (User.email == email),
+    ).first()
 
 def create_user(db: Session, user: User) -> User:
     db.add(user)
