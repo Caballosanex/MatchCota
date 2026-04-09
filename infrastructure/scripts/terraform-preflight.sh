@@ -5,6 +5,10 @@ set -euo pipefail
 EXPECTED_REGION="us-east-1"
 MIN_TF_MINOR=14
 
+# Default to the project AWS Academy profile unless caller overrides.
+AWS_PROFILE="${AWS_PROFILE:-matchcota}"
+export AWS_PROFILE
+
 require_cmd() {
   local cmd="$1"
   if ! command -v "$cmd" >/dev/null 2>&1; then

@@ -8,6 +8,10 @@ PREFLIGHT_SCRIPT="${SCRIPT_DIR}/terraform-preflight.sh"
 DNS_DELEGATION_CHECK_SCRIPT="${SCRIPT_DIR}/dns-delegation-check.sh"
 TLS_READINESS_CHECK_SCRIPT="${SCRIPT_DIR}/tls-readiness-check.sh"
 
+# Default to the project AWS Academy profile unless caller overrides.
+AWS_PROFILE="${AWS_PROFILE:-matchcota}"
+export AWS_PROFILE
+
 SMOKE_DOMAIN="${SMOKE_DOMAIN:-matchcota.tech}"
 SMOKE_WILDCARD_SAMPLE="${SMOKE_WILDCARD_SAMPLE:-smoke.matchcota.tech}"
 SMOKE_API_HOST="${SMOKE_API_HOST:-api.matchcota.tech}"
@@ -64,6 +68,8 @@ main() {
   cat >"${SMOKE_TFVARS}" <<'EOF'
 terraform_state_bucket = "smoke-placeholder-state-bucket"
 terraform_lock_table   = "smoke-placeholder-lock-table"
+frontend_elastic_ip    = "203.0.113.10"
+db_password            = "smoke-placeholder-password"
 EOF
 
   SMOKE_TMP_ENV_DIR="$(mktemp -d)"

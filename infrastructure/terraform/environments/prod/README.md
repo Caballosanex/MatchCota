@@ -6,6 +6,7 @@ This directory contains the production Terraform root for MatchCota in AWS Acade
 
 1. Terraform `~> 1.14`
 2. AWS CLI configured with active temporary AWS Academy credentials
+   - Default profile used by project scripts: `matchcota` (scripts auto-set `AWS_PROFILE=matchcota` when unset)
 3. Region set to `us-east-1`
 
 ## First Run
@@ -35,6 +36,7 @@ This directory contains the production Terraform root for MatchCota in AWS Acade
 ## Resume after credential expiry
 
 1. Refresh AWS Academy credentials and export/update your AWS CLI session.
+   - If running commands manually, set the expected profile first: `export AWS_PROFILE=matchcota`
 2. Re-run preflight checks:
    - `bash infrastructure/scripts/terraform-preflight.sh`
 3. Re-run smoke harness before any apply resume:

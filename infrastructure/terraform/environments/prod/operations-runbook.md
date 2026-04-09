@@ -6,6 +6,8 @@ This runbook is the operator guide for baseline Terraform provisioning in AWS Ac
 
 1. Terraform `~> 1.14` and AWS CLI are installed.
 2. AWS Academy temporary credentials are active in the current shell/profile.
+   - Standard profile for this project: `matchcota`.
+   - Script default: `terraform-preflight.sh` and `terraform-smoke.sh` auto-export `AWS_PROFILE=matchcota` when unset.
 3. Region is set to `us-east-1`.
 4. Backend state resources are known (S3 bucket + DynamoDB lock table).
 
@@ -112,6 +114,7 @@ Wildcard issuance requires DNS-01 challenge. `certbot --nginx` is not valid for 
 
 1. Refresh AWS Academy credentials.
 2. Update environment/profile used by AWS CLI.
+   - For manual commands outside scripts: `export AWS_PROFILE=matchcota`
 3. Re-run preflight:
 
    ```bash
