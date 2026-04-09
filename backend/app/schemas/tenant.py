@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel, EmailStr, HttpUrl
+from pydantic import BaseModel, EmailStr, Field
 from uuid import UUID
 from datetime import datetime
 
@@ -16,7 +16,7 @@ class TenantBase(BaseModel):
     logo_url: Optional[str] = None
 
 class TenantCreate(TenantBase):
-    pass
+    admin_password: str = Field(min_length=8)
 
 class TenantUpdate(TenantBase):
     name: Optional[str] = None
