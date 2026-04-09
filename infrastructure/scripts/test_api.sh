@@ -1,70 +1,138 @@
-#!/bin/bash
-# ================================================
-# Test API Endpoints
-# ================================================
+#!/usr/bin/env bash
 
-BASE_URL="http://localhost:8000/api/v1"
-TENANT="demo"
+set -euo pipefail
 
-echo "================================================"
-echo "🧪  MATCHCOTA API TESTS"
-echo "================================================"
-echo "Base URL: $BASE_URL"
-echo "Tenant:   $TENANT"
-echo ""
+BASE_URL="${BASE_URL:-http://localhost:8000/api/v1}"
+TENANT="${TENANT:-demo}"
+HEALTH_REPEATS="${HEALTH_REPEATS:-10}"
 
-# 1. Health Check
-echo "👉 1. Checking Health..."
-curl -s -X GET "$BASE_URL/health" | jq . || curl -s -X GET "$BASE_URL/health"
-echo ""
-echo ""
+stage() {
+  echo "[test-api] $1"
+}
 
-# 2. Get Public Tenant Info
-echo "👉 2. Getting Tenant Info (Public)..."
-curl -s -X GET "$BASE_URL/tenants/current" \
-  -H "X-Tenant-Slug: $TENANT" | jq . || curl -s -X GET "$BASE_URL/tenants/current" \
-  -H "X-Tenant-Slug: $TENANT"
-echo ""
-echo ""
+print_json_if_possible() {
+  local body_file="$1"
+  if command -v jq >/dev/null 2>&1; then
+    jq . "$body_file" 2>/dev/null || cat "$body_file"
+  else
+    cat "$body_file"
+  fi
+}
 
-# 3. List Animals (Public)
-echo "👉 3. Listing Animals (Public)..."
-curl -s -X GET "$BASE_URL/animals" \
-  -H "X-Tenant-Slug: $TENANT" | jq . || curl -s -X GET "$BASE_URL/animals" \
-  -H "X-Tenant-Slug: $TENANT"
-echo ""
-echo ""
+assert_matchcota_fingerprint() {
+  local headers_file="$1"
+  local body_file="$2"
+  local context="$3"
+  local combo
 
-# 4. Login (Get Token)
-echo "👉 4. Logging in as Admin..."
-LOGIN_RESPONSE=$(curl -s -X POST "$BASE_URL/auth/login" \
-  -H "X-Tenant-Slug: $TENANT" \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "username=admin@demo.com&password=admin123")
+  combo="$(cat "$headers_file" "$body_file")"
+  if [[ "$combo" == *"httpbin.org"* ]] || [[ "$combo" == *"gunicorn/19.9.0"* ]]; then
+    echo "[test-api] ERROR: non-MatchCota signature detected during ${context}" >&2
+    cat "$headers_file" >&2 || true
+    cat "$body_file" >&2 || true
+    exit 1
+  fi
+}
 
-echo "$LOGIN_RESPONSE" | jq . || echo "$LOGIN_RESPONSE"
-echo ""
+assert_health_payload() {
+  local body_file="$1"
+  python3 - "$body_file" <<'PY'
+import json
+import pathlib
+import sys
 
-# Extract Token (simple grep/sed if jq not available, but assuming jq for now or raw output)
-# Try to extract token using grep/sed for compatibility if jq missing
-TOKEN=$(echo $LOGIN_RESPONSE | grep -o '"access_token":"[^"]*' | cut -d'"' -f4)
+payload = json.loads(pathlib.Path(sys.argv[1]).read_text())
+if payload.get("status") != "healthy":
+    raise SystemExit("missing status=healthy")
+PY
+}
 
-if [ -z "$TOKEN" ]; then
-    echo "❌ Connect Failed to get token"
-else
-    echo "✅ Token Token acquired"
-    echo ""
-    
-    # 5. Get Protected User Info
-    echo "👉 5. Getting Current User Info (Protected)..."
-    curl -s -X GET "$BASE_URL/auth/me" \
-      -H "X-Tenant-Slug: $TENANT" \
-      -H "Authorization: Bearer $TOKEN" | jq . || curl -s -X GET "$BASE_URL/auth/me" \
-      -H "X-Tenant-Slug: $TENANT" \
-      -H "Authorization: Bearer $TOKEN"
-fi
+run_health_check() {
+  local label="$1"
+  local headers body status
+  headers="$(mktemp)"
+  body="$(mktemp)"
 
-echo ""
-echo "================================================"
-echo "✅ Tests Completed"
-echo "================================================"
+  status="$(curl -sS -m 20 -D "$headers" -o "$body" -w "%{http_code}" "$BASE_URL/health")"
+  if [[ "$status" != "200" ]]; then
+    echo "[test-api] ERROR: ${label} failed with HTTP ${status}" >&2
+    cat "$body" >&2 || true
+    rm -f "$headers" "$body"
+    exit 1
+  fi
+
+  assert_matchcota_fingerprint "$headers" "$body" "$label"
+  assert_health_payload "$body"
+
+  stage "${label} OK"
+  print_json_if_possible "$body"
+
+  rm -f "$headers" "$body"
+}
+
+run_tenant_registration_contract_check() {
+  local headers body status
+  headers="$(mktemp)"
+  body="$(mktemp)"
+
+  status="$(curl -sS -m 20 -D "$headers" -o "$body" -w "%{http_code}" \
+    -X POST "$BASE_URL/tenants" \
+    -H "Content-Type: application/json" \
+    --data '{"name":"Runtime Contract Shelter","slug":"runtime-contract-shelter","admin_email":"invalid"}')"
+
+  if [[ "$status" -lt 400 || "$status" -ge 500 ]]; then
+    echo "[test-api] ERROR: expected 4xx validation response from POST /tenants, got HTTP ${status}" >&2
+    cat "$body" >&2 || true
+    rm -f "$headers" "$body"
+    exit 1
+  fi
+
+  assert_matchcota_fingerprint "$headers" "$body" "tenant-registration-contract"
+
+  if ! python3 - "$body" <<'PY'
+import json
+import pathlib
+import sys
+
+payload = json.loads(pathlib.Path(sys.argv[1]).read_text())
+detail = payload.get("detail")
+if not isinstance(detail, list):
+    raise SystemExit(1)
+if not detail:
+    raise SystemExit(1)
+first = detail[0]
+if not isinstance(first, dict):
+    raise SystemExit(1)
+if "loc" not in first or "msg" not in first:
+    raise SystemExit(1)
+PY
+  then
+    echo "[test-api] ERROR: response does not look like FastAPI validation error structure" >&2
+    cat "$body" >&2 || true
+    rm -f "$headers" "$body"
+    exit 1
+  fi
+
+  stage "POST /tenants validation contract OK (HTTP ${status})"
+  print_json_if_possible "$body"
+
+  rm -f "$headers" "$body"
+}
+
+run_repeated_health_checks() {
+  local i
+  stage "running repeated health checks (count=${HEALTH_REPEATS})"
+  for ((i = 1; i <= HEALTH_REPEATS; i++)); do
+    run_health_check "health-loop-${i}/${HEALTH_REPEATS}"
+  done
+}
+
+main() {
+  stage "base_url=${BASE_URL} tenant=${TENANT}"
+  run_health_check "health-initial"
+  run_tenant_registration_contract_check
+  run_repeated_health_checks
+  stage "all API checks passed"
+}
+
+main "$@"

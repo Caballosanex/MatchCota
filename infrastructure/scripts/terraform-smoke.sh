@@ -19,6 +19,7 @@ SMOKE_DNS_TIMEOUT="${SMOKE_DNS_TIMEOUT:-900}"
 SMOKE_DNS_INTERVAL="${SMOKE_DNS_INTERVAL:-30}"
 SMOKE_TLS_TIMEOUT="${SMOKE_TLS_TIMEOUT:-900}"
 SMOKE_TLS_INTERVAL="${SMOKE_TLS_INTERVAL:-30}"
+SMOKE_API_BASE_URL="${SMOKE_API_BASE_URL:-https://${SMOKE_API_HOST}/api/v1}"
 
 SMOKE_TMP_ENV_DIR=""
 
@@ -45,6 +46,53 @@ cleanup() {
 
 stage() {
   echo "[smoke] $1"
+}
+
+assert_matchcota_runtime_fingerprint() {
+  local tmp_headers tmp_body
+  tmp_headers="$(mktemp)"
+  tmp_body="$(mktemp)"
+
+  stage "stage=runtime_domain_fingerprint start"
+
+  local status_code
+  status_code="$(curl -sS -m 20 -D "$tmp_headers" -o "$tmp_body" -w "%{http_code}" "${SMOKE_API_BASE_URL}/health")"
+
+  if [[ "$status_code" != "200" ]]; then
+    echo "[smoke] ERROR: runtime health check returned HTTP ${status_code}" >&2
+    cat "$tmp_body" >&2 || true
+    rm -f "$tmp_headers" "$tmp_body"
+    exit 1
+  fi
+
+  if ! python3 - "$tmp_body" <<'PY'
+import json
+import pathlib
+import sys
+
+payload = json.loads(pathlib.Path(sys.argv[1]).read_text())
+if payload.get("status") != "healthy":
+    raise SystemExit(1)
+PY
+  then
+    echo "[smoke] ERROR: runtime health payload missing expected status=healthy" >&2
+    cat "$tmp_body" >&2 || true
+    rm -f "$tmp_headers" "$tmp_body"
+    exit 1
+  fi
+
+  local header_body
+  header_body="$(cat "$tmp_headers" "$tmp_body")"
+  if [[ "$header_body" == *"httpbin.org"* ]] || [[ "$header_body" == *"gunicorn/19.9.0"* ]]; then
+    echo "[smoke] ERROR: detected non-MatchCota runtime signature (httpbin/gunicorn)" >&2
+    cat "$tmp_headers" >&2 || true
+    cat "$tmp_body" >&2 || true
+    rm -f "$tmp_headers" "$tmp_body"
+    exit 1
+  fi
+
+  rm -f "$tmp_headers" "$tmp_body"
+  stage "stage=runtime_domain_fingerprint pass"
 }
 
 main() {
@@ -117,6 +165,8 @@ EOF
     --timeout "${SMOKE_TLS_TIMEOUT}" \
     --interval "${SMOKE_TLS_INTERVAL}"
   stage "stage=tls_readiness pass"
+
+  assert_matchcota_runtime_fingerprint
 
   stage "stage=complete pass"
 }
