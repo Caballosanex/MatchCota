@@ -289,6 +289,89 @@ resource "aws_route53_record" "api_alias_a" {
   }
 }
 
+data "aws_caller_identity" "current" {}
+
+data "archive_file" "lambda_runtime_zip" {
+  type        = "zip"
+  source_file = var.lambda_artifact_path
+  output_path = "${path.module}/.terraform/build/matchcota-runtime.zip"
+}
+
+resource "aws_lambda_function" "runtime" {
+  function_name    = var.lambda_function_name
+  role             = local.lambda_execution_role_arn
+  handler          = var.lambda_handler
+  runtime          = var.lambda_runtime
+  timeout          = var.lambda_timeout
+  memory_size      = var.lambda_memory_size
+  filename         = data.archive_file.lambda_runtime_zip.output_path
+  source_code_hash = data.archive_file.lambda_runtime_zip.output_base64sha256
+
+  vpc_config {
+    subnet_ids         = local.lambda_runtime_subnet_ids
+    security_group_ids = local.lambda_runtime_security_group_ids
+  }
+
+  environment {
+    variables = var.lambda_environment_variables
+  }
+
+  tags = merge(local.default_tags, {
+    Name = var.lambda_function_name
+  })
+}
+
+resource "aws_apigatewayv2_api" "runtime" {
+  name          = "matchcota-prod-http-api"
+  protocol_type = "HTTP"
+
+  disable_execute_api_endpoint = false
+  route_selection_expression   = "$request.method $request.path"
+
+  tags = merge(local.default_tags, {
+    Name = "matchcota-prod-http-api"
+  })
+}
+
+resource "aws_apigatewayv2_integration" "runtime_lambda_proxy" {
+  api_id                 = aws_apigatewayv2_api.runtime.id
+  integration_type       = "AWS_PROXY"
+  integration_method     = "POST"
+  integration_uri        = aws_lambda_function.runtime.invoke_arn
+  payload_format_version = "2.0"
+  timeout_milliseconds   = 29000
+}
+
+resource "aws_apigatewayv2_route" "runtime_root" {
+  api_id    = aws_apigatewayv2_api.runtime.id
+  route_key = "ANY /"
+  target    = "integrations/${aws_apigatewayv2_integration.runtime_lambda_proxy.id}"
+}
+
+resource "aws_apigatewayv2_route" "runtime_proxy" {
+  api_id    = aws_apigatewayv2_api.runtime.id
+  route_key = "ANY /{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.runtime_lambda_proxy.id}"
+}
+
+resource "aws_apigatewayv2_stage" "runtime_default" {
+  api_id      = aws_apigatewayv2_api.runtime.id
+  name        = var.api_gateway_stage_name
+  auto_deploy = true
+
+  tags = merge(local.default_tags, {
+    Name = "matchcota-prod-http-api-default-stage"
+  })
+}
+
+resource "aws_lambda_permission" "allow_apigateway_invoke" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.runtime.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.runtime.execution_arn}/*/*"
+}
+
 resource "aws_acm_certificate" "api_custom_domain" {
   domain_name       = var.api_custom_domain_name
   validation_method = "DNS"
@@ -336,9 +419,9 @@ resource "aws_apigatewayv2_domain_name" "api_custom_domain" {
 resource "aws_apigatewayv2_api_mapping" "api_default" {
   count = local.should_create_api_mapping ? 1 : 0
 
-  api_id      = var.api_gateway_http_api_id
+  api_id      = local.resolved_api_gateway_http_api_id
   domain_name = aws_apigatewayv2_domain_name.api_custom_domain[0].domain_name
-  stage       = var.api_gateway_stage_name
+  stage       = aws_apigatewayv2_stage.runtime_default.name
 }
 
 resource "terraform_data" "edge_tls_bootstrap_contract" {

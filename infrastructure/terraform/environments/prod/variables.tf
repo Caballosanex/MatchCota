@@ -73,6 +73,66 @@ variable "api_gateway_stage_name" {
   default     = "$default"
 }
 
+variable "lambda_artifact_path" {
+  description = "Path to deployment artifact zip consumed by Lambda runtime"
+  type        = string
+  default     = "../../../../backend/dist/lambda.zip"
+}
+
+variable "lambda_function_name" {
+  description = "Lambda function name for MatchCota backend runtime"
+  type        = string
+  default     = "matchcota-prod-api"
+}
+
+variable "lambda_handler" {
+  description = "Lambda handler entrypoint for FastAPI runtime"
+  type        = string
+  default     = "app.lambda_handler.handler"
+}
+
+variable "lambda_runtime" {
+  description = "Lambda runtime identifier for backend execution"
+  type        = string
+  default     = "python3.11"
+}
+
+variable "lambda_timeout" {
+  description = "Lambda runtime timeout in seconds"
+  type        = number
+  default     = 30
+}
+
+variable "lambda_memory_size" {
+  description = "Lambda runtime memory allocation in MB"
+  type        = number
+  default     = 1024
+}
+
+variable "lambda_environment_variables" {
+  description = "Environment variables injected into Lambda runtime"
+  type        = map(string)
+  default     = {}
+}
+
+variable "lambda_execution_role_arn" {
+  description = "Optional explicit execution role ARN for Lambda. Defaults to LabRole in current account."
+  type        = string
+  default     = ""
+}
+
+variable "lambda_subnet_ids" {
+  description = "Optional private subnet IDs for Lambda VPC config; defaults to managed private subnets"
+  type        = list(string)
+  default     = []
+}
+
+variable "lambda_security_group_ids" {
+  description = "Optional security group IDs for Lambda VPC config; defaults to managed lambda runtime SG"
+  type        = list(string)
+  default     = []
+}
+
 variable "api_gateway_alias_target_name" {
   description = "Legacy API alias target DNS name used only when api_custom_domain_bootstrap_enabled=false"
   type        = string

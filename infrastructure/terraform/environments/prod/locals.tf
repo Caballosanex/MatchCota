@@ -13,11 +13,22 @@ locals {
 
   use_api_bootstrap_resources = var.api_custom_domain_bootstrap_enabled
 
-  should_create_api_mapping = local.use_api_bootstrap_resources && var.api_gateway_http_api_id != ""
+  resolved_api_gateway_http_api_id = var.api_gateway_http_api_id != "" ? var.api_gateway_http_api_id : aws_apigatewayv2_api.runtime.id
+
+  should_create_api_mapping = local.use_api_bootstrap_resources && local.resolved_api_gateway_http_api_id != ""
 
   api_alias_dns_name = local.use_api_bootstrap_resources ? aws_apigatewayv2_domain_name.api_custom_domain[0].domain_name_configuration[0].target_domain_name : var.api_gateway_alias_target_name
 
   api_alias_zone_id = local.use_api_bootstrap_resources ? aws_apigatewayv2_domain_name.api_custom_domain[0].domain_name_configuration[0].hosted_zone_id : var.api_gateway_alias_target_zone_id
+
+  lambda_execution_role_arn = var.lambda_execution_role_arn != "" ? var.lambda_execution_role_arn : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.lab_role_name}"
+
+  lambda_runtime_subnet_ids = length(var.lambda_subnet_ids) > 0 ? var.lambda_subnet_ids : [
+    for subnet_name, subnet in local.subnet_layout : aws_subnet.data_plane[subnet_name].id
+    if subnet.tier == "private"
+  ]
+
+  lambda_runtime_security_group_ids = length(var.lambda_security_group_ids) > 0 ? var.lambda_security_group_ids : [aws_security_group.lambda_runtime.id]
 
   edge_tls_bootstrap_cloud_init = var.edge_tls_bootstrap_enabled ? join("\n", [
     "#!/usr/bin/env bash",
