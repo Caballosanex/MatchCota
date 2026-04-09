@@ -516,6 +516,23 @@ server {
     root __MATCHCOTA_DOCROOT__;
     index index.html;
 
+    # Enforce host-specific routing contracts at the edge before SPA fallback:
+    # - Apex host must redirect tenant-only public paths to /
+    # - Tenant hosts must not expose registration path
+    location ~ ^/(test|home)(/.*)?$ {
+        if (\$host = matchcota.tech) {
+            return 302 /;
+        }
+        try_files \$uri /index.html;
+    }
+
+    location ~ ^/register-tenant(/.*)?$ {
+        if (\$host ~ ^[a-z0-9-]+\.matchcota\.tech$) {
+            return 302 /;
+        }
+        try_files \$uri /index.html;
+    }
+
     location / {
         try_files \$uri /index.html;
     }
