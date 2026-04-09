@@ -18,6 +18,17 @@ SMOKE_TLS_INTERVAL="${SMOKE_TLS_INTERVAL:-30}"
 
 SMOKE_TMP_ENV_DIR=""
 
+require_pattern() {
+  local file_path="$1"
+  local pattern="$2"
+  local message="$3"
+
+  if ! grep -Eq "$pattern" "$file_path"; then
+    echo "[smoke] ERROR: ${message}" >&2
+    exit 1
+  fi
+}
+
 cleanup() {
   if [[ -n "${SMOKE_TFVARS:-}" && -f "${SMOKE_TFVARS}" ]]; then
     rm -f "${SMOKE_TFVARS}"
@@ -67,6 +78,21 @@ EOF
     -var-file="${SMOKE_TFVARS}" \
     -out=tfplan-smoke >/dev/null
   stage "stage=plan pass"
+
+  stage "stage=data_plane_contract start"
+  terraform -chdir="${SMOKE_TMP_ENV_DIR}" show -no-color tfplan-smoke >"${SMOKE_TMP_ENV_DIR}/tfplan-smoke.txt"
+
+  require_pattern "${SMOKE_TMP_ENV_DIR}/tfplan-smoke.txt" "aws_vpc\\.data_plane|aws_subnet\\.data_plane" "missing VPC/subnet resources in plan output"
+  require_pattern "${SMOKE_TMP_ENV_DIR}/tfplan-smoke.txt" "aws_db_instance\\.postgres" "missing aws_db_instance.postgres in plan output"
+  require_pattern "${SMOKE_TMP_ENV_DIR}/tfplan-smoke.txt" "aws_s3_bucket_public_access_block\\.uploads" "missing aws_s3_bucket_public_access_block.uploads in plan output"
+  require_pattern "${SMOKE_TMP_ENV_DIR}/tfplan-smoke.txt" "aws_vpc_endpoint\\.s3_gateway" "missing aws_vpc_endpoint.s3_gateway in plan output"
+
+  require_pattern "${SMOKE_TMP_ENV_DIR}/outputs.tf" "output \"vpc_id\"" "missing vpc_id output contract"
+  require_pattern "${SMOKE_TMP_ENV_DIR}/outputs.tf" "output \"private_subnet_ids\"" "missing private_subnet_ids output contract"
+  require_pattern "${SMOKE_TMP_ENV_DIR}/outputs.tf" "output \"rds_endpoint\"" "missing rds_endpoint output contract"
+  require_pattern "${SMOKE_TMP_ENV_DIR}/outputs.tf" "output \"uploads_bucket_name\"" "missing uploads_bucket_name output contract"
+  require_pattern "${SMOKE_TMP_ENV_DIR}/outputs.tf" "output \"s3_gateway_endpoint_id\"" "missing s3_gateway_endpoint_id output contract"
+  stage "stage=data_plane_contract pass"
 
   stage "stage=dns_delegation start (dns-delegation-check.sh)"
   bash "${DNS_DELEGATION_CHECK_SCRIPT}" \
