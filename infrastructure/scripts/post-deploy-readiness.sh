@@ -6,6 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DNS_CHECK_SCRIPT="${SCRIPT_DIR}/dns-delegation-check.sh"
 TLS_CHECK_SCRIPT="${SCRIPT_DIR}/tls-readiness-check.sh"
 API_CHECK_SCRIPT="${SCRIPT_DIR}/test_api.sh"
+FRONTEND_DEPLOY_SCRIPT="${SCRIPT_DIR}/deploy-frontend.sh"
 
 DOMAIN="${DOMAIN:-matchcota.tech}"
 WILDCARD_SAMPLE="${WILDCARD_SAMPLE:-smoke.matchcota.tech}"
@@ -17,6 +18,8 @@ DNS_TIMEOUT="${DNS_TIMEOUT:-900}"
 DNS_INTERVAL="${DNS_INTERVAL:-30}"
 TLS_TIMEOUT="${TLS_TIMEOUT:-900}"
 TLS_INTERVAL="${TLS_INTERVAL:-30}"
+KNOWN_TENANT_SLUG="${KNOWN_TENANT_SLUG:-}"
+KNOWN_TENANT_HOST="${KNOWN_TENANT_HOST:-}"
 
 usage() {
   cat <<'EOF'
@@ -27,6 +30,7 @@ Deterministic post-deploy orchestration order:
   1) DNS delegation readiness
   2) TLS readiness (apex + wildcard sample + api)
   3) API runtime/readiness checks
+  4) Frontend host-routing contract readiness checks
 
 Environment variables (all optional defaults shown):
   AWS_PROFILE      AWS profile for commands that use AWS credentials (default: matchcota)
@@ -38,6 +42,8 @@ Environment variables (all optional defaults shown):
   DNS_INTERVAL     Seconds between dns-delegation-check retries (default: 30)
   TLS_TIMEOUT      Seconds before tls-readiness-check timeout (default: 900)
   TLS_INTERVAL     Seconds between tls-readiness-check retries (default: 30)
+  KNOWN_TENANT_SLUG Known production tenant slug for host-routing checks (required unless KNOWN_TENANT_HOST is set)
+  KNOWN_TENANT_HOST Known production tenant host override for host-routing checks (optional)
 
 Exit code contract:
   0 = all stages passed in deterministic order
@@ -57,6 +63,24 @@ require_script() {
   fi
 }
 
+run_frontend_route_readiness() {
+  local tenant_slug="$KNOWN_TENANT_SLUG"
+  local tenant_host="$KNOWN_TENANT_HOST"
+
+  if [[ -z "$tenant_slug" && -z "$tenant_host" ]]; then
+    echo "[post-deploy-readiness] stage=frontend-route-readiness fail reason=missing-known-tenant" >&2
+    echo "[post-deploy-readiness] ERROR set KNOWN_TENANT_SLUG (or KNOWN_TENANT_HOST) for tenant host-routing verification" >&2
+    exit 1
+  fi
+
+  if ! KNOWN_TENANT_SLUG="$tenant_slug" KNOWN_TENANT_HOST="$tenant_host" \
+    VITE_BASE_DOMAIN="$DOMAIN" VITE_ENVIRONMENT="production" \
+    bash "$FRONTEND_DEPLOY_SCRIPT" --verify-route-contracts-only; then
+    stage "frontend-route-readiness fail"
+    exit 1
+  fi
+}
+
 main() {
   if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
     usage
@@ -68,6 +92,7 @@ main() {
   require_script "$DNS_CHECK_SCRIPT"
   require_script "$TLS_CHECK_SCRIPT"
   require_script "$API_CHECK_SCRIPT"
+  require_script "$FRONTEND_DEPLOY_SCRIPT"
 
   stage "dns-delegation-check start"
   bash "$DNS_CHECK_SCRIPT" \
@@ -90,6 +115,10 @@ main() {
   stage "test-api start"
   BASE_URL="$API_BASE_URL" bash "$API_CHECK_SCRIPT"
   stage "test-api pass"
+
+  stage "frontend-route-readiness start"
+  run_frontend_route_readiness
+  stage "frontend-route-readiness pass"
 
   stage "complete pass"
 }
