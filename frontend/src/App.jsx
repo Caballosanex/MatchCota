@@ -15,6 +15,43 @@ import Dashboard from './pages/admin/Dashboard';
 import AnimalsManager from './pages/admin/AnimalsManager';
 import AnimalCreate from './pages/admin/AnimalCreate';
 import AnimalEdit from './pages/admin/AnimalEdit';
+import {
+  resolveHostContext,
+  isApexTenantPathBlocked,
+  isTenantRegistrationBlocked,
+} from './routing/hostRouting';
+
+function GuardedRoot() {
+  const hostContext = resolveHostContext();
+
+  if (hostContext.isTenantHost) {
+    return <Home />;
+  }
+
+  return <Landing />;
+}
+
+function ApexTenantRouteGuard({ children }) {
+  const hostContext = resolveHostContext();
+  const pathname = window.location.pathname;
+
+  if (hostContext.isApexHost && isApexTenantPathBlocked(pathname)) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+}
+
+function TenantRegistrationGuard() {
+  const hostContext = resolveHostContext();
+  const pathname = window.location.pathname;
+
+  if (hostContext.isTenantHost && isTenantRegistrationBlocked(pathname)) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <RegisterTenant />;
+}
 
 export default function App() {
   return (
@@ -22,16 +59,51 @@ export default function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Landing />} />
+            <Route path="/" element={<GuardedRoot />} />
 
             <Route element={<PublicLayout />}>
-              <Route path="home" element={<Home />} />
-              <Route path="animals" element={<Animals />} />
-              <Route path="animals/:id" element={<AnimalDetail />} />
+              <Route
+                path="home"
+                element={(
+                  <ApexTenantRouteGuard>
+                    <Home />
+                  </ApexTenantRouteGuard>
+                )}
+              />
+              <Route
+                path="animals"
+                element={(
+                  <ApexTenantRouteGuard>
+                    <Animals />
+                  </ApexTenantRouteGuard>
+                )}
+              />
+              <Route
+                path="animals/:id"
+                element={(
+                  <ApexTenantRouteGuard>
+                    <AnimalDetail />
+                  </ApexTenantRouteGuard>
+                )}
+              />
               <Route path="login" element={<Login />} />
-              <Route path="register-tenant" element={<RegisterTenant />} />
-              <Route path="test" element={<MatchTest />} />
-              <Route path="test/results" element={<MatchResults />} />
+              <Route path="register-tenant" element={<TenantRegistrationGuard />} />
+              <Route
+                path="test"
+                element={(
+                  <ApexTenantRouteGuard>
+                    <MatchTest />
+                  </ApexTenantRouteGuard>
+                )}
+              />
+              <Route
+                path="test/results"
+                element={(
+                  <ApexTenantRouteGuard>
+                    <MatchResults />
+                  </ApexTenantRouteGuard>
+                )}
+              />
             </Route>
 
             <Route path="/admin" element={<AdminLayout />}>
