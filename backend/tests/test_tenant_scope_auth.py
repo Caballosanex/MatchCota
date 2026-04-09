@@ -7,6 +7,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from app.models.user import User
+from app.crud import users as crud_users
 
 
 def _unique_constraint_column_sets():
@@ -34,3 +35,78 @@ def test_tenant_scope_migration_exists_with_composite_unique_constraints():
     assert "op.drop_constraint" in migration_content
     assert "uq_users_tenant_id_email" in migration_content
     assert "uq_users_tenant_id_username" in migration_content
+
+
+class _DummyColumn:
+    def __init__(self, name: str):
+        self.name = name
+
+    def __eq__(self, _other):
+        return ("eq", self.name)
+
+
+class _DummyUserModel:
+    email = _DummyColumn("email")
+    username = _DummyColumn("username")
+    tenant_id = _DummyColumn("tenant_id")
+
+
+class _DummyQuery:
+    def __init__(self):
+        self.filters = []
+
+    def filter(self, *criteria):
+        self.filters.extend(criteria)
+        return self
+
+    def first(self):
+        return None
+
+
+class _DummySession:
+    def __init__(self):
+        self.query_calls = []
+        self.last_query = None
+
+    def query(self, model):
+        self.query_calls.append(model)
+        query = _DummyQuery()
+        self.last_query = query
+        return query
+
+
+def test_crud_identity_lookup_functions_require_tenant_id_argument():
+    tenant_id = "tenant-a"
+    db = _DummySession()
+
+    original_user_model = crud_users.User
+    crud_users.User = _DummyUserModel
+
+    try:
+        crud_users.get_user_by_email(db, "user@example.com", tenant_id)
+        email_filters = db.last_query.filters
+
+        crud_users.get_user_by_username(db, "username", tenant_id)
+        username_filters = db.last_query.filters
+
+        crud_users.check_existing_user(db, "username", "user@example.com", tenant_id)
+        existing_filters = db.last_query.filters
+    finally:
+        crud_users.User = original_user_model
+
+    assert ("eq", "tenant_id") in email_filters
+    assert ("eq", "email") in email_filters
+
+    assert ("eq", "tenant_id") in username_filters
+    assert ("eq", "username") in username_filters
+
+    assert ("eq", "tenant_id") in existing_filters
+
+
+def test_auth_module_uses_tenant_scoped_current_user_query_and_login_query():
+    auth_file = PROJECT_ROOT / "app/api/v1/auth.py"
+    auth_content = auth_file.read_text(encoding="utf-8")
+
+    assert "User.id == user_id, User.tenant_id == header_tenant_id" in auth_content
+    assert "User.email == form_data.username," in auth_content
+    assert "User.tenant_id == tenant.id" in auth_content
