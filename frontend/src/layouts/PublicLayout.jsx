@@ -1,15 +1,51 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useTenant } from '../hooks/useTenant';
+import { resolveHostContext } from '../routing/hostRouting';
 
-function PublicHeader({ tenantName }) {
+function ApexPublicHeader() {
     return (
         <header className="bg-white shadow">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16">
                     <div className="flex">
                         <div className="flex-shrink-0 flex items-center">
-                            <Link to="/home" className="text-2xl font-bold text-blue-600">
-                                {tenantName ? tenantName : 'MatchCota'}
+                            <Link to="/" className="text-2xl font-bold text-blue-600">
+                                MatchCota
+                            </Link>
+                        </div>
+                        <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+                            <Link to="/register-tenant" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                                Registra una protectora
+                            </Link>
+                            <Link to="/login" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                                Accés Admin
+                            </Link>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center">
+                        <Link to="/register-tenant" className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">
+                            Crea el teu shelter
+                        </Link>
+                    </div>
+
+                </div>
+            </div>
+        </header>
+    );
+}
+
+function TenantPublicHeader({ tenantName }) {
+    const displayName = tenantName || 'Shelter MatchCota';
+
+    return (
+        <header className="bg-white shadow">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between h-16">
+                    <div className="flex">
+                        <div className="flex-shrink-0 flex items-center">
+                            <Link to="/" className="text-2xl font-bold text-teal-700">
+                                {displayName}
                             </Link>
                         </div>
                         <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -26,8 +62,8 @@ function PublicHeader({ tenantName }) {
                     </div>
 
                     <div className="flex items-center">
-                        <Link to="/login" className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">
-                            Accés Admin
+                        <Link to="/login" className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-xs font-medium uppercase tracking-wide">
+                            Accés administració
                         </Link>
                     </div>
 
@@ -80,13 +116,15 @@ function TenantNotFoundState({ error }) {
 export default function PublicLayout() {
     const { tenant, error } = useTenant();
     const currentLocation = useLocation();
+    const hostContext = resolveHostContext();
     const isAuthenticationPage = ['/login', '/register-tenant'].includes(currentLocation.pathname);
     const showTenantNotFound = error && typeof error === 'object' && error.type === 'tenant-not-found';
+    const isTenantHost = hostContext.isTenantHost;
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-50">
             {!isAuthenticationPage && (
-                <PublicHeader tenantName={tenant?.name} />
+                isTenantHost ? <TenantPublicHeader tenantName={tenant?.name} /> : <ApexPublicHeader />
             )}
             <main className={`flex-grow ${isAuthenticationPage ? 'flex flex-col' : ''}`}>
                 <div className={isAuthenticationPage ? 'w-full h-full p-0' : 'max-w-7xl mx-auto py-6 sm:px-6 lg:px-8'}>
