@@ -417,9 +417,17 @@ resource "aws_apigatewayv2_domain_name" "api_custom_domain" {
 }
 
 resource "aws_apigatewayv2_api_mapping" "api_default" {
-  count = local.should_create_api_mapping ? 1 : 0
+  count = local.use_runtime_api_mapping ? 1 : 0
 
-  api_id      = local.resolved_api_gateway_http_api_id
+  api_id      = aws_apigatewayv2_api.runtime.id
+  domain_name = aws_apigatewayv2_domain_name.api_custom_domain[0].domain_name
+  stage       = aws_apigatewayv2_stage.runtime_default.name
+}
+
+resource "aws_apigatewayv2_api_mapping" "api_default_external" {
+  count = local.use_external_api_mapping ? 1 : 0
+
+  api_id      = var.api_gateway_http_api_id
   domain_name = aws_apigatewayv2_domain_name.api_custom_domain[0].domain_name
   stage       = aws_apigatewayv2_stage.runtime_default.name
 }

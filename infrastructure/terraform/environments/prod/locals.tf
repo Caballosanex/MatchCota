@@ -13,9 +13,13 @@ locals {
 
   use_api_bootstrap_resources = var.api_custom_domain_bootstrap_enabled
 
-  resolved_api_gateway_http_api_id = var.api_gateway_http_api_id != "" ? var.api_gateway_http_api_id : aws_apigatewayv2_api.runtime.id
+  use_external_api_mapping = local.use_api_bootstrap_resources && var.api_gateway_http_api_id != ""
 
-  should_create_api_mapping = local.use_api_bootstrap_resources && local.resolved_api_gateway_http_api_id != ""
+  use_runtime_api_mapping = local.use_api_bootstrap_resources && var.api_gateway_http_api_id == ""
+
+  should_create_api_mapping = local.use_external_api_mapping || local.use_runtime_api_mapping
+
+  resolved_api_gateway_http_api_id = local.use_external_api_mapping ? var.api_gateway_http_api_id : (local.use_runtime_api_mapping ? aws_apigatewayv2_api.runtime.id : "")
 
   api_alias_dns_name = local.use_api_bootstrap_resources ? aws_apigatewayv2_domain_name.api_custom_domain[0].domain_name_configuration[0].target_domain_name : var.api_gateway_alias_target_name
 

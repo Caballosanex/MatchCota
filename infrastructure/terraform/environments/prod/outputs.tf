@@ -75,7 +75,7 @@ output "api_custom_domain_api_mapping_enabled" {
 
 output "api_custom_domain_api_mapping_id" {
   description = "API mapping ID when api_gateway_http_api_id is supplied"
-  value       = local.should_create_api_mapping ? aws_apigatewayv2_api_mapping.api_default[0].id : null
+  value       = local.use_runtime_api_mapping ? aws_apigatewayv2_api_mapping.api_default[0].id : (local.use_external_api_mapping ? aws_apigatewayv2_api_mapping.api_default_external[0].id : null)
 }
 
 output "lambda_function_name" {
@@ -105,7 +105,7 @@ output "api_gateway_invoke_url" {
 
 output "api_custom_domain_runtime_mapping_enabled" {
   description = "True when runtime HTTP API is mapped to the Terraform-managed API custom domain"
-  value       = local.should_create_api_mapping && local.resolved_api_gateway_http_api_id == aws_apigatewayv2_api.runtime.id
+  value       = local.use_runtime_api_mapping
 }
 
 output "api_acm_validation_record_fqdns" {

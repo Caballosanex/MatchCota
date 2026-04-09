@@ -22,6 +22,7 @@ SMOKE_TLS_INTERVAL="${SMOKE_TLS_INTERVAL:-30}"
 SMOKE_API_BASE_URL="${SMOKE_API_BASE_URL:-https://${SMOKE_API_HOST}/api/v1}"
 
 SMOKE_TMP_ENV_DIR=""
+SMOKE_LAMBDA_ARTIFACT_PATH=""
 
 require_pattern() {
   local file_path="$1"
@@ -46,6 +47,28 @@ cleanup() {
 
 stage() {
   echo "[smoke] $1"
+}
+
+ensure_smoke_lambda_artifact() {
+  SMOKE_LAMBDA_ARTIFACT_PATH="${SMOKE_TMP_ENV_DIR}/smoke-lambda.zip"
+
+  if [[ -f "backend/dist/lambda.zip" ]]; then
+    SMOKE_LAMBDA_ARTIFACT_PATH="$(cd "$(dirname "backend/dist/lambda.zip")" && pwd)/$(basename "backend/dist/lambda.zip")"
+    stage "using existing Lambda artifact for smoke plan: ${SMOKE_LAMBDA_ARTIFACT_PATH}"
+    return
+  fi
+
+  stage "backend/dist/lambda.zip missing; creating deterministic smoke placeholder artifact"
+  python3 - "$SMOKE_LAMBDA_ARTIFACT_PATH" <<'PY'
+import pathlib
+import sys
+import zipfile
+
+zip_path = pathlib.Path(sys.argv[1])
+zip_path.parent.mkdir(parents=True, exist_ok=True)
+with zipfile.ZipFile(zip_path, "w") as zf:
+    zf.writestr("placeholder.txt", "smoke-placeholder")
+PY
 }
 
 assert_matchcota_runtime_fingerprint() {
@@ -123,6 +146,7 @@ EOF
   SMOKE_TMP_ENV_DIR="$(mktemp -d)"
   cp "${TF_ENV_DIR}"/*.tf "${SMOKE_TMP_ENV_DIR}/"
   rm -f "${SMOKE_TMP_ENV_DIR}/backend.tf"
+  ensure_smoke_lambda_artifact
 
   terraform -chdir="${SMOKE_TMP_ENV_DIR}" init -backend=false -input=false >/dev/null
   terraform -chdir="${SMOKE_TMP_ENV_DIR}" plan \
@@ -130,6 +154,7 @@ EOF
     -input=false \
     -refresh=false \
     -var-file="${SMOKE_TFVARS}" \
+    -var="lambda_artifact_path=${SMOKE_LAMBDA_ARTIFACT_PATH}" \
     -out=tfplan-smoke >/dev/null
   stage "stage=plan pass"
 
