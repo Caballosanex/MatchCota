@@ -98,3 +98,59 @@ output "edge_tls_bootstrap_contract" {
   description = "Operational contract for EC2 edge TLS bootstrap and lifecycle ownership"
   value       = var.edge_tls_bootstrap_enabled ? terraform_data.edge_tls_bootstrap_contract[0].input : null
 }
+
+output "vpc_id" {
+  description = "Production VPC ID consumed by runtime resources"
+  value       = aws_vpc.data_plane.id
+}
+
+output "public_subnet_ids" {
+  description = "Public subnet IDs used by internet-facing resources"
+  value = [
+    for subnet_name, subnet in local.subnet_layout : aws_subnet.data_plane[subnet_name].id
+    if subnet.tier == "public"
+  ]
+}
+
+output "private_subnet_ids" {
+  description = "Private subnet IDs used by data-plane and Lambda runtime resources"
+  value = [
+    for subnet_name, subnet in local.subnet_layout : aws_subnet.data_plane[subnet_name].id
+    if subnet.tier == "private"
+  ]
+}
+
+output "lambda_runtime_security_group_id" {
+  description = "Lambda runtime security group ID for private data-plane access"
+  value       = aws_security_group.lambda_runtime.id
+}
+
+output "rds_security_group_id" {
+  description = "RDS PostgreSQL security group ID with Lambda-only ingress"
+  value       = aws_security_group.rds_postgres.id
+}
+
+output "rds_endpoint" {
+  description = "RDS PostgreSQL endpoint address for runtime database connectivity"
+  value       = aws_db_instance.postgres.address
+}
+
+output "rds_port" {
+  description = "RDS PostgreSQL listener port for runtime database connectivity"
+  value       = aws_db_instance.postgres.port
+}
+
+output "uploads_bucket_name" {
+  description = "Private uploads bucket name used by runtime object storage"
+  value       = aws_s3_bucket.uploads.bucket
+}
+
+output "uploads_bucket_arn" {
+  description = "Private uploads bucket ARN used by runtime IAM/policy bindings"
+  value       = aws_s3_bucket.uploads.arn
+}
+
+output "s3_gateway_endpoint_id" {
+  description = "S3 gateway endpoint ID attached to private route tables"
+  value       = aws_vpc_endpoint.s3_gateway.id
+}
