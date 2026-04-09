@@ -78,6 +78,36 @@ output "api_custom_domain_api_mapping_id" {
   value       = local.should_create_api_mapping ? aws_apigatewayv2_api_mapping.api_default[0].id : null
 }
 
+output "lambda_function_name" {
+  description = "Lambda function name backing api.matchcota.tech runtime"
+  value       = aws_lambda_function.runtime.function_name
+}
+
+output "lambda_function_arn" {
+  description = "Lambda function ARN backing api.matchcota.tech runtime"
+  value       = aws_lambda_function.runtime.arn
+}
+
+output "api_gateway_http_api_id" {
+  description = "HTTP API ID fronting Lambda runtime"
+  value       = aws_apigatewayv2_api.runtime.id
+}
+
+output "api_gateway_stage_name" {
+  description = "HTTP API stage name used for runtime and custom-domain mapping"
+  value       = aws_apigatewayv2_stage.runtime_default.name
+}
+
+output "api_gateway_invoke_url" {
+  description = "HTTP API invoke URL for runtime smoke checks"
+  value       = aws_apigatewayv2_stage.runtime_default.invoke_url
+}
+
+output "api_custom_domain_runtime_mapping_enabled" {
+  description = "True when runtime HTTP API is mapped to the Terraform-managed API custom domain"
+  value       = local.should_create_api_mapping && local.resolved_api_gateway_http_api_id == aws_apigatewayv2_api.runtime.id
+}
+
 output "api_acm_validation_record_fqdns" {
   description = "Route53 validation records used for API ACM certificate issuance"
   value       = [for record in aws_route53_record.api_acm_validation : record.fqdn]
