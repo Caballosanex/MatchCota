@@ -84,6 +84,7 @@ aws_route53_record.api_acm_validation
 aws_acm_certificate_validation.api_custom_domain
 aws_apigatewayv2_domain_name.api_custom_domain
 aws_apigatewayv2_api_mapping.api_default
+aws_apigatewayv2_api_mapping.api_default_external
 terraform_data.edge_tls_bootstrap_contract
 TARGETS
       ;;
@@ -93,6 +94,24 @@ TARGETS
       exit 1
       ;;
   esac
+}
+
+init_if_needed() {
+  if [[ -d "${TF_ENV_DIR}/.terraform" ]]; then
+    echo "[apply-layer] terraform already initialized; skipping backend re-init"
+    return
+  fi
+
+  if [[ -z "$TF_BACKEND_BUCKET" ]] || [[ -z "$TF_BACKEND_DYNAMODB_TABLE" ]]; then
+    echo "ERROR: TF_BACKEND_BUCKET and TF_BACKEND_DYNAMODB_TABLE must be set for first-time prod backend init" >&2
+    exit 1
+  fi
+
+  echo "[apply-layer] terraform init -reconfigure"
+  terraform -chdir="$TF_ENV_DIR" init -reconfigure \
+    -backend-config="bucket=${TF_BACKEND_BUCKET}" \
+    -backend-config="dynamodb_table=${TF_BACKEND_DYNAMODB_TABLE}" \
+    -backend-config="region=${TF_BACKEND_REGION}"
 }
 
 main() {
@@ -107,22 +126,13 @@ main() {
 
   plan_file="tfplan-${LAYER}"
 
-  if [[ -z "$TF_BACKEND_BUCKET" ]] || [[ -z "$TF_BACKEND_DYNAMODB_TABLE" ]]; then
-    echo "ERROR: TF_BACKEND_BUCKET and TF_BACKEND_DYNAMODB_TABLE must be set for prod backend init" >&2
-    exit 1
-  fi
-
   if [[ "${#tf_targets[@]}" -eq 0 ]]; then
     echo "ERROR: No targets resolved for layer '${LAYER}'" >&2
     exit 1
   fi
 
   echo "[apply-layer] layer=${LAYER} targets=${tf_targets[*]}"
-  echo "[apply-layer] terraform init -reconfigure"
-  terraform -chdir="$TF_ENV_DIR" init -reconfigure \
-    -backend-config="bucket=${TF_BACKEND_BUCKET}" \
-    -backend-config="dynamodb_table=${TF_BACKEND_DYNAMODB_TABLE}" \
-    -backend-config="region=${TF_BACKEND_REGION}"
+  init_if_needed
 
   echo "[apply-layer] terraform plan -out=${plan_file}"
   plan_args=(

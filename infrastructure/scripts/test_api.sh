@@ -28,6 +28,7 @@ assert_matchcota_fingerprint() {
   combo="$(cat "$headers_file" "$body_file")"
   if [[ "$combo" == *"httpbin.org"* ]] || [[ "$combo" == *"gunicorn/19.9.0"* ]]; then
     echo "[test-api] ERROR: non-MatchCota signature detected during ${context}" >&2
+    echo "[test-api] observed fingerprint diagnostics (headers + body):" >&2
     cat "$headers_file" >&2 || true
     cat "$body_file" >&2 || true
     exit 1

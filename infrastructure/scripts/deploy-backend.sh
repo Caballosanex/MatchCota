@@ -70,8 +70,16 @@ build_lambda_zip() {
   mkdir -p "$artifact_dir"
   BUILD_TMP_DIR="$(mktemp -d)"
 
-  stage "install python dependencies for Lambda bundle"
-  python3 -m pip install --quiet -r backend/requirements.txt --target "$BUILD_TMP_DIR"
+  stage "install Lambda-compatible binary wheels (no source builds)"
+  python3 -m pip install --quiet \
+    --only-binary=:all: \
+    --platform manylinux2014_x86_64 \
+    --implementation cp \
+    --python-version 3.11 \
+    --abi cp311 \
+    --upgrade \
+    -r backend/requirements.txt \
+    --target "$BUILD_TMP_DIR"
 
   stage "copy backend application package"
   cp -R backend/app "$BUILD_TMP_DIR/app"
