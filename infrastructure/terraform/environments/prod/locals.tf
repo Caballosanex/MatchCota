@@ -57,4 +57,27 @@ locals {
     "sudo nginx -t",
     "sudo systemctl reload nginx",
   ]) : ""
+
+  subnet_layout = {
+    public_a = {
+      cidr_block = var.public_subnet_cidrs[0]
+      tier       = "public"
+      az         = var.availability_zones[0]
+    }
+    public_b = {
+      cidr_block = var.public_subnet_cidrs[1]
+      tier       = "public"
+      az         = var.availability_zones[1]
+    }
+    private_a = {
+      cidr_block = var.private_subnet_cidrs[0]
+      tier       = "private"
+      az         = var.availability_zones[0]
+    }
+    private_b = {
+      cidr_block = var.private_subnet_cidrs[1]
+      tier       = "private"
+      az         = var.availability_zones[1]
+    }
+  }
 }

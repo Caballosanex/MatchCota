@@ -102,3 +102,42 @@ variable "edge_tls_certbot_package" {
   type        = string
   default     = "python3-certbot-nginx"
 }
+
+variable "vpc_cidr" {
+  description = "CIDR block for the production VPC"
+  type        = string
+  default     = "10.42.0.0/16"
+}
+
+variable "public_subnet_cidrs" {
+  description = "CIDR blocks for public subnets (exactly two)"
+  type        = list(string)
+  default     = ["10.42.0.0/24", "10.42.1.0/24"]
+
+  validation {
+    condition     = length(var.public_subnet_cidrs) == 2
+    error_message = "public_subnet_cidrs must contain exactly two CIDR blocks."
+  }
+}
+
+variable "private_subnet_cidrs" {
+  description = "CIDR blocks for private subnets (exactly two)"
+  type        = list(string)
+  default     = ["10.42.10.0/24", "10.42.11.0/24"]
+
+  validation {
+    condition     = length(var.private_subnet_cidrs) == 2
+    error_message = "private_subnet_cidrs must contain exactly two CIDR blocks."
+  }
+}
+
+variable "availability_zones" {
+  description = "Availability Zones used for paired public/private subnet layout"
+  type        = list(string)
+  default     = ["us-east-1a", "us-east-1b"]
+
+  validation {
+    condition     = length(var.availability_zones) == 2
+    error_message = "availability_zones must contain exactly two AZ values."
+  }
+}
