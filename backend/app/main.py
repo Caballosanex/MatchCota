@@ -32,7 +32,13 @@ if settings.is_production():
     @app.middleware("http")
     async def dynamic_cors(request, call_next):
         origin = request.headers.get("origin", "")
-        response = await call_next(request)
+
+        if request.method == "OPTIONS":
+            from fastapi.responses import Response
+
+            response = Response(status_code=204)
+        else:
+            response = await call_next(request)
 
         if _allowed_origin_re.match(origin):
             response.headers["Access-Control-Allow-Origin"] = origin
