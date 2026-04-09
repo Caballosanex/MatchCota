@@ -27,6 +27,7 @@ httpx==0.26.0
 
 # AWS
 boto3==1.34.28
+mangum==0.17.0
 
 # Email
 aiosmtplib==3.0.1
