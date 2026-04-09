@@ -47,18 +47,23 @@ Use this artifact to record real owner-run launch verification on production dom
 - Evidence / notes: Owner confirmed step B approved in continuation response.
 
 ### C) Confirm redirect to tenant login domain
-- Expected URL: `https://{slug}.matchcota.tech/login`
-- Actual URL observed: owner-confirmed tenant login redirect on `https://<owner-verified-slug>.matchcota.tech/login` (real unique non-fixture slug)
+- Expected URL: `https://{slug}.matchcota.tech/`
+- Actual URL observed: owner-confirmed tenant-root redirect on `https://<owner-verified-slug>.matchcota.tech/` (real unique non-fixture slug)
 - Timestamp (UTC): 2026-04-09T18:10:45Z
 - Result: [x] pass [ ] fail
 - Evidence / notes: Owner confirmed step C approved in continuation response.
 
 ### D) Log in with just-created credentials
-- Login URL used: `https://<owner-verified-slug>.matchcota.tech/login`
+- Login URL used: `https://<owner-verified-slug>.matchcota.tech/login` (optional subsequent action after tenant-root arrival)
 - Email used: owner-created registration email
 - Timestamp (UTC): 2026-04-09T18:11:00Z
 - Result: [x] pass [ ] fail
 - Evidence / notes: Owner confirmed step D approved in continuation response.
+
+### Contract baseline update (Phase 01 gap closure)
+- Prior `/login` first-destination wording is **deprecated** and **superseded** by tenant-root public-first semantics.
+- Success handoff expectation: land on tenant root first (`https://{slug}.matchcota.tech/`), then continue with public browsing/setup and perform admin login only when needed.
+- Fallback handoff expectation: any manual/open-link recovery also targets tenant root, not `/login`.
 
 ## Operational Evidence (required)
 
