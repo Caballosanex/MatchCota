@@ -3,7 +3,7 @@ status: partial
 phase: 05-production-frontend-tenant-entry-ux
 source: [05-VERIFICATION.md]
 started: 2026-04-09T15:56:00Z
-updated: 2026-04-09T17:24:36Z
+updated: 2026-04-09T17:36:45Z
 ---
 
 ## Current Test
@@ -40,10 +40,14 @@ result: [fixed] User-reported failure reproduced from code path analysis: `VITE_
 expected: New production build serves corrected API route contract without backend runtime coupling
 result: [passed] `infrastructure/scripts/deploy-frontend.sh` deployed via SSM to `i-0f3f9d6ae388f7746`; static-only guard passed; `https://matchcota.tech/register-tenant` returned SPA shell post-deploy.
 
+### 6. Auth login endpoint hotfix after live UAT follow-up
+expected: Frontend login targets `https://api.matchcota.tech/api/v1/auth/login` (not root `/auth/login`) and tenant registration remains on `/api/v1/tenants/`
+result: [passed] Remaining direct API base call sites (`AuthContext.jsx`, `ImageUpload.jsx`) now use shared `getApiBaseUrl()` normalizer. Live evidence confirms endpoint behavior: `POST /api/v1/auth/login` => `200` with bearer token, legacy root path `POST /auth/login` => `404`, and `POST /api/v1/tenants/` => `201`.
+
 ## Summary
 
-total: 5
-passed: 4
+total: 6
+passed: 5
 issues: 0
 pending: 1
 skipped: 0

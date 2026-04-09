@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTenant } from '../../hooks/useTenant';
+import { getApiBaseUrl } from '../../api/baseUrl';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
+const API_URL = getApiBaseUrl();
 
 export default function ImageUpload({ photos = [], onChange }) {
     const [uploading, setUploading] = useState(false);

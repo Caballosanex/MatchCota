@@ -5,6 +5,7 @@
 // - useContext: Per poder llegir dades d'un altre "magatzem" (en aquest cas, de la protectora activa).
 import { createContext, useState, useEffect, useContext } from 'react';
 import TenantContext from './TenantContext';
+import { getApiBaseUrl } from '../api/baseUrl';
 
 /**
  * EL CONTEXT D'AUTENTICACIÓ
@@ -33,7 +34,7 @@ export function AuthProvider({ children }) {
     const { tenant } = useContext(TenantContext);
 
     // Definim la ruta base de la nostra API on enviem les peticions
-    const baseUrl = import.meta.env.VITE_API_URL || '/api/v1';
+    const baseUrl = getApiBaseUrl();
 
     /**
      * EFECTE D'INICI (useEffect)

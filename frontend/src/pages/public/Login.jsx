@@ -123,6 +123,7 @@ export default function Login() {
                                 <label className="text-[11px] font-black text-[#4A90A4] uppercase tracking-widest mb-2 block ml-1">Correu electrònic</label>
                                 <input
                                     type="email"
+                                    autoComplete="email"
                                     // JA NO CAL `value` o `onChange`. `...register("email")` fa tota la màgia invisible.
                                     {...register('email')}
                                     placeholder="hola@la-teva-entitat.com"
@@ -147,6 +148,7 @@ export default function Login() {
                                 </div>
                                 <input
                                     type="password"
+                                    autoComplete="current-password"
                                     {...register('password')}
                                     placeholder="••••••••"
                                     className={`w-full bg-gray-50/50 border-2 py-4 px-6 rounded-2xl focus:bg-white focus:outline-none transition-all duration-300 font-bold text-gray-900 placeholder-gray-300 shadow-sm

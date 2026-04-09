@@ -283,6 +283,7 @@ export default function RegisterTenant() {
                 <input
                   {...register('admin_password')}
                   type={showPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
                   placeholder="••••••••"
                   className={`w-full bg-white border-2 rounded-2xl px-5 py-3 pr-24 focus:outline-none transition-all duration-300 shadow-sm ${
                     errors.admin_password ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'
@@ -309,6 +310,7 @@ export default function RegisterTenant() {
                 <input
                   {...register('confirm_password')}
                   type={showConfirmPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
                   placeholder="••••••••"
                   className={`w-full bg-white border-2 rounded-2xl px-5 py-3 pr-24 focus:outline-none transition-all duration-300 shadow-sm ${
                     errors.confirm_password ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'
