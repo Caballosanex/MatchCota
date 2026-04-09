@@ -59,9 +59,8 @@ export default function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<GuardedRoot />} />
-
             <Route element={<PublicLayout />}>
+              <Route index element={<GuardedRoot />} />
               <Route
                 path="home"
                 element={(

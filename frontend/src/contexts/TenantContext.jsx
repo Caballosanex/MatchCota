@@ -1,13 +1,12 @@
 import { createContext, useState, useEffect } from 'react';
 import { getApiBaseUrl } from '../api/baseUrl';
+import { resolveHostContext } from '../routing/hostRouting';
 
 const TenantContext = createContext();
 
 const TENANT_NOT_FOUND_HEADLINE = 'We could not find that shelter';
 const TENANT_NOT_FOUND_BODY =
     'Verify the subdomain spelling, or return to https://matchcota.tech to register or locate your shelter URL.';
-
-const ALLOWED_SUBDOMAIN_PATTERN = /^[a-z0-9-]+$/;
 
 function buildTenantNotFoundError() {
     return {
@@ -18,30 +17,6 @@ function buildTenantNotFoundError() {
     };
 }
 
-function normalizeHostname(hostname) {
-    return (hostname || '').toLowerCase().trim();
-}
-
-function getProductionSubdomain(hostname, baseDomain) {
-    if (!hostname || !baseDomain) return { tenantSlug: '', invalidHost: true };
-
-    if (hostname === baseDomain) {
-        return { tenantSlug: '', invalidHost: false };
-    }
-
-    const suffix = `.${baseDomain}`;
-    if (!hostname.endsWith(suffix)) {
-        return { tenantSlug: '', invalidHost: true };
-    }
-
-    const tenantSlug = hostname.slice(0, -suffix.length);
-    if (!tenantSlug || tenantSlug.includes('.') || !ALLOWED_SUBDOMAIN_PATTERN.test(tenantSlug)) {
-        return { tenantSlug: '', invalidHost: true };
-    }
-
-    return { tenantSlug, invalidHost: false };
-}
-
 export function TenantProvider({ children }) {
     const [tenant, setTenant] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -50,23 +25,19 @@ export function TenantProvider({ children }) {
     useEffect(() => {
         const detectTenant = async () => {
             try {
-                const hostname = normalizeHostname(window.location.hostname);
-                const environment = (import.meta.env.VITE_ENVIRONMENT || 'development').toLowerCase();
-                const isProduction = environment === 'production';
-                const baseDomain = normalizeHostname(import.meta.env.VITE_BASE_DOMAIN || 'matchcota.tech');
+                const hostContext = resolveHostContext();
+                const isProduction = hostContext.isProduction;
 
                 const searchParams = new URLSearchParams(window.location.search);
                 const tenantParam = searchParams.get('tenant');
 
                 let subdomain = '';
-                let invalidProductionHost = false;
+                const invalidProductionHost = hostContext.invalidHost;
 
                 if (isProduction) {
-                    const productionResolution = getProductionSubdomain(hostname, baseDomain);
-                    subdomain = productionResolution.tenantSlug;
-                    invalidProductionHost = productionResolution.invalidHost;
+                    subdomain = hostContext.tenantSlug;
                 } else {
-                    const parts = hostname.split('.');
+                    const parts = hostContext.hostname.split('.');
                     if (tenantParam) {
                         subdomain = tenantParam;
                     } else if (parts.length > 2) {
