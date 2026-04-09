@@ -8,6 +8,9 @@ LAYER="${1:-}"
 TF_BACKEND_BUCKET="${TF_BACKEND_BUCKET:-}"
 TF_BACKEND_DYNAMODB_TABLE="${TF_BACKEND_DYNAMODB_TABLE:-}"
 TF_BACKEND_REGION="${TF_BACKEND_REGION:-us-east-1}"
+AWS_PROFILE="${AWS_PROFILE:-matchcota}"
+
+export AWS_PROFILE
 
 usage() {
   cat <<'USAGE'
@@ -66,6 +69,13 @@ TARGETS
       ;;
     runtime)
       cat <<'TARGETS'
+aws_lambda_function.runtime
+aws_apigatewayv2_api.runtime
+aws_apigatewayv2_integration.runtime_lambda_proxy
+aws_apigatewayv2_route.runtime_root
+aws_apigatewayv2_route.runtime_proxy
+aws_apigatewayv2_stage.runtime_default
+aws_lambda_permission.allow_apigateway_invoke
 aws_route53_record.apex_a
 aws_route53_record.wildcard_a
 aws_route53_record.api_alias_a
@@ -87,9 +97,14 @@ TARGETS
 
 main() {
   require_layer
-  local plan_file
+  local plan_file tf_target
   local -a tf_targets plan_args
-  mapfile -t tf_targets < <(layer_selector "$LAYER")
+
+  tf_targets=()
+  while IFS= read -r tf_target; do
+    [[ -n "$tf_target" ]] && tf_targets+=("$tf_target")
+  done < <(layer_selector "$LAYER")
+
   plan_file="tfplan-${LAYER}"
 
   if [[ -z "$TF_BACKEND_BUCKET" ]] || [[ -z "$TF_BACKEND_DYNAMODB_TABLE" ]]; then
