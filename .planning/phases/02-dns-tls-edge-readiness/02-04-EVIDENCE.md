@@ -176,3 +176,185 @@ tolist([
 1. Initial backend init failed due to empty backend placeholders in `backend.tf`; execution now supplies backend values through `terraform-apply-layer.sh` environment-driven `-backend-config` arguments.
 2. Initial layer mapping targeted non-existent module paths; layer targets were corrected to real root resources (`terraform_data.academy_guardrails`, `aws_route53_zone.primary`, Route53 record resources, and `aws_acm_certificate.api_custom_domain`).
 3. Intermittent local lock contention occurred once during `terraform init`; rerun succeeded and execution continued.
+
+## Task 2 — Registrar Delegation Checkpoint
+
+- Timestamp (UTC): 2026-04-08T23:27:00Z
+- Checkpoint confirmation: `delegation-complete`
+- Manual action recorded: DotTech authoritative nameservers updated to match `route53_hosted_zone_name_servers` exactly.
+- Resume command:
+
+```bash
+AWS_PROFILE="matchcota" AWS_REGION="us-east-1" AWS_DEFAULT_REGION="us-east-1" \
+bash infrastructure/scripts/dns-delegation-check.sh \
+  --domain matchcota.tech \
+  --wildcard-sample smoke.matchcota.tech \
+  --api-host api.matchcota.tech \
+  --timeout 900 \
+  --interval 30
+```
+
+## Task 3 — DNS/TLS Readiness Gates
+
+### Propagation hold before first attempt
+
+- Timestamp (UTC): 2026-04-08T23:27:30Z
+- Operator note honored: waited ~12 minutes before first gate execution.
+
+### Attempt 1 (post-wait)
+
+#### DNS gate
+
+- Timestamp (UTC): 2026-04-08T23:39:11Z
+- Command:
+
+```bash
+AWS_PROFILE="matchcota" AWS_REGION="us-east-1" AWS_DEFAULT_REGION="us-east-1" \
+bash infrastructure/scripts/dns-delegation-check.sh \
+  --domain matchcota.tech \
+  --wildcard-sample smoke.matchcota.tech \
+  --api-host api.matchcota.tech \
+  --timeout 900 \
+  --interval 30
+```
+
+- Exit code: `2`
+- Output excerpt:
+
+```text
+FAIL delegation NS mismatch
+PASS apex A records for matchcota.tech => 18.210.253.176
+PASS wildcard sample A records for smoke.matchcota.tech => 18.210.253.176
+PASS api host A records for api.matchcota.tech => <varied API Gateway IPs>
+STATUS: blocked-waiting-for-delegation
+FAIL: propagation timeout reached after 900s
+RESUME: bash infrastructure/scripts/dns-delegation-check.sh ...
+```
+
+#### TLS gate
+
+- Timestamp (UTC): 2026-04-08T23:39:11Z
+- Command:
+
+```bash
+AWS_PROFILE="matchcota" AWS_REGION="us-east-1" AWS_DEFAULT_REGION="us-east-1" \
+bash infrastructure/scripts/tls-readiness-check.sh \
+  --apex matchcota.tech \
+  --wildcard-sample smoke.matchcota.tech \
+  --api api.matchcota.tech \
+  --timeout 900 \
+  --interval 30
+```
+
+- Exit code: `2`
+- Output excerpt:
+
+```text
+SUMMARY apex=FAIL wildcard=FAIL api=FAIL
+OVERALL: FAIL (timeout 900s reached)
+RESUME: bash infrastructure/scripts/tls-readiness-check.sh ...
+```
+
+### Rule 1 auto-fix during Task 3
+
+- Issue: DNS checker compared expected/observed NS strings with inconsistent newline escaping, causing false mismatch even when values matched.
+- Fix: updated `infrastructure/scripts/dns-delegation-check.sh` to print normalized expected NS with real newline separators (`"\n"`) in Python output formatting.
+
+### Attempt 2 (after DNS script fix)
+
+#### DNS gate
+
+- Timestamp (UTC): 2026-04-08T23:55:05Z
+- Exit code: `0`
+- PASS markers:
+
+```text
+PASS delegation NS match
+PASS apex A records for matchcota.tech => 18.210.253.176
+PASS wildcard sample A records for smoke.matchcota.tech => 18.210.253.176
+PASS api host A records for api.matchcota.tech => 3.232.243.145, 34.231.183.215
+OVERALL: PASS all DNS/delegation checks
+```
+
+#### TLS gate
+
+- Timestamp (UTC): 2026-04-08T23:55:11Z
+- Exit code: `2`
+- Output excerpt:
+
+```text
+SUMMARY apex=FAIL wildcard=FAIL api=FAIL
+OVERALL: FAIL (timeout 900s reached)
+RESUME: bash infrastructure/scripts/tls-readiness-check.sh --apex matchcota.tech --wildcard-sample smoke.matchcota.tech --api api.matchcota.tech --timeout 900 --interval 30
+```
+
+### Current status
+
+- DNS/delegation gate: **PASS**
+- TLS readiness gate: **blocked (timeout)** pending certificate issuance/attachment for apex/wildcard edge and API domain.
+
+### Continuation checkpoint (human action complete)
+
+- Timestamp (UTC): 2026-04-09T00:30:40Z
+- Confirmation: `tls-ready`
+- Operator note: TLS prerequisites completed for edge (`matchcota.tech`, wildcard) and API (`api.matchcota.tech`).
+
+### Final validation run (post TLS readiness)
+
+#### DNS gate
+
+- Timestamp (UTC): 2026-04-09T00:30:59Z
+- Command:
+
+```bash
+AWS_PROFILE="matchcota" AWS_REGION="us-east-1" AWS_DEFAULT_REGION="us-east-1" \
+bash infrastructure/scripts/dns-delegation-check.sh \
+  --domain matchcota.tech \
+  --wildcard-sample smoke.matchcota.tech \
+  --api-host api.matchcota.tech \
+  --timeout 900 \
+  --interval 30
+```
+
+- Exit code: `0`
+- PASS markers:
+
+```text
+PASS delegation NS match
+PASS apex A records for matchcota.tech => 18.210.253.176
+PASS wildcard sample A records for smoke.matchcota.tech => 18.210.253.176
+PASS api host A records for api.matchcota.tech => 52.0.251.60, 54.157.182.250
+OVERALL: PASS all DNS/delegation checks
+```
+
+#### TLS gate
+
+- Timestamp (UTC): 2026-04-09T00:30:59Z
+- Command:
+
+```bash
+AWS_PROFILE="matchcota" AWS_REGION="us-east-1" AWS_DEFAULT_REGION="us-east-1" \
+bash infrastructure/scripts/tls-readiness-check.sh \
+  --apex matchcota.tech \
+  --wildcard-sample smoke.matchcota.tech \
+  --api api.matchcota.tech \
+  --timeout 900 \
+  --interval 30
+```
+
+- Exit code: `0`
+- PASS markers:
+
+```text
+PASS apex TLS hostname/certificate check (matchcota.tech)
+PASS wildcard TLS hostname/certificate check (smoke.matchcota.tech)
+PASS api TLS hostname/certificate check (api.matchcota.tech)
+SUMMARY apex=PASS wildcard=PASS api=PASS
+OVERALL: PASS all domain classes passed TLS readiness
+```
+
+### Final status
+
+- DNS/delegation gate: **PASS**
+- TLS readiness gate: **PASS**
+- Phase 02-04 live verification gaps closed with timestamped evidence.

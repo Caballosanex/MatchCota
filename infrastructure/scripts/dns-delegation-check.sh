@@ -149,7 +149,7 @@ raw=sys.stdin.read().strip()
 if not raw:
     raise SystemExit(1)
 data=json.loads(raw)
-print("\\n".join(sorted(x.rstrip(".").lower() for x in data)))' <<<"$tf_json"
+print("\n".join(sorted(x.rstrip(".").lower() for x in data)))' <<<"$tf_json"
 }
 
 query_parent_name_servers() {
