@@ -15,6 +15,13 @@ def get_tenants(db: Session, skip: int = 0, limit: int = 100) -> List[Tenant]:
     return db.query(Tenant).offset(skip).limit(limit).all()
 
 def create_tenant(db: Session, tenant: TenantCreate) -> Tenant:
+    db_tenant = create_tenant_in_transaction(db, tenant)
+    db.commit()
+    db.refresh(db_tenant)
+    return db_tenant
+
+
+def create_tenant_in_transaction(db: Session, tenant: TenantCreate) -> Tenant:
     db_tenant = Tenant(
         name=tenant.name,
         slug=tenant.slug,
@@ -28,6 +35,4 @@ def create_tenant(db: Session, tenant: TenantCreate) -> Tenant:
         logo_url=tenant.logo_url
     )
     db.add(db_tenant)
-    db.commit()
-    db.refresh(db_tenant)
     return db_tenant
