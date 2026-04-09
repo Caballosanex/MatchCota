@@ -2,7 +2,7 @@
 Model User (Empleats).
 """
 
-from sqlalchemy import Column, String, ForeignKey, DateTime
+from sqlalchemy import Column, String, ForeignKey, DateTime, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -13,6 +13,10 @@ from app.database import Base
 
 class User(Base):
     __tablename__ = "users"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "email", name="uq_users_tenant_id_email"),
+        UniqueConstraint("tenant_id", "username", name="uq_users_tenant_id_username"),
+    )
 
     # Identificació
     id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -20,7 +24,7 @@ class User(Base):
     
     # Auth fields
     user_id = Column(String(255)) # usuari_id
-    username = Column(String(100), unique=True, nullable=False) # nom_usuari
+    username = Column(String(100), nullable=False) # nom_usuari
     email = Column(String(255), nullable=False) # email
     password_hash = Column(String(255), nullable=False) # contrasenya
     
