@@ -127,6 +127,86 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private.id
 }
 
+resource "aws_security_group" "lambda_runtime" {
+  name        = "matchcota-prod-lambda-runtime-sg"
+  description = "Security group for Lambda runtime ENIs"
+  vpc_id      = aws_vpc.data_plane.id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(local.default_tags, {
+    Name = "matchcota-prod-lambda-runtime-sg"
+  })
+}
+
+resource "aws_security_group" "rds_postgres" {
+  name        = "matchcota-prod-rds-postgres-sg"
+  description = "Security group for private PostgreSQL"
+  vpc_id      = aws_vpc.data_plane.id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(local.default_tags, {
+    Name = "matchcota-prod-rds-postgres-sg"
+  })
+}
+
+resource "aws_vpc_security_group_ingress_rule" "rds_postgres_from_lambda" {
+  security_group_id            = aws_security_group.rds_postgres.id
+  referenced_security_group_id = aws_security_group.lambda_runtime.id
+  from_port                    = 5432
+  to_port                      = 5432
+  ip_protocol                  = "tcp"
+  description                  = "Allow PostgreSQL from Lambda runtime SG only"
+}
+
+resource "aws_db_subnet_group" "postgres_private" {
+  name        = "matchcota-prod-postgres-private"
+  description = "Private subnet group for MatchCota PostgreSQL"
+  subnet_ids = [
+    for subnet_name, subnet in local.subnet_layout : aws_subnet.data_plane[subnet_name].id
+    if subnet.tier == "private"
+  ]
+
+  tags = merge(local.default_tags, {
+    Name = "matchcota-prod-postgres-private-subnet-group"
+  })
+}
+
+resource "aws_db_instance" "postgres" {
+  identifier              = "matchcota-prod-postgres"
+  engine                  = "postgres"
+  engine_version          = "15"
+  instance_class          = "db.t3.micro"
+  db_name                 = var.db_name
+  username                = var.db_username
+  password                = var.db_password
+  allocated_storage       = var.db_allocated_storage
+  backup_retention_period = 7
+  multi_az                = false
+  publicly_accessible     = false
+  storage_encrypted       = true
+  skip_final_snapshot     = true
+  port                    = 5432
+
+  db_subnet_group_name   = aws_db_subnet_group.postgres_private.name
+  vpc_security_group_ids = [aws_security_group.rds_postgres.id]
+
+  tags = merge(local.default_tags, {
+    Name = "matchcota-prod-postgres"
+  })
+}
+
 resource "aws_route53_record" "api_alias_a" {
   zone_id = aws_route53_zone.primary.zone_id
   name    = var.api_custom_domain_name

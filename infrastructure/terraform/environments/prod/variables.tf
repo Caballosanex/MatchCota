@@ -141,3 +141,27 @@ variable "availability_zones" {
     error_message = "availability_zones must contain exactly two AZ values."
   }
 }
+
+variable "db_name" {
+  description = "PostgreSQL database name for MatchCota runtime"
+  type        = string
+  default     = "matchcota"
+}
+
+variable "db_username" {
+  description = "PostgreSQL master username for MatchCota runtime"
+  type        = string
+  default     = "matchcota_admin"
+}
+
+variable "db_password" {
+  description = "PostgreSQL master password for MatchCota runtime"
+  type        = string
+  sensitive   = true
+}
+
+variable "db_allocated_storage" {
+  description = "PostgreSQL allocated storage in GiB"
+  type        = number
+  default     = 20
+}
