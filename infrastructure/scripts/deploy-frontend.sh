@@ -539,22 +539,22 @@ server {
     root __MATCHCOTA_DOCROOT__;
     index index.html;
 
-    set $matchcota_preboot_status "invalid";
-    set $matchcota_preboot_slug "";
+    set \$matchcota_preboot_status "invalid";
+    set \$matchcota_preboot_slug "";
 
-    if ($host = matchcota.tech) {
-        set $matchcota_preboot_status "apex";
+    if (\$host = matchcota.tech) {
+        set \$matchcota_preboot_status "apex";
     }
 
-    if ($host ~ ^([a-z0-9-]+)\.matchcota\.tech$) {
-        set $matchcota_preboot_status "unresolved";
-        set $matchcota_preboot_slug $1;
+    if (\$host ~ ^([a-z0-9-]+)\.matchcota\.tech$) {
+        set \$matchcota_preboot_status "unresolved";
+        set \$matchcota_preboot_slug \$1;
     }
 
     location = /tenant-preboot.js {
         default_type application/javascript;
         add_header Cache-Control "no-store";
-        return 200 "window.__MATCHCOTA_TENANT_PREBOOT__={\"host\":\"$host\",\"baseDomain\":\"matchcota.tech\",\"tenantSlug\":\"$matchcota_preboot_slug\",\"tenantName\":\"\",\"status\":\"$matchcota_preboot_status\"};";
+        return 200 "window.__MATCHCOTA_TENANT_PREBOOT__={\"host\":\"\$host\",\"baseDomain\":\"matchcota.tech\",\"tenantSlug\":\"\$matchcota_preboot_slug\",\"tenantName\":\"\",\"status\":\"\$matchcota_preboot_status\"};";
     }
 
     # Enforce host-specific routing contracts at the edge before SPA fallback:
