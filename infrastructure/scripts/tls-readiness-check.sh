@@ -20,7 +20,10 @@ Usage:
     --wildcard-sample demo.matchcota.tech \
     --api api.matchcota.tech \
     [--timeout 900] \
-    [--interval 30]
+  [--interval 30]
+
+This gate runs before frontend route/preboot contract checks in post-deploy readiness.
+If this script fails, tenant-root and /tenant-preboot.js checks are intentionally skipped.
 
 Checks exactly three domain classes:
   - apex

@@ -73,10 +73,13 @@ run_frontend_route_readiness() {
     exit 1
   fi
 
+  echo "[post-deploy-readiness] frontend contracts: apex redirects, tenant root shell, registration landing target, tenant preboot endpoint"
+
   if ! KNOWN_TENANT_SLUG="$tenant_slug" KNOWN_TENANT_HOST="$tenant_host" \
     VITE_BASE_DOMAIN="$DOMAIN" VITE_ENVIRONMENT="production" \
     bash "$FRONTEND_DEPLOY_SCRIPT" --verify-route-contracts-only; then
     stage "frontend-route-readiness fail"
+    echo "[post-deploy-readiness] diagnostics: rerun with KNOWN_TENANT_SLUG=<slug> and inspect deploy-frontend contract output above" >&2
     exit 1
   fi
 }
