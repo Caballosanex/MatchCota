@@ -43,7 +43,7 @@ resource "aws_route53_record" "apex_a" {
   name    = local.apex_record_name
   type    = "A"
   ttl     = local.apex_wildcard_ttl
-  records = [var.frontend_elastic_ip]
+  records = [aws_eip.frontend_edge.public_ip]
 }
 
 resource "aws_route53_record" "wildcard_a" {
@@ -51,7 +51,87 @@ resource "aws_route53_record" "wildcard_a" {
   name    = local.wildcard_record_name
   type    = "A"
   ttl     = local.apex_wildcard_ttl
-  records = [var.frontend_elastic_ip]
+  records = [aws_eip.frontend_edge.public_ip]
+}
+
+data "aws_ssm_parameter" "frontend_ami" {
+  name = var.frontend_ami_ssm_parameter
+}
+
+resource "aws_security_group" "frontend_edge" {
+  name        = "matchcota-prod-frontend-edge-sg"
+  description = "Security group for public frontend edge EC2"
+  vpc_id      = aws_vpc.data_plane.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = var.frontend_allowed_ssh_cidrs
+    description = "Allow SSH from operator CIDR ranges"
+  }
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow HTTP from internet"
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow HTTPS from internet"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all outbound traffic"
+  }
+
+  tags = merge(local.default_tags, {
+    Name = "matchcota-prod-frontend-edge-sg"
+  })
+}
+
+resource "aws_instance" "frontend_edge" {
+  ami                  = data.aws_ssm_parameter.frontend_ami.value
+  instance_type        = var.frontend_instance_type
+  subnet_id            = local.selected_frontend_public_subnet_id
+  iam_instance_profile = var.lab_instance_profile_name
+  vpc_security_group_ids = [
+    aws_security_group.frontend_edge.id,
+  ]
+  user_data = local.frontend_edge_bootstrap_cloud_init
+
+  root_block_device {
+    volume_size = var.frontend_root_volume_gb
+    volume_type = "gp3"
+    encrypted   = true
+  }
+
+  tags = merge(local.default_tags, {
+    Name = "matchcota-prod-frontend-edge"
+  })
+}
+
+resource "aws_eip" "frontend_edge" {
+  domain = "vpc"
+
+  tags = merge(local.default_tags, {
+    Name = "matchcota-prod-frontend-edge-eip"
+  })
+}
+
+resource "aws_eip_association" "frontend_edge" {
+  instance_id   = aws_instance.frontend_edge.id
+  allocation_id = aws_eip.frontend_edge.id
 }
 
 resource "aws_vpc" "data_plane" {
