@@ -11,6 +11,37 @@ locals {
   wildcard_record_name = "*.${var.base_domain}"
   apex_wildcard_ttl    = 300
 
+  public_subnet_ids = [
+    for subnet_name, subnet in local.subnet_layout : aws_subnet.data_plane[subnet_name].id
+    if subnet.tier == "public"
+  ]
+
+  selected_frontend_public_subnet_id = local.public_subnet_ids[var.frontend_public_subnet_index]
+
+  frontend_edge_bootstrap_cloud_init = join("\n", [
+    "#!/usr/bin/env bash",
+    "set -euo pipefail",
+    "",
+    "if command -v dnf >/dev/null 2>&1; then",
+    "  sudo dnf install -y nginx",
+    "elif command -v yum >/dev/null 2>&1; then",
+    "  sudo yum install -y nginx",
+    "else",
+    "  echo 'Unsupported package manager for frontend edge bootstrap' >&2",
+    "  exit 1",
+    "fi",
+    "",
+    "sudo systemctl enable nginx --now",
+    "sudo install -d -m 0755 /etc/matchcota",
+    "sudo tee /etc/matchcota/edge-bootstrap-contract.txt >/dev/null <<'CONTRACT'",
+    "MatchCota frontend edge bootstrap contract",
+    "managed_by=terraform",
+    "owner=edge-nginx",
+    "service=nginx",
+    "CONTRACT",
+    "sudo nginx -t",
+  ])
+
   use_api_bootstrap_resources = var.api_custom_domain_bootstrap_enabled
 
   use_external_api_mapping = local.use_api_bootstrap_resources && var.api_gateway_http_api_id != ""

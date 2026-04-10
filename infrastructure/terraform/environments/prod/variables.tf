@@ -49,6 +49,51 @@ variable "frontend_elastic_ip" {
   type        = string
 }
 
+variable "frontend_instance_type" {
+  description = "EC2 instance type for frontend edge host"
+  type        = string
+  default     = "t3.micro"
+}
+
+variable "frontend_root_volume_gb" {
+  description = "Root EBS volume size for frontend edge instance (GiB)"
+  type        = number
+  default     = 16
+}
+
+variable "frontend_allowed_ssh_cidrs" {
+  description = "Operator CIDR blocks allowed to access frontend edge SSH port"
+  type        = list(string)
+
+  validation {
+    condition     = length(var.frontend_allowed_ssh_cidrs) > 0
+    error_message = "frontend_allowed_ssh_cidrs must include at least one operator CIDR block."
+  }
+}
+
+variable "frontend_public_subnet_index" {
+  description = "Index of public subnet used for frontend edge placement"
+  type        = number
+  default     = 0
+
+  validation {
+    condition     = var.frontend_public_subnet_index >= 0 && var.frontend_public_subnet_index < length(var.public_subnet_cidrs)
+    error_message = "frontend_public_subnet_index must reference a valid index in public_subnet_cidrs."
+  }
+}
+
+variable "frontend_ssh_user" {
+  description = "Default SSH username for frontend edge host"
+  type        = string
+  default     = "ec2-user"
+}
+
+variable "frontend_ami_ssm_parameter" {
+  description = "SSM parameter path for frontend edge AMI resolution"
+  type        = string
+  default     = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
+}
+
 variable "api_custom_domain_name" {
   description = "Custom domain name used by API Gateway"
   type        = string
