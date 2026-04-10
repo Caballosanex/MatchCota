@@ -18,10 +18,12 @@ This directory contains the production Terraform root for MatchCota in AWS Acade
 3. Run smoke harness (includes DNS/TLS readiness stages):
    - `bash infrastructure/scripts/terraform-smoke.sh`
 4. Apply layers in order:
-    - `bash infrastructure/scripts/terraform-apply-layer.sh foundation`
-    - `bash infrastructure/scripts/terraform-apply-layer.sh network`
-    - `bash infrastructure/scripts/terraform-apply-layer.sh data`
-    - `bash infrastructure/scripts/terraform-apply-layer.sh runtime`
+     - `bash infrastructure/scripts/terraform-apply-layer.sh foundation`
+     - `bash infrastructure/scripts/terraform-apply-layer.sh network`
+     - `bash infrastructure/scripts/terraform-apply-layer.sh data`
+     - `bash infrastructure/scripts/terraform-apply-layer.sh runtime`
+   - Runtime now owns frontend edge lifecycle (`aws_security_group.frontend_edge`, `aws_instance.frontend_edge`, `aws_eip.frontend_edge`, `aws_eip_association.frontend_edge`) and emits `frontend_edge_host_for_deploy` for deterministic deploy targeting.
+   - No manual post-apply host bootstrap is part of the normal path. Terraform user-data establishes nginx baseline before deploy scripts publish SPA artifacts.
 5. Verify Phase 3 private data-plane state (RDS/S3/endpoint):
    - `terraform -chdir=infrastructure/terraform/environments/prod state show aws_db_instance.postgres | grep -E "postgres|15|db.t3.micro|allocated_storage\s+=\s+20|backup_retention_period\s+=\s+7|multi_az\s+=\s+false|publicly_accessible\s+=\s+false"`
    - `terraform -chdir=infrastructure/terraform/environments/prod state show aws_s3_bucket_public_access_block.uploads | grep -E "block_public_acls\s+=\s+true|ignore_public_acls\s+=\s+true|block_public_policy\s+=\s+true|restrict_public_buckets\s+=\s+true"`
@@ -49,8 +51,8 @@ This directory contains the production Terraform root for MatchCota in AWS Acade
    - `terraform -chdir=infrastructure/terraform/environments/prod state show aws_vpc_endpoint.s3_gateway | grep -E "com.amazonaws.us-east-1.s3"`
 6. Continue remaining layers in order until runtime is complete.
 7. Re-run delegation + TLS gates if pending:
-    - `bash infrastructure/scripts/dns-delegation-check.sh --domain matchcota.tech --wildcard-sample smoke.matchcota.tech --api-host api.matchcota.tech --timeout 900 --interval 30`
-    - `bash infrastructure/scripts/tls-readiness-check.sh --apex matchcota.tech --wildcard-sample smoke.matchcota.tech --api api.matchcota.tech --timeout 900 --interval 30`
+     - `bash infrastructure/scripts/dns-delegation-check.sh --domain matchcota.tech --wildcard-sample smoke.matchcota.tech --api-host api.matchcota.tech --timeout 900 --interval 30`
+     - `bash infrastructure/scripts/tls-readiness-check.sh --apex matchcota.tech --wildcard-sample smoke.matchcota.tech --api api.matchcota.tech --timeout 900 --interval 30`
 8. Save command output logs for execution evidence and troubleshooting.
 
 ## Post-reset recovery quick-start (run in this exact order)
@@ -63,12 +65,14 @@ Use this command order after lab reset or full redeploy, keeping `AWS_PROFILE=ma
 4. `AWS_PROFILE=matchcota bash infrastructure/scripts/terraform-apply-layer.sh data`
 5. `AWS_PROFILE=matchcota bash infrastructure/scripts/terraform-apply-layer.sh runtime`
 6. `AWS_PROFILE=matchcota DB_PASSWORD='<rds-password>' APP_SECRET_KEY='<fastapi-secret-key>' JWT_SECRET_KEY='<jwt-secret-key>' bash infrastructure/scripts/deploy-backend.sh`
-7. `AWS_PROFILE=matchcota FRONTEND_HOST='<frontend-ec2-host-or-ip>' bash infrastructure/scripts/deploy-frontend.sh`
+7. `AWS_PROFILE=matchcota bash infrastructure/scripts/deploy-frontend.sh`
 8. `AWS_PROFILE=matchcota bash infrastructure/scripts/post-deploy-readiness.sh`
 9. `AWS_PROFILE=matchcota bash infrastructure/scripts/production-data-audit.sh`
 10. Complete owner evidence in `.planning/phases/06-production-verification-operations-runbook/06-HUMAN-UAT.md`
 
-Required deploy variables in this sequence: `DB_PASSWORD`, `APP_SECRET_KEY`, `JWT_SECRET_KEY`, and `FRONTEND_HOST`.
+`deploy-frontend.sh` resolves the host from Terraform output `frontend_edge_host_for_deploy` by default. Set `FRONTEND_HOST` only as an explicit operator override.
+
+Required deploy variables in this sequence: `DB_PASSWORD`, `APP_SECRET_KEY`, and `JWT_SECRET_KEY` (`FRONTEND_HOST` optional override).
 
 AWS Academy constraints remain mandatory during recovery: no CloudFront, CloudWatch, SES, NAT Gateway, or Multi-AZ RDS assumptions.
 
