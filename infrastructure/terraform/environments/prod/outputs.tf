@@ -25,12 +25,42 @@ output "route53_hosted_zone_name_servers" {
 
 output "dns_apex_record_target_eip" {
   description = "Elastic IP target used by apex DNS A record"
-  value       = var.frontend_elastic_ip
+  value       = aws_eip.frontend_edge.public_ip
 }
 
 output "dns_wildcard_record_target_eip" {
   description = "Elastic IP target used by wildcard DNS A record"
-  value       = var.frontend_elastic_ip
+  value       = aws_eip.frontend_edge.public_ip
+}
+
+output "frontend_edge_instance_id" {
+  description = "Frontend edge EC2 instance ID"
+  value       = aws_instance.frontend_edge.id
+}
+
+output "frontend_edge_private_ip" {
+  description = "Frontend edge EC2 private IP"
+  value       = aws_instance.frontend_edge.private_ip
+}
+
+output "frontend_edge_public_ip" {
+  description = "Frontend edge EC2 public IP"
+  value       = aws_instance.frontend_edge.public_ip
+}
+
+output "frontend_edge_eip_allocation_id" {
+  description = "Frontend edge Elastic IP allocation ID"
+  value       = aws_eip.frontend_edge.id
+}
+
+output "frontend_edge_ssh_user" {
+  description = "Default SSH username for frontend edge host"
+  value       = var.frontend_ssh_user
+}
+
+output "frontend_edge_host_for_deploy" {
+  description = "Frontend edge host target for deploy scripts"
+  value       = aws_eip.frontend_edge.public_ip
 }
 
 output "dns_api_alias_target_name" {
