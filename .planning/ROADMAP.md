@@ -21,4 +21,14 @@ Plans:
 - [x] 01-03-PLAN.md — Wire host routing into TenantContext and PublicLayout
 - [x] 01-04-PLAN.md — Add deploy/readiness frontend contract assertions
 - [x] 01-05-PLAN.md — Align UAT artifacts to tenant-root handoff contract
-- [ ] 01-06-PLAN.md — Gap closure: rebuild and redeploy frontend to close 3 UAT failures
+- [x] 01-06-PLAN.md — Gap closure: rebuild and redeploy frontend to close 3 UAT failures
+
+### Phase 2: Eliminate tenant-name FOUC by injecting tenant data at the nginx edge before the SPA boots
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 1
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 2 to break down)

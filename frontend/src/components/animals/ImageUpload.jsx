@@ -4,6 +4,8 @@ import { useTenant } from '../../hooks/useTenant';
 import { getApiBaseUrl } from '../../api/baseUrl';
 
 const API_URL = getApiBaseUrl();
+const MAX_UPLOAD_SIZE_BYTES = 4 * 1024 * 1024;
+const MAX_UPLOAD_SIZE_MB = MAX_UPLOAD_SIZE_BYTES / (1024 * 1024);
 
 export default function ImageUpload({ photos = [], onChange }) {
     const [uploading, setUploading] = useState(false);
@@ -39,8 +41,14 @@ export default function ImageUpload({ photos = [], onChange }) {
 
     const handleFiles = async (files) => {
         setError(null);
-        setUploading(true);
         try {
+            for (const file of files) {
+                if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+                    throw new Error(`La imatge "${file.name}" supera el maxim de ${MAX_UPLOAD_SIZE_MB}MB`);
+                }
+            }
+
+            setUploading(true);
             const newUrls = [];
             for (const file of files) {
                 const url = await uploadFile(file);
@@ -102,7 +110,7 @@ export default function ImageUpload({ photos = [], onChange }) {
                 <p className="text-sm text-gray-600">
                     {uploading ? 'Pujant...' : 'Arrossega imatges aqui o fes clic per seleccionar'}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">JPG, PNG o WebP. Maxim 10MB</p>
+                <p className="text-xs text-gray-400 mt-1">JPG, PNG o WebP. Maxim 4MB</p>
                 <input
                     ref={inputRef}
                     type="file"

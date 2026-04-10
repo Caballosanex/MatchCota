@@ -6,6 +6,7 @@ from typing import List, Optional
 from app.crud import animals as crud_animals
 from app.schemas.animal import AnimalCreate, AnimalUpdate, AnimalResponse
 from app.models.animal import Animal
+from app.services.storage import normalize_upload_urls
 
 def list_animals(
     db: Session,
@@ -16,7 +17,10 @@ def list_animals(
     size: Optional[str] = None,
     sex: Optional[str] = None,
 ) -> List[Animal]:
-    return crud_animals.get_animals_by_tenant(db, tenant_id, skip, limit, species, size, sex)
+    animals = crud_animals.get_animals_by_tenant(db, tenant_id, skip, limit, species, size, sex)
+    for animal in animals:
+        animal.photo_urls = normalize_upload_urls(animal.photo_urls)
+    return animals
 
 def get_animal(db: Session, animal_id: UUID, tenant_id: UUID) -> Animal:
     animal = crud_animals.get_animal_by_tenant(db, animal_id, tenant_id)
@@ -25,6 +29,7 @@ def get_animal(db: Session, animal_id: UUID, tenant_id: UUID) -> Animal:
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Animal no trobat"
         )
+    animal.photo_urls = normalize_upload_urls(animal.photo_urls)
     return animal
 
 def create_animal(db: Session, animal_data: AnimalCreate, tenant_id: UUID) -> Animal:

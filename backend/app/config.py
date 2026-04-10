@@ -68,6 +68,7 @@ class Settings(BaseSettings):
 
     aws_access_key_id: Optional[str] = None
     aws_secret_access_key: Optional[str] = None
+    aws_session_token: Optional[str] = None
     aws_region: str = "us-east-1"
     s3_bucket_name: Optional[str] = None
     s3_enabled: bool = False  # Per desenvolupament, deshabilitat
@@ -96,7 +97,9 @@ class Settings(BaseSettings):
     # UPLOAD LIMITS
     # ====================
 
-    max_upload_size: int = 10 * 1024 * 1024  # 10 MB
+    # API Gateway HTTP + Lambda proxy starts failing before 10MB multipart uploads.
+    # Keep this below gateway/Lambda payload limits to avoid edge 413 responses.
+    max_upload_size: int = 4 * 1024 * 1024  # 4 MB
     allowed_image_types: list[str] = ["image/jpeg", "image/png", "image/webp"]
 
     # Field validator per parsejar llistes des de CSV strings

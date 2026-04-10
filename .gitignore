@@ -81,3 +81,4 @@ coverage.xml
 
 # GSD Planning (local-only)
 .planning/
+/backend/.venv/*

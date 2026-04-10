@@ -358,3 +358,93 @@ OVERALL: PASS all domain classes passed TLS readiness
 - DNS/delegation gate: **PASS**
 - TLS readiness gate: **PASS**
 - Phase 02-04 live verification gaps closed with timestamped evidence.
+
+---
+
+## 2026-04-09 TLS Codification Reconciliation (Phase 02.1 follow-up)
+
+### Objective
+
+- Close remaining TLS codification drift by reconciling Terraform state with live API custom-domain resources and updating wildcard edge TLS bootstrap guidance to DNS-01-safe operations.
+
+### Terraform import + drift reconciliation
+
+- Timestamp (UTC): 2026-04-09T01:00:00Z
+- Environment:
+  - `AWS_PROFILE=matchcota`
+  - `AWS_REGION=us-east-1`
+  - `AWS_DEFAULT_REGION=us-east-1`
+  - `TF_VAR_aws_profile=matchcota`
+  - `TF_VAR_terraform_state_bucket=matchcota-tfstate-788602800812-us-east-1`
+  - `TF_VAR_terraform_lock_table=matchcota-terraform-locks`
+  - `TF_VAR_frontend_elastic_ip=18.210.253.176`
+  - `TF_VAR_api_gateway_http_api_id=3g39efuo3j`
+
+#### Imports executed
+
+```bash
+terraform -chdir=infrastructure/terraform/environments/prod import "aws_apigatewayv2_domain_name.api_custom_domain[0]" api.matchcota.tech
+terraform -chdir=infrastructure/terraform/environments/prod import "aws_apigatewayv2_api_mapping.api_default[0]" exemv3/api.matchcota.tech
+terraform -chdir=infrastructure/terraform/environments/prod import "aws_route53_record.api_acm_validation[\"api.matchcota.tech\"]" "Z00548306NDDNO28UJT9__b721d248fa05a08aae9d096938ad5240.api.matchcota.tech_CNAME"
+```
+
+- Import result: **PASS**
+- Post-import `terraform state list` included:
+  - `aws_apigatewayv2_domain_name.api_custom_domain[0]`
+  - `aws_apigatewayv2_api_mapping.api_default[0]`
+  - `aws_route53_record.api_acm_validation["api.matchcota.tech"]`
+
+#### Apply executed
+
+```bash
+terraform -chdir=infrastructure/terraform/environments/prod apply -input=false -auto-approve
+```
+
+- Apply result: **PASS** (`1 added, 2 changed, 0 destroyed`)
+- Key reconciliation outcomes:
+  - Added `aws_acm_certificate_validation.api_custom_domain[0]` into managed state.
+  - Normalized imported Route53 ACM CNAME TTL from `300` to Terraform contract value `60`.
+  - Updated API custom domain tag set to match provider default tags.
+
+#### Drift confirmation
+
+```bash
+terraform -chdir=infrastructure/terraform/environments/prod plan -input=false
+```
+
+- Result: **No changes**
+
+### TLS contract correction (wildcard-safe guidance)
+
+- Updated Terraform edge bootstrap cloud-init contract to remove invalid wildcard issuance via `certbot --nginx`.
+- New contract behavior writes DNS-01 wildcard issuance guidance to `/etc/matchcota/tls-bootstrap-dns01.txt` and explicitly instructs:
+  - `certbot certonly --manual --preferred-challenges dns ... -d matchcota.tech -d '*.matchcota.tech'`
+  - nginx cert path update and reload post-issuance.
+- Updated runbook edge TLS section to align with DNS-01 requirement and remove invalid `certbot --nginx` wildcard command.
+
+### Live DNS/TLS readiness rerun
+
+- Timestamp (UTC): 2026-04-09T01:11:37Z
+- Commands:
+
+```bash
+bash infrastructure/scripts/dns-delegation-check.sh --domain matchcota.tech --wildcard-sample smoke.matchcota.tech --api-host api.matchcota.tech --timeout 120 --interval 15
+bash infrastructure/scripts/tls-readiness-check.sh --apex matchcota.tech --wildcard-sample smoke.matchcota.tech --api api.matchcota.tech --timeout 120 --interval 15
+```
+
+- DNS result: **PASS**
+  - `PASS delegation NS match`
+  - `PASS apex A records for matchcota.tech => 18.210.253.176`
+  - `PASS wildcard sample A records for smoke.matchcota.tech => 18.210.253.176`
+  - `PASS api host A records for api.matchcota.tech => 52.0.251.60, 54.157.182.250`
+- TLS result: **PASS**
+  - `PASS apex TLS hostname/certificate check (matchcota.tech)`
+  - `PASS wildcard TLS hostname/certificate check (smoke.matchcota.tech)`
+  - `PASS api TLS hostname/certificate check (api.matchcota.tech)`
+  - `SUMMARY apex=PASS wildcard=PASS api=PASS`
+
+### Final reconciliation status
+
+- Terraform state now includes live API domain/mapping/validation resources and is drift-free.
+- Edge TLS bootstrap documentation and generated contract now use wildcard-safe DNS-01 instructions.
+- DNS and TLS readiness checks remain green after reconciliation.

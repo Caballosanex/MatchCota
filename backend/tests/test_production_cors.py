@@ -55,3 +55,23 @@ def test_production_cors_rejects_unrelated_origin_without_fallback_header():
         assert "Access-Control-Allow-Origin" not in response.headers
     finally:
         settings.environment = original_env
+
+
+def test_production_cors_preflight_includes_cors_headers_for_tenant_subdomain():
+    client, original_env = _build_production_client()
+
+    try:
+        response = client.options(
+            "/api/v1/admin/upload",
+            headers={
+                "Origin": "https://shelter1.matchcota.tech",
+                "Access-Control-Request-Method": "POST",
+                "Access-Control-Request-Headers": "authorization, content-type, x-tenant-slug, x-tenant-id",
+            },
+        )
+
+        assert response.status_code == 204
+        assert response.headers.get("Access-Control-Allow-Origin") == "https://shelter1.matchcota.tech"
+        assert response.headers.get("Access-Control-Allow-Credentials") == "true"
+    finally:
+        settings.environment = original_env

@@ -30,6 +30,7 @@ from app.matching.engine import (
     calculate_matches,
     MATCHING_DIMENSIONS,
 )
+from app.services.storage import normalize_upload_url
 
 
 router = APIRouter(prefix="/matching", tags=["matching"])
@@ -106,7 +107,7 @@ def calculate_matching(
                 age_category = "senior"
         
         # Primera foto o None
-        photo_url = animal.photo_urls[0] if animal.photo_urls else None
+        photo_url = normalize_upload_url(animal.photo_urls[0]) if animal.photo_urls else None
         
         # Valors de matching per transparencia
         matching_values = {}
