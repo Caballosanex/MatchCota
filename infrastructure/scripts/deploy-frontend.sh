@@ -720,7 +720,7 @@ verify_registration_landing_contract() {
     exit 1
   fi
 
-  if grep -Fq "${tenantSlug}.matchcota.tech/login" "$register_tenant_file"; then
+  if grep -Fq '${tenantSlug}.matchcota.tech/login' "$register_tenant_file"; then
     echo "ERROR: Contract fail (registration landing) - login path detected in registration redirect contract." >&2
     exit 1
   fi
