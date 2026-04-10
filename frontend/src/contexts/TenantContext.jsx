@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect } from 'react';
 import { getApiBaseUrl } from '../api/baseUrl';
-import { resolveHostContext } from '../routing/hostRouting';
+import { readTenantPrebootContext } from '../preboot/tenantPreboot';
 
 const TenantContext = createContext();
 
@@ -18,26 +18,38 @@ function buildTenantNotFoundError() {
 }
 
 export function TenantProvider({ children }) {
-    const [tenant, setTenant] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [preboot] = useState(() => readTenantPrebootContext());
+    const initialTenant = preboot.tenantHint ? { ...preboot.tenantHint } : null;
+    const initialError = preboot.status === 'invalid-host' ? buildTenantNotFoundError() : null;
+    const shouldSkipFetch = preboot.status === 'invalid-host' || preboot.status === 'apex-host';
+
+    const [tenant, setTenant] = useState(initialTenant);
+    const [loading, setLoading] = useState(!shouldSkipFetch);
+    const [error, setError] = useState(initialError);
+    const [prebootStatus, setPrebootStatus] = useState(preboot.status);
 
     useEffect(() => {
         const detectTenant = async () => {
             try {
-                const hostContext = resolveHostContext();
-                const isProduction = hostContext.isProduction;
+                if (shouldSkipFetch) {
+                    return;
+                }
 
-                const searchParams = new URLSearchParams(window.location.search);
-                const tenantParam = searchParams.get('tenant');
+                const hostContext = preboot.hostContext;
+                const isProduction = hostContext.isProduction;
 
                 let subdomain = '';
                 const invalidProductionHost = hostContext.invalidHost;
 
-                if (isProduction) {
+                if (preboot.tenantHint?.slug) {
+                    subdomain = preboot.tenantHint.slug;
+                } else if (isProduction) {
                     subdomain = hostContext.tenantSlug;
                 } else {
+                    const searchParams = new URLSearchParams(window.location.search);
+                    const tenantParam = searchParams.get('tenant');
                     const parts = hostContext.hostname.split('.');
+
                     if (tenantParam) {
                         subdomain = tenantParam;
                     } else if (parts.length > 2) {
@@ -51,6 +63,7 @@ export function TenantProvider({ children }) {
                     sessionStorage.removeItem('matchcota_tenant_slug');
                     setTenant(null);
                     setError(buildTenantNotFoundError());
+                    setPrebootStatus('invalid-host');
                     return;
                 }
 
@@ -68,6 +81,7 @@ export function TenantProvider({ children }) {
                         setTenant(null);
                         if (response.status === 404 && isProduction) {
                             setError(buildTenantNotFoundError());
+                            setPrebootStatus('tenant-unresolved');
                             return;
                         }
                         throw new Error('Failed to load tenant context.');
@@ -77,23 +91,26 @@ export function TenantProvider({ children }) {
                     setTenant(tenantData);
                     sessionStorage.setItem('matchcota_tenant_slug', tenantData.slug);
                     setError(null);
+                    setPrebootStatus('tenant-resolved');
                 } else {
                     setTenant(null);
                     setError(null);
+                    setPrebootStatus('apex-host');
                 }
             } catch (err) {
                 setTenant(null);
                 setError(err.message || 'Failed to resolve tenant context.');
+                setPrebootStatus('tenant-unresolved');
             } finally {
                 setLoading(false);
             }
         };
 
         detectTenant();
-    }, []);
+    }, [preboot, shouldSkipFetch]);
 
     return (
-        <TenantContext.Provider value={{ tenant, loading, error }}>
+        <TenantContext.Provider value={{ tenant, loading, error, prebootStatus }}>
             {children}
         </TenantContext.Provider>
     );

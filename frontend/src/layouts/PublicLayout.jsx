@@ -114,17 +114,20 @@ function TenantNotFoundState({ error }) {
 }
 
 export default function PublicLayout() {
-    const { tenant, error } = useTenant();
+    const { tenant, error, loading, prebootStatus } = useTenant();
     const currentLocation = useLocation();
     const hostContext = resolveHostContext();
     const isAuthenticationPage = ['/login', '/register-tenant'].includes(currentLocation.pathname);
     const showTenantNotFound = error && typeof error === 'object' && error.type === 'tenant-not-found';
     const isTenantHost = hostContext.isTenantHost;
+    const showTenantHeader = isTenantHost && (Boolean(tenant?.name) || prebootStatus !== 'tenant-unresolved' || !loading);
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-50">
             {!isAuthenticationPage && (
-                isTenantHost ? <TenantPublicHeader tenantName={tenant?.name} /> : <ApexPublicHeader />
+                isTenantHost
+                    ? (showTenantHeader ? <TenantPublicHeader tenantName={tenant?.name} /> : null)
+                    : <ApexPublicHeader />
             )}
             <main className={`flex-grow ${isAuthenticationPage ? 'flex flex-col' : ''}`}>
                 <div className={isAuthenticationPage ? 'w-full h-full p-0' : 'max-w-7xl mx-auto py-6 sm:px-6 lg:px-8'}>
