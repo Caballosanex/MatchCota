@@ -460,3 +460,16 @@ resource "terraform_data" "edge_tls_bootstrap_contract" {
     }
   }
 }
+
+resource "terraform_data" "frontend_tenant_preboot_contract" {
+  input = {
+    base_domain                 = var.base_domain
+    wildcard_domain             = "*.${var.base_domain}"
+    preboot_endpoint            = "/tenant-preboot.js"
+    apex_status                 = "apex"
+    tenant_fallback_status      = "unresolved"
+    invalid_host_status         = "invalid"
+    registration_success_target = "https://{slug}.${var.base_domain}/"
+    owner                       = "edge-nginx"
+  }
+}

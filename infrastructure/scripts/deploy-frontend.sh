@@ -108,6 +108,7 @@ Contract assertions include:
   - https://matchcota.tech/test and /home redirect to /
   - https://{known-slug}.matchcota.tech/register-tenant redirects to tenant root and does not expose registration
   - tenant root does not render apex marketing shell markers
+  - /tenant-preboot.js returns deterministic host context status markers
 
 Examples:
   FRONTEND_HOST=44.210.10.20 infrastructure/scripts/deploy-frontend.sh
@@ -208,14 +209,20 @@ ensure_terraform_initialized() {
 
 verify_dns_contract() {
   stage "verify Terraform DNS contract outputs"
-  local hosted_zone_id wildcard_eip apex_eip
+  local hosted_zone_id wildcard_eip apex_eip preboot_contract
 
   hosted_zone_id="$(terraform -chdir="$TF_ENV_DIR" output -raw route53_hosted_zone_id)"
   wildcard_eip="$(terraform -chdir="$TF_ENV_DIR" output -raw dns_wildcard_record_target_eip)"
   apex_eip="$(terraform -chdir="$TF_ENV_DIR" output -raw dns_apex_record_target_eip)"
+  preboot_contract="$(terraform -chdir="$TF_ENV_DIR" output -json frontend_tenant_preboot_contract 2>/dev/null || true)"
 
   if [[ -z "$hosted_zone_id" || -z "$wildcard_eip" || -z "$apex_eip" ]]; then
     echo "ERROR: Missing required Terraform DNS outputs (route53_hosted_zone_id / dns_wildcard_record_target_eip / dns_apex_record_target_eip)." >&2
+    exit 1
+  fi
+
+  if [[ -z "$preboot_contract" || "$preboot_contract" == "null" ]]; then
+    echo "ERROR: Missing required Terraform output frontend_tenant_preboot_contract for edge preboot verification." >&2
     exit 1
   fi
 
@@ -516,6 +523,24 @@ server {
     root __MATCHCOTA_DOCROOT__;
     index index.html;
 
+    set $matchcota_preboot_status "invalid";
+    set $matchcota_preboot_slug "";
+
+    if ($host = matchcota.tech) {
+        set $matchcota_preboot_status "apex";
+    }
+
+    if ($host ~ ^([a-z0-9-]+)\.matchcota\.tech$) {
+        set $matchcota_preboot_status "unresolved";
+        set $matchcota_preboot_slug $1;
+    }
+
+    location = /tenant-preboot.js {
+        default_type application/javascript;
+        add_header Cache-Control "no-store";
+        return 200 "window.__MATCHCOTA_TENANT_PREBOOT__={\"host\":\"$host\",\"baseDomain\":\"matchcota.tech\",\"tenantSlug\":\"$matchcota_preboot_slug\",\"tenantName\":\"\",\"status\":\"$matchcota_preboot_status\"};";
+    }
+
     # Enforce host-specific routing contracts at the edge before SPA fallback:
     # - Apex host must redirect tenant-only public paths to /
     # - Tenant hosts must not expose registration path
@@ -671,6 +696,59 @@ assert_not_contains_marker() {
   fi
 }
 
+assert_contains_marker() {
+  local haystack="$1"
+  local marker="$2"
+  local contract_name="$3"
+
+  if [[ "$haystack" != *"$marker"* ]]; then
+    echo "ERROR: Contract fail (${contract_name}) - missing expected marker '${marker}'." >&2
+    exit 1
+  fi
+}
+
+verify_registration_landing_contract() {
+  local register_tenant_file="frontend/src/pages/public/RegisterTenant.jsx"
+
+  if [[ ! -f "$register_tenant_file" ]]; then
+    echo "ERROR: Contract fail (registration landing) - source file not found: $register_tenant_file" >&2
+    exit 1
+  fi
+
+  if ! grep -Fq 'https://${tenantSlug}.matchcota.tech/' "$register_tenant_file"; then
+    echo "ERROR: Contract fail (registration landing) - tenant root URL contract missing in RegisterTenant flow." >&2
+    exit 1
+  fi
+
+  if grep -Fq "${tenantSlug}.matchcota.tech/login" "$register_tenant_file"; then
+    echo "ERROR: Contract fail (registration landing) - login path detected in registration redirect contract." >&2
+    exit 1
+  fi
+}
+
+verify_tenant_preboot_contract() {
+  local apex_host="$1"
+  local tenant_host="$2"
+  local apex_preboot
+  local tenant_preboot
+
+  stage "verify apex preboot contract for https://${apex_host}/tenant-preboot.js"
+  apex_preboot="$(curl -fsSL "https://${apex_host}/tenant-preboot.js")"
+  assert_contains_marker "$apex_preboot" '"status":"apex"' "apex preboot status"
+  assert_contains_marker "$apex_preboot" '"tenantSlug":""' "apex preboot tenant slug empty"
+
+  stage "verify tenant preboot contract for https://${tenant_host}/tenant-preboot.js"
+  tenant_preboot="$(curl -fsSL "https://${tenant_host}/tenant-preboot.js")"
+  assert_contains_marker "$tenant_preboot" 'window.__MATCHCOTA_TENANT_PREBOOT__=' "tenant preboot payload declaration"
+  assert_contains_marker "$tenant_preboot" '"status":"unresolved"' "tenant preboot unresolved fallback status"
+  assert_contains_marker "$tenant_preboot" '"tenantSlug":"' "tenant preboot slug marker"
+
+  if [[ "$tenant_preboot" == *'"tenantSlug":""'* ]]; then
+    echo "ERROR: Contract fail (tenant preboot) - tenant host preboot payload returned empty tenantSlug." >&2
+    exit 1
+  fi
+}
+
 verify_host_routing_contracts() {
   local apex_host
   local tenant_host
@@ -698,6 +776,12 @@ verify_host_routing_contracts() {
   assert_not_contains_marker "$tenant_root_body" "Plataforma per connectar protectores amb adoptants" "tenant root not apex shell"
   assert_not_contains_marker "$tenant_root_body" "Registrar Protectora" "tenant root no apex registration CTA"
   assert_not_contains_marker "$tenant_root_body" "matchcota edge tls ok" "tenant root no edge probe shell"
+
+  stage "verify registration success contract in frontend source"
+  verify_registration_landing_contract
+
+  stage "verify tenant preboot endpoint contract"
+  verify_tenant_preboot_contract "$apex_host" "$tenant_host"
 
   stage "tenant root host-routing contracts passed"
 }

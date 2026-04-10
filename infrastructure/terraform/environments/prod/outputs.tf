@@ -139,6 +139,11 @@ output "edge_tls_bootstrap_contract" {
   value       = var.edge_tls_bootstrap_enabled ? terraform_data.edge_tls_bootstrap_contract[0].input : null
 }
 
+output "frontend_tenant_preboot_contract" {
+  description = "Frontend edge preboot contract consumed by deploy/readiness scripts"
+  value       = terraform_data.frontend_tenant_preboot_contract.input
+}
+
 output "vpc_id" {
   description = "Production VPC ID consumed by runtime resources"
   value       = aws_vpc.data_plane.id
