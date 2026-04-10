@@ -153,6 +153,7 @@ main() {
 terraform_state_bucket = "smoke-placeholder-state-bucket"
 terraform_lock_table   = "smoke-placeholder-lock-table"
 frontend_elastic_ip    = "203.0.113.10"
+frontend_allowed_ssh_cidrs = ["203.0.113.0/24"]
 db_password            = "smoke-placeholder-password"
 EOF
 
