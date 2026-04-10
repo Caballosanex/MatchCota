@@ -44,6 +44,9 @@ bash infrastructure/scripts/terraform-preflight.sh
    bash infrastructure/scripts/terraform-apply-layer.sh runtime
    ```
 
+   Runtime layer includes Terraform-owned frontend edge resources (`aws_security_group.frontend_edge`, `data.aws_ssm_parameter.frontend_ami`, `aws_instance.frontend_edge`, `aws_eip.frontend_edge`, `aws_eip_association.frontend_edge`).
+   Terraform user-data establishes nginx baseline; no manual post-apply host bootstrap step is part of the normal recovery contract.
+
 5. Verify Phase 3 private data-plane contract before release decision:
 
    ```bash
@@ -90,6 +93,23 @@ bash infrastructure/scripts/terraform-preflight.sh
 
 8. Save command output logs for each layer, smoke run, data-plane verification, delegation check, and TLS check as execution evidence.
 
+## Recovery evidence gates (mandatory)
+
+Capture timestamped command output for every gate below before marking recovery complete:
+
+1. `bash infrastructure/scripts/terraform-preflight.sh`
+2. `bash infrastructure/scripts/terraform-smoke.sh`
+3. Ordered layer applies:
+   - `bash infrastructure/scripts/terraform-apply-layer.sh foundation`
+   - `bash infrastructure/scripts/terraform-apply-layer.sh network`
+   - `bash infrastructure/scripts/terraform-apply-layer.sh data`
+   - `bash infrastructure/scripts/terraform-apply-layer.sh runtime`
+4. `bash infrastructure/scripts/deploy-frontend.sh` (must include route contract checks)
+5. `bash infrastructure/scripts/post-deploy-readiness.sh`
+6. `bash infrastructure/scripts/production-data-audit.sh`
+
+Do not skip evidence capture for any gate. Missing artifacts invalidate DR equivalence proof.
+
 ## Edge TLS issuance (EC2 nginx)
 
 Use Let's Encrypt for `matchcota.tech` and `*.matchcota.tech` at the nginx edge.
@@ -127,20 +147,14 @@ Wildcard issuance requires DNS-01 challenge. `certbot --nginx` is not valid for 
    bash infrastructure/scripts/terraform-smoke.sh
    ```
 
-5. Re-run smoke harness to restore stage contract confidence:
+5. Resume from failed or pending layer only:
 
    ```bash
-   bash infrastructure/scripts/terraform-smoke.sh
+     bash infrastructure/scripts/terraform-apply-layer.sh <foundation|network|data|runtime>
    ```
 
-6. Resume from failed or pending layer only:
-
-   ```bash
-    bash infrastructure/scripts/terraform-apply-layer.sh <foundation|network|data|runtime>
-   ```
-
-7. Continue remaining layers in order.
-8. If pending/failed scope includes private data-plane resources, rerun and confirm:
+6. Continue remaining layers in order.
+7. If pending/failed scope includes private data-plane resources, rerun and confirm:
 
    ```bash
    bash infrastructure/scripts/terraform-apply-layer.sh data
@@ -148,7 +162,7 @@ Wildcard issuance requires DNS-01 challenge. `certbot --nginx` is not valid for 
    terraform -chdir=infrastructure/terraform/environments/prod state show aws_vpc_endpoint.s3_gateway | grep -E "com.amazonaws.us-east-1.s3"
    ```
 
-9. If previously paused at delegation checkpoint, rerun `dns-delegation-check.sh` and `tls-readiness-check.sh` before proceeding.
+8. If previously paused at delegation checkpoint, rerun `dns-delegation-check.sh` and `tls-readiness-check.sh` before proceeding.
 
 ## Post-reset recovery and launch verification
 
@@ -188,9 +202,12 @@ Use this sequence after AWS Academy lab reset or whenever production needs full 
    ```bash
    export AWS_PROFILE=matchcota
    export AWS_REGION=us-east-1
-   export FRONTEND_HOST='<frontend-ec2-host-or-ip>'
    bash infrastructure/scripts/deploy-frontend.sh
    ```
+
+   `deploy-frontend.sh` resolves `FRONTEND_HOST` from Terraform output `frontend_edge_host_for_deploy` by default. Set `FRONTEND_HOST` only for explicit operator override.
+
+   Transport policy remains SSM-first with SSH fallback (`DEPLOY_TRANSPORT=auto`). Both channels must pass the same `verify_host_routing_contracts` and preboot contract checks.
 
 5. Run post-deploy readiness gate (DNS → TLS → API):
 
