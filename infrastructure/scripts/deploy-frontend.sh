@@ -76,7 +76,7 @@ Optional transport tools:
   ssh, rsync (required only for DEPLOY_TRANSPORT=ssh)
 
 Required environment:
-  FRONTEND_HOST                EC2 hostname/IP for nginx frontend host
+  FRONTEND_HOST                Optional EC2 hostname/IP override for nginx frontend host
 
 Optional environment:
   AWS_PROFILE                  AWS profile for Terraform output lookups (default: matchcota)
@@ -230,12 +230,6 @@ verify_dns_contract() {
 }
 
 verify_inputs() {
-  if [[ -z "$FRONTEND_HOST" ]]; then
-    echo "ERROR: FRONTEND_HOST is required (EC2 nginx host/IP)." >&2
-    echo "Run with FRONTEND_HOST=<host> infrastructure/scripts/deploy-frontend.sh" >&2
-    exit 1
-  fi
-
   if [[ "$VITE_ENVIRONMENT" != "production" ]]; then
     echo "ERROR: VITE_ENVIRONMENT must be 'production' for production deploy." >&2
     exit 1
@@ -261,6 +255,28 @@ verify_inputs() {
   esac
 
   validate_docroot
+}
+
+resolve_frontend_host() {
+  local tf_host
+
+  if [[ -n "$FRONTEND_HOST" ]]; then
+    return
+  fi
+
+  stage "resolve FRONTEND_HOST from Terraform output frontend_edge_host_for_deploy"
+
+  tf_host="$(terraform -chdir="$TF_ENV_DIR" output -raw frontend_edge_host_for_deploy 2>/dev/null || true)"
+  tf_host="$(printf '%s' "$tf_host" | tr -d '\r\n')"
+
+  if [[ -z "$tf_host" || "$tf_host" == "null" ]]; then
+    echo "ERROR: FRONTEND_HOST was not provided and Terraform output frontend_edge_host_for_deploy is unavailable." >&2
+    echo "Run runtime apply first (terraform-apply-layer.sh runtime) or set FRONTEND_HOST explicitly." >&2
+    exit 1
+  fi
+
+  FRONTEND_HOST="$tf_host"
+  stage "resolved frontend host from Terraform output: ${FRONTEND_HOST}"
 }
 
 verify_contract_inputs() {
@@ -807,6 +823,7 @@ main() {
 
   verify_inputs
   ensure_terraform_initialized
+  resolve_frontend_host
   verify_dns_contract
   resolve_transport
 
