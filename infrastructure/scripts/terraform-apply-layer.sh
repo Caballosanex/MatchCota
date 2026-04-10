@@ -69,6 +69,11 @@ TARGETS
       ;;
     runtime)
       cat <<'TARGETS'
+aws_security_group.frontend_edge
+data.aws_ssm_parameter.frontend_ami
+aws_instance.frontend_edge
+aws_eip.frontend_edge
+aws_eip_association.frontend_edge
 aws_s3_object.lambda_runtime_artifact
 aws_lambda_function.runtime
 aws_apigatewayv2_api.runtime
