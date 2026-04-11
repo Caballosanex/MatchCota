@@ -102,13 +102,15 @@ Optional environment:
 Verification-only mode:
   --verify-route-contracts-only
     Runs live apex/tenant host-routing assertions without building or publishing artifacts.
-    Useful for readiness orchestration stage checks.
+    Canonical INFRA-16 production domain contract evidence stage used by post-deploy-readiness.
 
 Contract assertions include:
   - https://matchcota.tech/test and /home redirect to /
   - https://{known-slug}.matchcota.tech/register-tenant redirects to tenant root and does not expose registration
   - tenant root does not render apex marketing shell markers
   - /tenant-preboot.js returns deterministic host context status markers
+
+No separate monitor-only route checks are introduced; these deterministic assertions are the single source of truth.
 
 Examples:
   FRONTEND_HOST=44.210.10.20 infrastructure/scripts/deploy-frontend.sh

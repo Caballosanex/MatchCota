@@ -20,6 +20,7 @@ SMOKE_DNS_INTERVAL="${SMOKE_DNS_INTERVAL:-30}"
 SMOKE_TLS_TIMEOUT="${SMOKE_TLS_TIMEOUT:-900}"
 SMOKE_TLS_INTERVAL="${SMOKE_TLS_INTERVAL:-30}"
 SMOKE_API_BASE_URL="${SMOKE_API_BASE_URL:-https://${SMOKE_API_HOST}/api/v1}"
+SMOKE_ROUTE_CONTRACT_STAGE="frontend-route-readiness"
 
 SMOKE_TMP_ENV_DIR=""
 SMOKE_LAMBDA_ARTIFACT_PATH=""
@@ -238,6 +239,8 @@ EOF
   stage "stage=tls_readiness pass"
 
   assert_matchcota_runtime_fingerprint
+
+  stage "INFRA-16 evidence path reminder: production domain alignment remains blocked until post-deploy-readiness stage=${SMOKE_ROUTE_CONTRACT_STAGE} passes with test-api in the same run"
 
   stage "stage=complete pass"
 }
