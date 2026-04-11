@@ -15,13 +15,13 @@
 ### Infrastructure Reproducibility and Recovery
 
 - [x] **INFRA-13**: Operator can provision frontend EC2, Elastic IP association, and nginx runtime configuration entirely from Terraform without manual host bootstrapping.
-- [ ] **INFRA-14**: Operator can initialize and use Terraform remote state backend with locking so interrupted applies can be resumed safely after AWS Academy credential expiry.
+- [x] **INFRA-14**: Operator can initialize and use Terraform remote state backend with locking so interrupted applies can be resumed safely after AWS Academy credential expiry.
 - [x] **INFRA-15**: Operator can rebuild frontend delivery infrastructure from a clean account state using documented, repeatable Terraform sequence and produce equivalent routing outcomes.
 
 ### Secrets and Security Baseline
 
-- [ ] **SECU-06**: Operator can migrate runtime secrets from local/env-file coupling to AWS SSM Parameter Store references with least-privilege use of `LabRole` and `LabInstanceProfile` only.
-- [ ] **SECU-07**: Deployment preserves AWS Academy and budget constraints by avoiding CloudFront, CloudWatch, SES assumptions, NAT Gateway, and Multi-AZ RDS while keeping wildcard DNS onboarding intact.
+- [x] **SECU-06**: Operator can migrate runtime secrets from local/env-file coupling to AWS SSM Parameter Store references with least-privilege use of `LabRole` and `LabInstanceProfile` only.
+- [x] **SECU-07**: Deployment preserves AWS Academy and budget constraints by avoiding CloudFront, CloudWatch, SES assumptions, NAT Gateway, and Multi-AZ RDS while keeping wildcard DNS onboarding intact.
 
 ### Carry-Forward Reliability and Onboarding Debt
 
@@ -52,9 +52,9 @@
 | UX-02 | Phase 11 | Complete |
 | INFRA-13 | Phase 8 | Complete |
 | INFRA-15 | Phase 8 | Complete |
-| INFRA-14 | Phase 12 | Pending |
-| SECU-06 | Phase 12 | Pending |
-| SECU-07 | Phase 12 | Pending |
+| INFRA-14 | Phase 12 | Complete |
+| SECU-06 | Phase 12 | Complete |
+| SECU-07 | Phase 12 | Complete |
 | ONBD-07 | Phase 13 | Pending |
 | ONBD-08 | Phase 13 | Pending |
 | INFRA-16 | Phase 13 | Pending |
