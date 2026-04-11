@@ -38,6 +38,20 @@ function normalizeFallbackActions(value) {
 }
 
 function normalizeChecks(value, handoffStatus) {
+    if (Array.isArray(value)) {
+        const byStage = Object.fromEntries(
+            value
+                .filter((item) => item && typeof item === 'object')
+                .map((item) => [normalizeString(item.stage).toLowerCase(), normalizeString(item.status).toLowerCase()])
+        );
+
+        return {
+            preboot: byStage.preboot || handoffStatus,
+            current: byStage.current || handoffStatus,
+            login: byStage.login || handoffStatus,
+        };
+    }
+
     if (!value || typeof value !== 'object') {
         return {
             preboot: handoffStatus,
