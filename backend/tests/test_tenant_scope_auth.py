@@ -130,3 +130,21 @@ def test_auth_module_uses_tenant_scoped_current_user_query_and_login_query():
     assert "User.tenant_id == header_tenant_id" in auth_content
     assert "User.email == form_data.username," in auth_content
     assert "User.tenant_id == tenant.id" in auth_content
+
+
+def test_production_auth_has_explicit_mismatch_deny_contract_branch():
+    auth_file = PROJECT_ROOT / "app/api/v1/auth.py"
+    auth_content = auth_file.read_text(encoding="utf-8")
+
+    assert "resolve_tenant_slug_for_request" in auth_content
+    assert "LOGIN-HOST_HINT_MISMATCH" in auth_content
+    assert '"handoff_status": "tenant_mismatch"' in auth_content
+
+
+def test_tenants_current_uses_host_authority_resolver_contract():
+    tenants_file = PROJECT_ROOT / "app/api/v1/tenants.py"
+    tenants_content = tenants_file.read_text(encoding="utf-8")
+
+    assert "resolve_tenant_slug_for_request" in tenants_content
+    assert "CONTEXT-TENANT_MISSING" in tenants_content
+    assert "CONTEXT-TENANT_NOT_FOUND" in tenants_content
