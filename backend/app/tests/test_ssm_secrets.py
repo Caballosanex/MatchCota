@@ -50,9 +50,17 @@ def test_bootstrap_fails_closed_when_reference_is_missing(monkeypatch):
     _reset_runtime_cache(monkeypatch)
     _set_required_env(monkeypatch)
     monkeypatch.delenv("JWT_SECRET_KEY_SSM_PARAMETER")
+    client_factory = MagicMock()
+    monkeypatch.setattr(bootstrap_runtime.boto3, "client", client_factory)
 
-    with pytest.raises(RuntimeError, match="missing JWT_SECRET_KEY_SSM_PARAMETER"):
+    with pytest.raises(
+        RuntimeError,
+        match=r"missing JWT_SECRET_KEY_SSM_PARAMETER \(before SSM client init\)",
+    ):
         bootstrap_runtime.bootstrap_runtime_secrets()
+
+    assert client_factory.call_count == 0
+    assert "RUNTIME_SECRETS_BOOTSTRAPPED" not in os.environ
 
 
 def test_bootstrap_reuses_process_cache(monkeypatch):
