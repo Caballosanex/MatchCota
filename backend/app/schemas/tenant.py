@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 from pydantic import BaseModel, EmailStr, Field
 from uuid import UUID
 from datetime import datetime
@@ -30,3 +30,36 @@ class Tenant(TenantBase):
 
     class Config:
         from_attributes = True
+
+
+class OnboardingHandoffCheck(BaseModel):
+    stage: Literal["preboot", "current", "login"]
+    status: Literal["ok", "unresolved"]
+
+
+class OnboardingFallbackActions(BaseModel):
+    retry: bool = True
+    open: bool = True
+    copy: bool = True
+
+
+class OnboardingHandoffStatus(BaseModel):
+    registration_outcome: Literal["success"] = "success"
+    handoff_status: Literal["ready", "action_required"]
+    checks: list[OnboardingHandoffCheck]
+    fallback_actions: OnboardingFallbackActions
+    user_message_key: str
+    support_code: str = Field(
+        pattern=r"^(CREATE|CONTEXT|LOGIN)-[A-Z0-9_]+$"
+    )
+
+
+class TenantRegistrationResponse(Tenant):
+    onboarding: OnboardingHandoffStatus
+
+
+class TenantIsolationDenyStatus(BaseModel):
+    registration_outcome: Literal["denied"] = "denied"
+    handoff_status: Literal["tenant_mismatch"] = "tenant_mismatch"
+    user_message_key: str
+    support_code: str = Field(pattern=r"^LOGIN-[A-Z0-9_]+$")
