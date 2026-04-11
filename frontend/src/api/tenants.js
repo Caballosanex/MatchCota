@@ -25,16 +25,24 @@ function normalizeHandoffStatus(value) {
 }
 
 function normalizeFallbackActions(value) {
-    if (!Array.isArray(value)) {
-        return [...DEFAULT_FALLBACK_ACTIONS];
+    if (Array.isArray(value)) {
+        const normalized = value
+            .map((action) => normalizeString(action).toLowerCase())
+            .filter(Boolean)
+            .filter((action, index, collection) => collection.indexOf(action) === index);
+
+        return normalized.length ? normalized : [...DEFAULT_FALLBACK_ACTIONS];
     }
 
-    const normalized = value
-        .map((action) => normalizeString(action).toLowerCase())
-        .filter(Boolean)
-        .filter((action, index, collection) => collection.indexOf(action) === index);
+    if (value && typeof value === 'object') {
+        const mapped = [];
+        if (value.retry) mapped.push('retry_checks');
+        if (value.open) mapped.push('open_tenant_root');
+        if (value.copy) mapped.push('copy_url');
+        return mapped.length ? mapped : [...DEFAULT_FALLBACK_ACTIONS];
+    }
 
-    return normalized.length ? normalized : [...DEFAULT_FALLBACK_ACTIONS];
+    return [...DEFAULT_FALLBACK_ACTIONS];
 }
 
 function normalizeChecks(value, handoffStatus) {
