@@ -109,7 +109,7 @@ init_if_needed() {
   fi
 
   if [[ -z "$TF_BACKEND_BUCKET" ]] || [[ -z "$TF_BACKEND_DYNAMODB_TABLE" ]]; then
-    echo "ERROR: TF_BACKEND_BUCKET and TF_BACKEND_DYNAMODB_TABLE must be set for first-time prod backend init" >&2
+    echo "ERROR: Missing backend init prerequisites. Run infrastructure/scripts/terraform-bootstrap-backend.sh and export TF_BACKEND_BUCKET/TF_BACKEND_DYNAMODB_TABLE before first init." >&2
     exit 1
   fi
 
