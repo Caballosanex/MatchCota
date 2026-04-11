@@ -5,7 +5,7 @@ from typing import Any, List
 from app.database import get_db
 from app.config import settings
 from app.models.tenant import Tenant as TenantModel
-from app.schemas.tenant import TenantCreate, Tenant
+from app.schemas.tenant import TenantCreate, Tenant, TenantRegistrationResponse
 from app.core.tenant import get_current_tenant
 from app.services import tenants as tenants_service
 
@@ -45,8 +45,8 @@ def get_current_tenant_info(tenant: TenantModel = Depends(get_current_tenant)):
     return tenant
 
 
-@router.post("", response_model=Tenant, status_code=status.HTTP_201_CREATED, include_in_schema=False)
-@router.post("/", response_model=Tenant, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=TenantRegistrationResponse, status_code=status.HTTP_201_CREATED, include_in_schema=False)
+@router.post("/", response_model=TenantRegistrationResponse, status_code=status.HTTP_201_CREATED)
 def create_tenant(
     tenant_in: TenantCreate,
     db: Session = Depends(get_db)
