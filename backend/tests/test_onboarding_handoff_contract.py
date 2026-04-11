@@ -82,3 +82,10 @@ def test_tenant_registration_response_includes_onboarding_contract():
 
     assert response.onboarding.handoff_status == "action_required"
     assert response.onboarding.support_code == "CONTEXT-UNRESOLVED"
+
+
+def test_readiness_contract_uses_three_stage_checks_and_deterministic_actions():
+    status = OnboardingHandoffStatus(**_base_payload())
+
+    assert [check.stage for check in status.checks] == ["preboot", "current", "login"]
+    assert status.fallback_actions.model_dump() == {"retry": True, "open": True, "copy": True}

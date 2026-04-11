@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+from datetime import datetime, UTC
 from uuid import uuid4
 
 import pytest
@@ -13,7 +14,6 @@ if str(PROJECT_ROOT) not in sys.path:
 from app.schemas.tenant import TenantCreate
 from app.services import tenants as tenants_service
 from app.crud import tenants as crud_tenants
-from app.core.security import verify_password
 
 
 def _valid_tenant_payload() -> dict:
@@ -41,6 +41,8 @@ def test_registration_payload_rejects_short_admin_password():
 class _FakeTenantModel:
     def __init__(self, **kwargs):
         self.id = kwargs.pop("id", None)
+        self.created_at = kwargs.pop("created_at", datetime.now(UTC))
+        self.updated_at = kwargs.pop("updated_at", datetime.now(UTC))
         for key, value in kwargs.items():
             setattr(self, key, value)
 
@@ -102,8 +104,10 @@ def test_onboarding_creates_linked_admin_with_hashed_password(monkeypatch):
     monkeypatch.setattr(crud_tenants, "Tenant", _FakeTenantModel)
     monkeypatch.setattr(crud_tenants, "get_tenant_by_slug", lambda _db, slug: None)
     monkeypatch.setattr(tenants_service, "User", _FakeUserModel)
+    monkeypatch.setattr(tenants_service, "get_password_hash", lambda raw: f"hashed::{raw}")
 
-    created_tenant = tenants_service.create_tenant(db, tenant_payload)
+    created = tenants_service.create_tenant(db, tenant_payload)
+    created_tenant = db.tenants[0]
 
     assert db.commit_calls == 1
     assert len(db.tenants) == 1
@@ -114,7 +118,7 @@ def test_onboarding_creates_linked_admin_with_hashed_password(monkeypatch):
     assert created_user.tenant_id == created_tenant.id
     assert created_user.email == tenant_payload.email
     assert created_user.password_hash != tenant_payload.admin_password
-    assert verify_password(tenant_payload.admin_password, created_user.password_hash)
+    assert created_user.password_hash == "hashed::strongpass123"
 
 
 def test_onboarding_rolls_back_when_user_creation_fails(monkeypatch):
@@ -124,6 +128,7 @@ def test_onboarding_rolls_back_when_user_creation_fails(monkeypatch):
     monkeypatch.setattr(crud_tenants, "Tenant", _FakeTenantModel)
     monkeypatch.setattr(crud_tenants, "get_tenant_by_slug", lambda _db, slug: None)
     monkeypatch.setattr(tenants_service, "User", _FakeUserModel)
+    monkeypatch.setattr(tenants_service, "get_password_hash", lambda raw: f"hashed::{raw}")
 
     with pytest.raises(Exception):
         tenants_service.create_tenant(db, tenant_payload)
@@ -131,6 +136,38 @@ def test_onboarding_rolls_back_when_user_creation_fails(monkeypatch):
     assert db.rollback_calls == 1
     assert db.tenants == []
     assert db.users == []
+
+
+def test_onboarding_create_succeeds_even_when_current_check_unresolved(monkeypatch):
+    db = _FakeSession()
+    tenant_payload = TenantCreate(**_valid_tenant_payload(), admin_password="strongpass123")
+
+    monkeypatch.setattr(crud_tenants, "Tenant", _FakeTenantModel)
+    monkeypatch.setattr(crud_tenants, "get_tenant_by_slug", lambda _db, slug: None)
+    monkeypatch.setattr(tenants_service, "User", _FakeUserModel)
+    monkeypatch.setattr(tenants_service, "get_password_hash", lambda raw: f"hashed::{raw}")
+    monkeypatch.setattr(
+        tenants_service,
+        "evaluate_handoff_readiness",
+        lambda _db, _tenant: {
+            "registration_outcome": "success",
+            "handoff_status": "action_required",
+            "checks": [
+                {"stage": "preboot", "status": "ok"},
+                {"stage": "current", "status": "unresolved"},
+                {"stage": "login", "status": "ok"},
+            ],
+            "fallback_actions": {"retry": True, "open": True, "copy": True},
+            "user_message_key": "onboarding.handoff_action_required",
+            "support_code": "CONTEXT-UNRESOLVED",
+        },
+    )
+
+    created = tenants_service.create_tenant(db, tenant_payload)
+
+    assert db.commit_calls == 1
+    assert created["onboarding"].handoff_status == "action_required"
+    assert created["onboarding"].support_code == "CONTEXT-UNRESOLVED"
 
 
 def test_onboarding_service_does_not_reference_route53_runtime_mutation():
