@@ -9,7 +9,7 @@
 
 ### UX Hardening
 
-- [ ] **UX-01**: Visitor sees tenant name and tenant-themed public shell only after server-injected tenant context is available, with no visible flash of incorrect tenant/default branding.
+- [x] **UX-01**: Visitor sees tenant name and tenant-themed public shell only after server-injected tenant context is available, with no visible flash of incorrect tenant/default branding.
 - [ ] **UX-02**: Registrant lands on `https://{slug}.matchcota.tech/` after successful signup with a deterministic fallback path when tenant context preboot fails.
 
 ### Infrastructure Reproducibility and Recovery
@@ -48,7 +48,7 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| UX-01 | Phase 11 | Pending |
+| UX-01 | Phase 11 | Complete |
 | UX-02 | Phase 11 | Pending |
 | INFRA-13 | Phase 8 | Complete |
 | INFRA-15 | Phase 8 | Complete |
