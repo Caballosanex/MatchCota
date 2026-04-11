@@ -39,6 +39,33 @@ export const buildRedirectFallback = (tenantSlug, registrationEmail) => ({
   registrationEmail,
 });
 
+export const buildRegistrationOutcomeState = ({
+  handoffStatus,
+  supportCode,
+  userMessageKey,
+  fallbackActions,
+  destinationUrl,
+  registrationEmail,
+}) => ({
+  handoffStatus,
+  supportCode,
+  userMessageKey,
+  fallbackActions,
+  destinationUrl,
+  registrationEmail,
+});
+
+const CURATED_MESSAGES = {
+  ONBOARDING_READY: 'Registre completat. Ja pots continuar des del teu espai del shelter.',
+  'onboarding.handoff_ready': 'Registre completat. Ja pots continuar des del teu espai del shelter.',
+  'onboarding.handoff_action_required': 'Hem creat el teu shelter però cal revisar la connexió inicial abans de continuar.',
+  'onboarding.registration_failed': 'No hem pogut completar el registre ara mateix. Torna-ho a provar en uns minuts.',
+  'auth.tenant_mismatch': 'Aquest compte pertany a un altre shelter. Accedeix des del subdomini correcte.',
+  fallback: 'Hem detectat un problema temporal en l’onboarding. Pots reintentar o obrir directament el teu espai.',
+};
+
+const resolveCuratedMessage = (messageKey) => CURATED_MESSAGES[messageKey] || CURATED_MESSAGES.fallback;
+
 export const buildRedirectMessage = ({ destinationUrl, registrationEmail }) => (
   `Redirecting you to your tenant root (${destinationUrl}). ` +
   `From there, you can continue with public setup and sign in later using ${registrationEmail}.`
@@ -74,7 +101,7 @@ export default function RegisterTenant() {
   });
 
   const [apiError, setApiError] = useState(null);
-  const [redirectFallback, setRedirectFallback] = useState(null);
+  const [registrationOutcome, setRegistrationOutcome] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -89,7 +116,7 @@ export default function RegisterTenant() {
 
   const onSubmit = async (data) => {
     setApiError(null);
-    setRedirectFallback(null);
+    setRegistrationOutcome(null);
 
     try {
       const payload = buildTenantPayload(data);
@@ -101,30 +128,66 @@ export default function RegisterTenant() {
       const tenantSlug = normalizeTenantSlug(createdTenant?.slug || data.slug);
       const destinationUrl = buildTenantRootUrl(tenantSlug);
       const registrationEmail = createdTenant?.email || data.email;
+      const handoffStatus = createdTenant?.handoffStatus || 'ready';
+
+      const fallbackState = buildRegistrationOutcomeState({
+        handoffStatus,
+        supportCode: createdTenant?.supportCode || 'CREATE-UNRESOLVED',
+        userMessageKey: createdTenant?.userMessageKey || 'onboarding.handoff_action_required',
+        fallbackActions: createdTenant?.fallbackActions || ['retry_checks', 'open_tenant_root', 'copy_url'],
+        destinationUrl,
+        registrationEmail,
+      });
+
+      if (handoffStatus !== 'ready') {
+        setRegistrationOutcome(fallbackState);
+      }
 
       try {
         window.location.assign(destinationUrl);
       } catch {
-        setRedirectFallback(buildRedirectFallback(tenantSlug, registrationEmail));
+        setRegistrationOutcome(fallbackState);
       }
 
       reset();
     } catch (err) {
-      setApiError(err.message || 'Hi ha hagut un error en el registre.');
+      setApiError(resolveCuratedMessage(err.messageKey));
+      setRegistrationOutcome(
+        buildRegistrationOutcomeState({
+          handoffStatus: err.handoffStatus || 'unresolved',
+          supportCode: err.supportCode || 'CREATE-REQUEST_FAILED',
+          userMessageKey: err.messageKey || 'onboarding.registration_failed',
+          fallbackActions: err.fallbackActions || ['retry_checks', 'open_tenant_root', 'copy_url'],
+          destinationUrl: buildTenantRootUrl(normalizeTenantSlug(data.slug)),
+          registrationEmail: data.email,
+        }),
+      );
     }
   };
 
   const showConfirmError = touchedFields.confirm_password || submitCount > 0;
 
   const handleRetryRedirect = () => {
-    if (!redirectFallback?.destinationUrl) {
+    if (!registrationOutcome?.destinationUrl) {
       return;
     }
 
     try {
-      window.location.assign(redirectFallback.destinationUrl);
+      window.location.assign(registrationOutcome.destinationUrl);
     } catch {
-      setApiError('No hem pogut iniciar la redirecció a la pàgina principal del teu shelter. Torna-ho a provar.');
+      setApiError(CURATED_MESSAGES.fallback);
+    }
+  };
+
+  const handleCopyUrl = async () => {
+    if (!registrationOutcome?.destinationUrl || !navigator?.clipboard?.writeText) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(registrationOutcome.destinationUrl);
+    } catch {
+      setApiError('No hem pogut copiar l\'enllaç automàticament.');
     }
   };
 
@@ -349,28 +412,47 @@ export default function RegisterTenant() {
                 </div>
               )}
 
-              {redirectFallback && (
+              {registrationOutcome && (
                 <div className="text-[#4A90A4] text-sm font-bold bg-[#4A90A4]/10 p-4 rounded-xl border border-[#4A90A4]/20 space-y-3">
-                  <p className="text-base">Shelter created successfully</p>
+                  <p className="text-base">Diagnòstic d'onboarding</p>
                   <p>
-                    {buildRedirectMessage(redirectFallback)}
+                    {resolveCuratedMessage(registrationOutcome.userMessageKey)}
                   </p>
-                  <p className="break-all text-xs text-gray-700 font-semibold">{redirectFallback.destinationUrl}</p>
+                  <p className="text-xs font-semibold text-gray-700">
+                    Support code: <span className="font-black">{registrationOutcome.supportCode}</span>
+                  </p>
+                  <p className="break-all text-xs text-gray-700 font-semibold">{registrationOutcome.destinationUrl}</p>
                   <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={handleRetryRedirect}
-                      className="bg-[#4A90A4] text-white text-xs uppercase tracking-wider px-4 py-2 rounded-lg hover:bg-[#3a7c8d] transition-colors"
-                    >
-                      Retry redirect
-                    </button>
-                    <a
-                      href={redirectFallback.destinationUrl}
-                      className="text-xs uppercase tracking-wider underline"
-                    >
-                      Open shelter root
-                    </a>
+                    {registrationOutcome.fallbackActions?.includes('retry_checks') && (
+                      <button
+                        type="button"
+                        onClick={handleRetryRedirect}
+                        className="bg-[#4A90A4] text-white text-xs uppercase tracking-wider px-4 py-2 rounded-lg hover:bg-[#3a7c8d] transition-colors"
+                      >
+                        Retry checks
+                      </button>
+                    )}
+                    {registrationOutcome.fallbackActions?.includes('open_tenant_root') && (
+                      <a
+                        href={registrationOutcome.destinationUrl}
+                        className="text-xs uppercase tracking-wider underline"
+                      >
+                        Open shelter root
+                      </a>
+                    )}
+                    {registrationOutcome.fallbackActions?.includes('copy_url') && (
+                      <button
+                        type="button"
+                        onClick={handleCopyUrl}
+                        className="text-xs uppercase tracking-wider underline"
+                      >
+                        Copy URL
+                      </button>
+                    )}
                   </div>
+                  {registrationOutcome.handoffStatus === 'ready' && (
+                    <p className="text-xs text-gray-700">{buildRedirectMessage(registrationOutcome)}</p>
+                  )}
                 </div>
               )}
 
