@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 2 context gathered
-last_updated: "2026-04-09T22:23:15.028Z"
-last_activity: 2026-04-09 -- Phase 01 execution started
+stopped_at: Completed 11-01-PLAN.md
+last_updated: "2026-04-11T20:06:07.358Z"
+last_activity: 2026-04-11 -- Phase 11 planning complete
 progress:
-  total_phases: 4
-  completed_phases: 3
-  total_plans: 13
-  completed_plans: 13
+  total_phases: 7
+  completed_phases: 5
+  total_plans: 12
+  completed_plans: 12
   percent: 100
 ---
 
@@ -18,42 +18,44 @@ progress:
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-04-09)
+See: `.planning/PROJECT.md` (updated 2026-04-10)
 
 **Core value:** A new shelter can register at `matchcota.tech`, instantly get `{slug}.matchcota.tech`, and log in with the password they created, fully over HTTPS.
-**Current focus:** Phase 01 — fix-tenant-subdomain-frontend-routing-after-registration
+**Current focus:** Milestone v1.1 complete — ready for milestone closure
 
 ## Current Position
 
-Phase: 01 (fix-tenant-subdomain-frontend-routing-after-registration) — EXECUTING
-Plan: 1 of 6
-Milestone: v1.0 (MVP)
-Status: Executing Phase 01
-Next: Define next milestone scope and requirements
-Last activity: 2026-04-09 -- Phase 01 execution started
+Phase: Complete (v1.1 milestone)
+Plan: Not started
+Milestone: v1.1 (Reliability + UX Hardening)
+Status: Ready to execute
+Next: Run /gsd-complete-milestone v1.1
+Last activity: 2026-04-11 -- Phase 11 planning complete
 
-Progress: [##########] 100%
+Progress: [████████████████████] 11/11 plans (100%)
 
 ## Milestone Snapshot
 
-- Archived roadmap: `.planning/milestones/v1.0-ROADMAP.md`
-- Archived requirements: `.planning/milestones/v1.0-REQUIREMENTS.md`
-- Milestone summary: `.planning/MILESTONES.md`
-- Requirements file reset: `.planning/REQUIREMENTS.md` removed pending next milestone definition
+- Active milestone: `v1.1 Reliability + UX Hardening`
+- Active requirements: `.planning/REQUIREMENTS.md`
+- Active roadmap: `.planning/ROADMAP.md`
+- Prior milestone archive: `.planning/milestones/v1.0-ROADMAP.md`, `.planning/milestones/v1.0-REQUIREMENTS.md`
 
 ## Carry-Forward Concerns
 
-- Run `/gsd-audit-milestone` before the next milestone closeout to avoid missing audit artifacts.
-- Re-plan unresolved v1 requirement debt captured in `.planning/MILESTONES.md` and `.planning/milestones/v1.0-REQUIREMENTS.md`.
+- Preserve AWS Academy restrictions (LabRole/LabInstanceProfile only; no CloudFront/CloudWatch/SES assumptions).
+- Maintain budget controls (no NAT Gateway, no Multi-AZ RDS) and wildcard DNS onboarding model.
+- Prioritize carry-forward v1.0 debt tied to onboarding reliability and tenant isolation.
 
 ## Accumulated Context
 
 ### Roadmap Evolution
 
 - Phase 2 added: Eliminate tenant-name FOUC by injecting tenant data at the nginx edge before the SPA boots
+- Phase 3 added: Close disaster recovery gaps — codify frontend EC2 EIP nginx in Terraform, bootstrap state backend, move secrets to SSM Parameter Store
 
 ## Session Continuity
 
-Last session: 2026-04-09T22:23:15.025Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-eliminate-tenant-name-fouc-by-injecting-tenant-data-at-the-n/02-CONTEXT.md
+Last session: 2026-04-11T20:06:07.356Z
+Stopped at: Completed 11-01-PLAN.md
+Resume file: None
