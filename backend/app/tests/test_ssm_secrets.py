@@ -50,6 +50,7 @@ def test_bootstrap_fails_closed_when_reference_is_missing(monkeypatch):
     _reset_runtime_cache(monkeypatch)
     _set_required_env(monkeypatch)
     monkeypatch.delenv("JWT_SECRET_KEY_SSM_PARAMETER")
+    monkeypatch.delenv("RUNTIME_SECRETS_BOOTSTRAPPED", raising=False)
     client_factory = MagicMock()
     monkeypatch.setattr(bootstrap_runtime.boto3, "client", client_factory)
 

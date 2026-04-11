@@ -21,6 +21,15 @@ def _require_env(name: str) -> str:
     return value
 
 
+def _require_reference_env(name: str) -> str:
+    value = os.getenv(name, "").strip()
+    if not value:
+        raise RuntimeError(
+            f"Runtime secret bootstrap failed: missing {name} (before SSM client init)"
+        )
+    return value
+
+
 def _resolve_ssm_parameter(ssm_client, parameter_name: str) -> str:
     try:
         response = ssm_client.get_parameter(Name=parameter_name, WithDecryption=False)
@@ -38,18 +47,26 @@ def bootstrap_runtime_secrets() -> Dict[str, str]:
         os.environ.update(_RUNTIME_CACHE)
         return dict(_RUNTIME_CACHE)
 
+    reference_values: Dict[str, str] = {}
+    for reference_env in _REQUIRED_REFERENCE_VARS:
+        reference_values[reference_env] = _require_reference_env(reference_env)
+
+    db_values: Dict[str, str] = {}
+    for env_name in _REQUIRED_DB_ENV_VARS:
+        db_values[env_name] = _require_env(env_name)
+
     region = os.getenv("APP_AWS_REGION", "us-east-1")
     ssm_client = boto3.client("ssm", region_name=region)
 
     resolved: Dict[str, str] = {}
     for reference_env, runtime_env in _REQUIRED_REFERENCE_VARS.items():
-        parameter_name = _require_env(reference_env)
+        parameter_name = reference_values[reference_env]
         resolved[runtime_env] = _resolve_ssm_parameter(ssm_client, parameter_name)
 
-    db_host = _require_env("DB_HOST")
-    db_port = _require_env("DB_PORT")
-    db_name = _require_env("DB_NAME")
-    db_username = _require_env("DB_USERNAME")
+    db_host = db_values["DB_HOST"]
+    db_port = db_values["DB_PORT"]
+    db_name = db_values["DB_NAME"]
+    db_username = db_values["DB_USERNAME"]
 
     resolved["DATABASE_URL"] = (
         f"postgresql://{db_username}:{resolved['DB_PASSWORD']}@{db_host}:{db_port}/{db_name}?sslmode=require"
