@@ -54,16 +54,17 @@ function normalizeChecks(value, handoffStatus) {
 }
 
 export function normalizeTenantCreateResponse(payload = {}) {
-    const handoffStatus = normalizeHandoffStatus(payload.handoff_status);
+    const onboarding = payload?.onboarding ?? payload;
+    const handoffStatus = normalizeHandoffStatus(onboarding.handoff_status);
     const defaultSupportCode = handoffStatus === 'ready' ? 'CREATE-READY' : 'CREATE-UNRESOLVED';
 
     return {
         ...payload,
         handoffStatus,
-        supportCode: normalizeSupportCode(payload.support_code, defaultSupportCode),
-        userMessageKey: normalizeString(payload.user_message_key) || 'ONBOARDING_READY',
-        fallbackActions: normalizeFallbackActions(payload.fallback_actions),
-        checks: normalizeChecks(payload.checks, handoffStatus),
+        supportCode: normalizeSupportCode(onboarding.support_code, defaultSupportCode),
+        userMessageKey: normalizeString(onboarding.user_message_key) || 'ONBOARDING_READY',
+        fallbackActions: normalizeFallbackActions(onboarding.fallback_actions),
+        checks: normalizeChecks(onboarding.checks, handoffStatus),
     };
 }
 
