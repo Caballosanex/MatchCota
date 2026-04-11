@@ -23,6 +23,8 @@ SMOKE_API_BASE_URL="${SMOKE_API_BASE_URL:-https://${SMOKE_API_HOST}/api/v1}"
 
 SMOKE_TMP_ENV_DIR=""
 SMOKE_LAMBDA_ARTIFACT_PATH=""
+SMOKE_BACKEND_BUCKET="${TF_BACKEND_BUCKET:-}"
+SMOKE_BACKEND_LOCK_TABLE="${TF_BACKEND_DYNAMODB_TABLE:-}"
 
 require_pattern() {
   local file_path="$1"
@@ -47,6 +49,27 @@ cleanup() {
 
 stage() {
   echo "[smoke] $1"
+}
+
+check_backend_prerequisites() {
+  stage "stage=backend_prerequisites start"
+
+  if [[ -z "$SMOKE_BACKEND_BUCKET" || -z "$SMOKE_BACKEND_LOCK_TABLE" ]]; then
+    echo "ERROR: Missing backend prerequisites. Set TF_BACKEND_BUCKET and TF_BACKEND_DYNAMODB_TABLE before smoke." >&2
+    exit 1
+  fi
+
+  if ! aws s3api head-bucket --bucket "$SMOKE_BACKEND_BUCKET" >/dev/null 2>&1; then
+    echo "ERROR: Backend bucket is not accessible: ${SMOKE_BACKEND_BUCKET}" >&2
+    exit 1
+  fi
+
+  if ! aws dynamodb describe-table --table-name "$SMOKE_BACKEND_LOCK_TABLE" >/dev/null 2>&1; then
+    echo "ERROR: Backend lock table is not accessible: ${SMOKE_BACKEND_LOCK_TABLE}" >&2
+    exit 1
+  fi
+
+  stage "stage=backend_prerequisites pass"
 }
 
 ensure_smoke_lambda_artifact() {
@@ -137,6 +160,8 @@ main() {
   stage "stage=preflight start"
   bash "${PREFLIGHT_SCRIPT}"
   stage "stage=preflight pass"
+
+  check_backend_prerequisites
 
   stage "stage=fmt_check start (terraform fmt -check)"
   terraform -chdir=infrastructure/terraform/environments/prod fmt -check
