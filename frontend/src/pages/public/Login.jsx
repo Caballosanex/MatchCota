@@ -77,8 +77,7 @@ export default function Login() {
             // Si funciona ens anem al dashboard
             navigate(from, { replace: true });
         } catch (err) {
-            // El backend expulsa -> L'usuari va posar un 1234 fals
-            setApiError('Credencials incorrectes o entitat no trobada');
+            setApiError(err?.message || 'Credencials incorrectes o entitat no trobada');
         }
     };
 

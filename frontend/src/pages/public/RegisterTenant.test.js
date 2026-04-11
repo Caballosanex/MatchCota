@@ -5,6 +5,9 @@ import {
   buildTenantRootUrl,
   buildRedirectFallback,
   buildRedirectMessage,
+  buildRegistrationOutcomeState,
+  resolveCuratedMessage,
+  getFallbackActionState,
 } from './RegisterTenant';
 
 describe('RegisterTenant validation contract', () => {
@@ -74,5 +77,28 @@ describe('RegisterTenant validation contract', () => {
     expect(copy).toContain('tenant root');
     expect(copy).toContain('https://new-shelter.matchcota.tech/');
     expect(copy).not.toContain('login');
+  });
+
+  it('returns curated fallback copy and never mirrors raw backend detail', () => {
+    expect(resolveCuratedMessage('onboarding.handoff_action_required')).toContain('Hem creat el teu shelter');
+    expect(resolveCuratedMessage('raw backend detail stacktrace')).toContain('problema temporal');
+    expect(resolveCuratedMessage('raw backend detail stacktrace')).not.toContain('stacktrace');
+  });
+
+  it('enables retry/open/copy actions for unresolved handoff outcomes', () => {
+    const outcome = buildRegistrationOutcomeState({
+      handoffStatus: 'unresolved',
+      supportCode: 'CONTEXT-UNRESOLVED',
+      userMessageKey: 'onboarding.handoff_action_required',
+      fallbackActions: ['retry_checks', 'open_tenant_root', 'copy_url'],
+      destinationUrl: 'https://new-shelter.matchcota.tech/',
+      registrationEmail: 'admin@new-shelter.org',
+    });
+
+    expect(getFallbackActionState(outcome)).toEqual({
+      retryChecks: true,
+      openTenantRoot: true,
+      copyUrl: true,
+    });
   });
 });

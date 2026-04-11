@@ -7,6 +7,25 @@ import { createContext, useState, useEffect, useContext } from 'react';
 import TenantContext from './TenantContext';
 import { getApiBaseUrl } from '../api/baseUrl';
 
+export const AUTH_CURATED_MESSAGES = {
+    'auth.tenant_mismatch': 'Aquest compte pertany a un altre shelter. Inicia sessió des del subdomini correcte.',
+    'auth.tenant_context_missing': 'No hem pogut detectar el teu shelter. Obre l\'enllaç del teu subdomini i torna-ho a provar.',
+    'auth.tenant_not_found': 'No hem trobat aquest shelter. Revisa l\'adreça del subdomini i torna-ho a provar.',
+    fallback: 'Credencials incorrectes o entitat no trobada',
+};
+
+export function mapAuthErrorToCuratedMessage(errorData = {}) {
+    const messageKey = typeof errorData?.user_message_key === 'string' ? errorData.user_message_key : '';
+    const curatedMessage = AUTH_CURATED_MESSAGES[messageKey] || AUTH_CURATED_MESSAGES.fallback;
+    const supportCode = typeof errorData?.support_code === 'string' ? errorData.support_code : null;
+
+    return {
+        message: curatedMessage,
+        messageKey,
+        supportCode,
+    };
+}
+
 /**
  * EL CONTEXT D'AUTENTICACIÓ
  * ----------------------------------------------------------------------
@@ -93,7 +112,11 @@ export function AuthProvider({ children }) {
         // Si l'API diu que la contrasenya és dolenta o passa alguna cosa...
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.detail || 'Error en iniciar la sessió');
+            const mappedError = mapAuthErrorToCuratedMessage(errorData.detail || errorData);
+            const authError = new Error(mappedError.message);
+            authError.messageKey = mappedError.messageKey;
+            authError.supportCode = mappedError.supportCode;
+            throw authError;
         }
 
         // Si anem bé, extraiem el token (el "passaport") de la resposta

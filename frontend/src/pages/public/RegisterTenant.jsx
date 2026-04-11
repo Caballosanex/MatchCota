@@ -64,7 +64,13 @@ const CURATED_MESSAGES = {
   fallback: 'Hem detectat un problema temporal en l’onboarding. Pots reintentar o obrir directament el teu espai.',
 };
 
-const resolveCuratedMessage = (messageKey) => CURATED_MESSAGES[messageKey] || CURATED_MESSAGES.fallback;
+export const resolveCuratedMessage = (messageKey) => CURATED_MESSAGES[messageKey] || CURATED_MESSAGES.fallback;
+
+export const getFallbackActionState = (registrationOutcome) => ({
+  retryChecks: Boolean(registrationOutcome?.fallbackActions?.includes('retry_checks')),
+  openTenantRoot: Boolean(registrationOutcome?.fallbackActions?.includes('open_tenant_root')),
+  copyUrl: Boolean(registrationOutcome?.fallbackActions?.includes('copy_url')),
+});
 
 export const buildRedirectMessage = ({ destinationUrl, registrationEmail }) => (
   `Redirecting you to your tenant root (${destinationUrl}). ` +
@@ -190,6 +196,8 @@ export default function RegisterTenant() {
       setApiError('No hem pogut copiar l\'enllaç automàticament.');
     }
   };
+
+  const actionState = getFallbackActionState(registrationOutcome);
 
   return (
     <div className="min-h-screen bg-white flex font-sans overflow-hidden">
@@ -423,7 +431,7 @@ export default function RegisterTenant() {
                   </p>
                   <p className="break-all text-xs text-gray-700 font-semibold">{registrationOutcome.destinationUrl}</p>
                   <div className="flex gap-3">
-                    {registrationOutcome.fallbackActions?.includes('retry_checks') && (
+                    {actionState.retryChecks && (
                       <button
                         type="button"
                         onClick={handleRetryRedirect}
@@ -432,7 +440,7 @@ export default function RegisterTenant() {
                         Retry checks
                       </button>
                     )}
-                    {registrationOutcome.fallbackActions?.includes('open_tenant_root') && (
+                    {actionState.openTenantRoot && (
                       <a
                         href={registrationOutcome.destinationUrl}
                         className="text-xs uppercase tracking-wider underline"
@@ -440,7 +448,7 @@ export default function RegisterTenant() {
                         Open shelter root
                       </a>
                     )}
-                    {registrationOutcome.fallbackActions?.includes('copy_url') && (
+                    {actionState.copyUrl && (
                       <button
                         type="button"
                         onClick={handleCopyUrl}
