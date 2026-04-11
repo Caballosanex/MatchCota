@@ -16,6 +16,7 @@ from app.database import get_db
 from app.models.user import User
 from app.models.tenant import Tenant
 from app.core.security import verify_password, create_access_token, decode_access_token
+from app.core.tenant import resolve_tenant_slug_for_request
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -130,33 +131,43 @@ def login(
     - username: admin@demo.com
     - password: admin123
     """
-    # Obtenir tenant slug de múltiples fonts (per compatibilitat)
-    tenant_slug = None
+    hint_slug = form_data.client_id
+    if not hint_slug and form_data.scopes:
+        hint_slug = form_data.scopes[0] if isinstance(form_data.scopes, list) else form_data.scopes
 
-    # 1. Intentar des de client_id (Swagger OAuth2 sempre mostra aquest camp)
-    if form_data.client_id:
-        tenant_slug = form_data.client_id
-
-    # 2. Si no, intentar des de scope
-    if not tenant_slug and form_data.scopes:
-        tenant_slug = form_data.scopes[0] if isinstance(form_data.scopes, list) else form_data.scopes
-
-    # 3. Si no, des del header X-Tenant-Slug
-    if not tenant_slug:
-        tenant_slug = request.headers.get("X-Tenant-Slug")
-
-    # 4. Si no, des del state del middleware (si s'ha executat)
-    if not tenant_slug:
-        tenant_id_from_middleware = getattr(request.state, "tenant_id", None)
-        if tenant_id_from_middleware:
-            tenant = db.query(Tenant).filter(Tenant.id == tenant_id_from_middleware).first()
-            if tenant:
-                tenant_slug = tenant.slug
+    try:
+        tenant_slug = resolve_tenant_slug_for_request(
+            request,
+            hint_slug=hint_slug,
+            support_stage="LOGIN",
+        )
+    except HTTPException as mismatch_exc:
+        mismatch_detail = mismatch_exc.detail if isinstance(mismatch_exc.detail, dict) else {}
+        if (
+            settings.is_production()
+            and mismatch_exc.status_code == status.HTTP_403_FORBIDDEN
+            and mismatch_detail.get("handoff_status") == "tenant_mismatch"
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "registration_outcome": "denied",
+                    "handoff_status": "tenant_mismatch",
+                    "user_message_key": "auth.tenant_mismatch",
+                    "support_code": "LOGIN-HOST_HINT_MISMATCH",
+                },
+            )
+        raise
 
     if not tenant_slug:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Tenant slug missing. Use client_id field (e.g., 'demo') or X-Tenant-Slug header."
+            detail={
+                "registration_outcome": "denied",
+                "handoff_status": "tenant_context_missing",
+                "user_message_key": "auth.tenant_context_missing",
+                "support_code": "LOGIN-TENANT_MISSING",
+            },
         )
 
     # Buscar tenant
@@ -164,7 +175,12 @@ def login(
     if not tenant:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Tenant '{tenant_slug}' not found"
+            detail={
+                "registration_outcome": "denied",
+                "handoff_status": "tenant_not_found",
+                "user_message_key": "auth.tenant_not_found",
+                "support_code": "LOGIN-TENANT_NOT_FOUND",
+            },
         )
 
     # Buscar user per email dins del tenant
@@ -206,3 +222,4 @@ def get_me(current_user: User = Depends(get_current_user)):
         "name": current_user.name,
         "tenant_id": str(current_user.tenant_id)
     }
+from app.config import settings

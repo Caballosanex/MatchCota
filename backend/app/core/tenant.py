@@ -1,4 +1,4 @@
-from fastapi import Request, Depends, HTTPException
+from fastapi import Request, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
@@ -6,6 +6,49 @@ from starlette.responses import JSONResponse
 from app.database import SessionLocal, get_db
 from app.models.tenant import Tenant
 from app.config import settings
+
+
+def extract_tenant_slug_from_host(host_header: str | None) -> str | None:
+    if not host_header:
+        return None
+
+    host = host_header.split(":")[0].lower().strip()
+    wildcard_domain = settings.wildcard_domain.lower().strip()
+    wildcard_suffix = f".{wildcard_domain}"
+
+    if host == wildcard_domain or host == f"api.{wildcard_domain}":
+        return None
+
+    if host.endswith(wildcard_suffix):
+        slug = host[: -len(wildcard_suffix)]
+        return slug or None
+
+    return None
+
+
+def resolve_tenant_slug_for_request(
+    request: Request,
+    hint_slug: str | None = None,
+    support_stage: str = "CONTEXT",
+) -> str | None:
+    header_hint = request.headers.get("X-Tenant-Slug")
+    effective_hint = hint_slug or header_hint
+    host_slug = extract_tenant_slug_from_host(request.headers.get("host", ""))
+
+    if settings.is_production():
+        if host_slug and effective_hint and host_slug != effective_hint:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "registration_outcome": "denied",
+                    "handoff_status": "tenant_mismatch",
+                    "user_message_key": "auth.tenant_mismatch",
+                    "support_code": f"{support_stage}-HOST_HINT_MISMATCH",
+                },
+            )
+        return host_slug or effective_hint
+
+    return effective_hint or host_slug
 
 class TenantMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -18,22 +61,14 @@ class TenantMiddleware(BaseHTTPMiddleware):
         if request.url.path in ["/docs", "/redoc", "/openapi.json", "/api/v1/health", "/", "/api/v1/tenants", "/api/v1/tenants/", "/api/v1/auth/login"] or request.url.path.startswith("/uploads") or request.url.path.startswith("/api/v1/uploads"):
             return await call_next(request)
 
-        # 1. Extreure slug (prioritat header en dev)
-        slug = request.headers.get("X-Tenant-Slug")
-        
-        if not slug:
-            # Intentar extreure del subdomini
-            host = request.headers.get("host", "").split(":")[0]  # Treure port
-            
-            # Lògica bàsica de subdomini
-            # Si el host acaba en el domini base, agafem la part del davant
-            domain_suffix = f".{settings.wildcard_domain}"
-            if host.endswith(domain_suffix):
-                 slug = host[:-len(domain_suffix)]
-            elif host == settings.wildcard_domain:
-                 # Root domain -> potser no hi ha tenant o és un landing global
-                 # Per ara, retornarem 404 si no hi ha header
-                 pass
+        # 1. Extreure slug amb política canònica host-authority en producció
+        try:
+            slug = resolve_tenant_slug_for_request(request, support_stage="CONTEXT")
+        except HTTPException as mismatch_exc:
+            return JSONResponse(
+                status_code=mismatch_exc.status_code,
+                content={"detail": mismatch_exc.detail},
+            )
         
         if not slug:
              return JSONResponse(
