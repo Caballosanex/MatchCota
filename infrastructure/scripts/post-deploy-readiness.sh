@@ -55,6 +55,18 @@ stage() {
   echo "[post-deploy-readiness] stage=$1"
 }
 
+fail_stage() {
+  local stage_name="$1"
+  local reason="$2"
+  local rerun_hint="$3"
+
+  echo "[post-deploy-readiness] stage=${stage_name} fail reason=${reason}" >&2
+  if [[ -n "$rerun_hint" ]]; then
+    echo "[post-deploy-readiness] diagnostics: ${rerun_hint}" >&2
+  fi
+  exit 1
+}
+
 require_script() {
   local path="$1"
   if [[ ! -f "$path" ]]; then
@@ -68,9 +80,8 @@ run_frontend_route_readiness() {
   local tenant_host="$KNOWN_TENANT_HOST"
 
   if [[ -z "$tenant_slug" && -z "$tenant_host" ]]; then
-    echo "[post-deploy-readiness] stage=frontend-route-readiness fail reason=missing-known-tenant" >&2
-    echo "[post-deploy-readiness] ERROR set KNOWN_TENANT_SLUG (or KNOWN_TENANT_HOST) for tenant host-routing verification" >&2
-    exit 1
+    fail_stage "frontend-route-readiness" "missing-known-tenant" \
+      "set KNOWN_TENANT_SLUG=<known-production-tenant> (or KNOWN_TENANT_HOST=<tenant.matchcota.tech>) and rerun post-deploy-readiness.sh"
   fi
 
   echo "[post-deploy-readiness] frontend contracts: apex redirects, tenant root shell, registration landing target, tenant preboot endpoint"
@@ -78,9 +89,8 @@ run_frontend_route_readiness() {
   if ! KNOWN_TENANT_SLUG="$tenant_slug" KNOWN_TENANT_HOST="$tenant_host" \
     VITE_BASE_DOMAIN="$DOMAIN" VITE_ENVIRONMENT="production" \
     bash "$FRONTEND_DEPLOY_SCRIPT" --verify-route-contracts-only; then
-    stage "frontend-route-readiness fail"
-    echo "[post-deploy-readiness] diagnostics: rerun with KNOWN_TENANT_SLUG=<slug> and inspect deploy-frontend contract output above" >&2
-    exit 1
+    fail_stage "frontend-route-readiness" "routing-contract-failed" \
+      "rerun with KNOWN_TENANT_SLUG=<slug> (or KNOWN_TENANT_HOST=<host>) and inspect deploy-frontend --verify-route-contracts-only output above"
   fi
 }
 
@@ -116,7 +126,10 @@ main() {
   stage "tls-readiness-check pass"
 
   stage "test-api start"
-  BASE_URL="$API_BASE_URL" bash "$API_CHECK_SCRIPT"
+  if ! BASE_URL="$API_BASE_URL" bash "$API_CHECK_SCRIPT"; then
+    fail_stage "test-api" "api-contract-failed" \
+      "frontend-route-readiness and complete pass are blocked until API + frontend contracts pass in the same run; verify API_BASE_URL=${API_BASE_URL} and rerun"
+  fi
   stage "test-api pass"
 
   stage "frontend-route-readiness start"
