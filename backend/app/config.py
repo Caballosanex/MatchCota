@@ -5,6 +5,8 @@ Utilitza pydantic-settings per carregar i validar variables d'entorn.
 Totes les variables es carreguen des de .env o variables d'entorn del sistema.
 """
 
+import os
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 
@@ -186,6 +188,9 @@ def validate_settings():
 
     # Producció: verificar secrets — SEMPRE crash si falta algo crític
     if settings.is_production():
+        if os.getenv("RUNTIME_SECRETS_BOOTSTRAPPED") != "true":
+            errors.append("Runtime secret bootstrap is required in production")
+
         if "CHANGE-THIS" in settings.secret_key:
             errors.append("SECRET_KEY no està configurat per producció")
 
