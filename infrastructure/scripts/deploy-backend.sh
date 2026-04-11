@@ -9,9 +9,6 @@ TF_BACKEND_BUCKET="${TF_BACKEND_BUCKET:-}"
 TF_BACKEND_DYNAMODB_TABLE="${TF_BACKEND_DYNAMODB_TABLE:-}"
 TF_BACKEND_REGION="${TF_BACKEND_REGION:-us-east-1}"
 LAMBDA_ARTIFACT_PATH="${LAMBDA_ARTIFACT_PATH:-$DEFAULT_ARTIFACT_PATH}"
-DB_PASSWORD="${DB_PASSWORD:-}"
-APP_SECRET_KEY="${APP_SECRET_KEY:-}"
-JWT_SECRET_KEY="${JWT_SECRET_KEY:-}"
 
 export AWS_PROFILE
 
@@ -27,9 +24,7 @@ Environment variables:
   TF_BACKEND_BUCKET           Optional: Terraform state bucket for init
   TF_BACKEND_DYNAMODB_TABLE   Optional: Terraform lock table for init
   TF_BACKEND_REGION           Optional: Terraform backend region (default: us-east-1)
-  DB_PASSWORD                 Required: RDS password used to construct DATABASE_URL
-  APP_SECRET_KEY              Required: FastAPI SECRET_KEY runtime value
-  JWT_SECRET_KEY              Required: JWT secret runtime value
+  Runtime secrets are resolved from SSM parameters managed by Terraform.
 USAGE
 }
 
@@ -43,31 +38,6 @@ require_cmd() {
     echo "ERROR: Required command not found: $cmd" >&2
     exit 1
   fi
-}
-
-require_env() {
-  local name="$1"
-  local value="$2"
-
-  if [[ -z "$value" ]]; then
-    echo "ERROR: Required environment variable is missing: ${name}" >&2
-    exit 1
-  fi
-}
-
-terraform_output_or_state_attr() {
-  local output_name="$1"
-  local state_resource="$2"
-  local state_attr="$3"
-  local value=""
-
-  if value="$(terraform -chdir="$TF_ENV_DIR" output -raw "$output_name" 2>/dev/null)" && [[ -n "$value" ]]; then
-    printf "%s" "$value"
-    return 0
-  fi
-
-  value="$(terraform -chdir="$TF_ENV_DIR" state show "$state_resource" 2>/dev/null | awk -F' = ' -v key="$state_attr" '$1 ~ "^[[:space:]]*" key "[[:space:]]*$" {gsub(/\"/, "", $2); print $2; exit}')"
-  printf "%s" "$value"
 }
 
 cleanup() {
@@ -141,21 +111,21 @@ main() {
 
   stage "resolve Terraform runtime outputs"
   local lambda_function_name api_gateway_invoke_url lambda_artifact_bucket_name lambda_artifact_object_key
-  local rds_endpoint rds_port db_name db_username uploads_bucket_name database_url
-
-  require_env "DB_PASSWORD" "$DB_PASSWORD"
-  require_env "APP_SECRET_KEY" "$APP_SECRET_KEY"
-  require_env "JWT_SECRET_KEY" "$JWT_SECRET_KEY"
+  local uploads_bucket_name ssm_db_param ssm_app_param ssm_jwt_param
+  local db_host db_port db_name db_username
 
   lambda_function_name="$(terraform -chdir="$TF_ENV_DIR" output -raw lambda_function_name)"
   api_gateway_invoke_url="$(terraform -chdir="$TF_ENV_DIR" output -raw api_gateway_invoke_url)"
   lambda_artifact_bucket_name="$(terraform -chdir="$TF_ENV_DIR" output -raw lambda_artifact_bucket_name)"
   lambda_artifact_object_key="$(terraform -chdir="$TF_ENV_DIR" output -raw lambda_artifact_object_key)"
-  rds_endpoint="$(terraform -chdir="$TF_ENV_DIR" output -raw rds_endpoint)"
-  rds_port="$(terraform -chdir="$TF_ENV_DIR" output -raw rds_port)"
-  db_name="$(terraform_output_or_state_attr db_name aws_db_instance.postgres db_name)"
-  db_username="$(terraform_output_or_state_attr db_username aws_db_instance.postgres username)"
   uploads_bucket_name="$(terraform -chdir="$TF_ENV_DIR" output -raw uploads_bucket_name)"
+  ssm_db_param="$(terraform -chdir="$TF_ENV_DIR" output -raw ssm_db_password_parameter_name)"
+  ssm_app_param="$(terraform -chdir="$TF_ENV_DIR" output -raw ssm_app_secret_key_parameter_name)"
+  ssm_jwt_param="$(terraform -chdir="$TF_ENV_DIR" output -raw ssm_jwt_secret_key_parameter_name)"
+  db_host="$(terraform -chdir="$TF_ENV_DIR" output -raw rds_endpoint)"
+  db_port="$(terraform -chdir="$TF_ENV_DIR" output -raw rds_port)"
+  db_name="$(terraform -chdir="$TF_ENV_DIR" output -raw db_name)"
+  db_username="$(terraform -chdir="$TF_ENV_DIR" output -raw db_username)"
 
   if [[ -z "$lambda_function_name" ]]; then
     echo "ERROR: Terraform output lambda_function_name is empty" >&2
@@ -167,23 +137,31 @@ main() {
     exit 1
   fi
 
-  if [[ -z "$rds_endpoint" || -z "$rds_port" || -z "$db_name" || -z "$db_username" ]]; then
-    echo "ERROR: Terraform outputs for runtime database configuration are empty" >&2
-    exit 1
-  fi
-
   if [[ -z "$uploads_bucket_name" ]]; then
     echo "ERROR: Terraform output uploads_bucket_name is empty" >&2
     exit 1
   fi
 
-  database_url="postgresql://${db_username}:${DB_PASSWORD}@${rds_endpoint}:${rds_port}/${db_name}?sslmode=require"
+  if [[ -z "$db_host" || -z "$db_port" || -z "$db_name" || -z "$db_username" ]]; then
+    echo "ERROR: Terraform outputs for runtime database configuration are empty" >&2
+    exit 1
+  fi
+
+  if [[ -z "$ssm_db_param" || -z "$ssm_app_param" || -z "$ssm_jwt_param" ]]; then
+    echo "ERROR: Terraform outputs for runtime SSM parameter names are empty" >&2
+    exit 1
+  fi
+
+  stage "verify SSM runtime secret prerequisites"
+  aws ssm get-parameter --name "$ssm_db_param" >/dev/null
+  aws ssm get-parameter --name "$ssm_app_param" >/dev/null
+  aws ssm get-parameter --name "$ssm_jwt_param" >/dev/null
 
   stage "lambda_function_name=${lambda_function_name}"
   stage "update Lambda runtime environment"
   aws lambda update-function-configuration \
     --function-name "$lambda_function_name" \
-    --environment "Variables={ENVIRONMENT=production,DEBUG=false,DATABASE_URL=${database_url},SECRET_KEY=${APP_SECRET_KEY},JWT_SECRET_KEY=${JWT_SECRET_KEY},S3_ENABLED=true,S3_BUCKET_NAME=${uploads_bucket_name},WILDCARD_DOMAIN=matchcota.tech,APP_AWS_REGION=us-east-1}" >/dev/null
+    --environment "Variables={ENVIRONMENT=production,DEBUG=false,S3_ENABLED=true,S3_BUCKET_NAME=${uploads_bucket_name},WILDCARD_DOMAIN=matchcota.tech,APP_AWS_REGION=us-east-1,DB_HOST=${db_host},DB_PORT=${db_port},DB_NAME=${db_name},DB_USERNAME=${db_username},DB_PASSWORD_SSM_PARAMETER=${ssm_db_param},APP_SECRET_KEY_SSM_PARAMETER=${ssm_app_param},JWT_SECRET_KEY_SSM_PARAMETER=${ssm_jwt_param}}" >/dev/null
 
   stage "wait for Lambda runtime environment update"
   aws lambda wait function-updated --function-name "$lambda_function_name"

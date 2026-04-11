@@ -230,6 +230,21 @@ output "uploads_bucket_name" {
   value       = aws_s3_bucket.uploads.bucket
 }
 
+output "ssm_db_password_parameter_name" {
+  description = "SSM parameter name storing runtime DB password"
+  value       = aws_ssm_parameter.db_password.name
+}
+
+output "ssm_app_secret_key_parameter_name" {
+  description = "SSM parameter name storing runtime app secret key"
+  value       = aws_ssm_parameter.app_secret_key.name
+}
+
+output "ssm_jwt_secret_key_parameter_name" {
+  description = "SSM parameter name storing runtime JWT secret key"
+  value       = aws_ssm_parameter.jwt_secret_key.name
+}
+
 output "uploads_bucket_arn" {
   description = "Private uploads bucket ARN used by runtime IAM/policy bindings"
   value       = aws_s3_bucket.uploads.arn

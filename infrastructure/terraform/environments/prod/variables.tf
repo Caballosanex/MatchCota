@@ -271,6 +271,42 @@ variable "db_password" {
   sensitive   = true
 }
 
+variable "ssm_db_password_parameter_name" {
+  description = "SSM parameter name for runtime DB password secret"
+  type        = string
+  default     = "DB_PASSWORD"
+}
+
+variable "ssm_app_secret_key_parameter_name" {
+  description = "SSM parameter name for runtime app secret key"
+  type        = string
+  default     = "APP_SECRET_KEY"
+}
+
+variable "ssm_jwt_secret_key_parameter_name" {
+  description = "SSM parameter name for runtime JWT secret key"
+  type        = string
+  default     = "JWT_SECRET_KEY"
+}
+
+variable "ssm_db_password_value" {
+  description = "Runtime DB password stored in SSM"
+  type        = string
+  sensitive   = true
+}
+
+variable "ssm_app_secret_key_value" {
+  description = "Runtime app secret key stored in SSM"
+  type        = string
+  sensitive   = true
+}
+
+variable "ssm_jwt_secret_key_value" {
+  description = "Runtime JWT secret key stored in SSM"
+  type        = string
+  sensitive   = true
+}
+
 variable "db_allocated_storage" {
   description = "PostgreSQL allocated storage in GiB"
   type        = number

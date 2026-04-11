@@ -287,6 +287,36 @@ resource "aws_db_instance" "postgres" {
   })
 }
 
+resource "aws_ssm_parameter" "db_password" {
+  name  = var.ssm_db_password_parameter_name
+  type  = "String"
+  value = var.ssm_db_password_value
+
+  tags = merge(local.default_tags, {
+    Name = var.ssm_db_password_parameter_name
+  })
+}
+
+resource "aws_ssm_parameter" "app_secret_key" {
+  name  = var.ssm_app_secret_key_parameter_name
+  type  = "String"
+  value = var.ssm_app_secret_key_value
+
+  tags = merge(local.default_tags, {
+    Name = var.ssm_app_secret_key_parameter_name
+  })
+}
+
+resource "aws_ssm_parameter" "jwt_secret_key" {
+  name  = var.ssm_jwt_secret_key_parameter_name
+  type  = "String"
+  value = var.ssm_jwt_secret_key_value
+
+  tags = merge(local.default_tags, {
+    Name = var.ssm_jwt_secret_key_parameter_name
+  })
+}
+
 resource "aws_s3_bucket" "uploads" {
   bucket = var.uploads_bucket_name
 
@@ -399,7 +429,21 @@ resource "aws_lambda_function" "runtime" {
   }
 
   environment {
-    variables = var.lambda_environment_variables
+    variables = merge(var.lambda_environment_variables, {
+      APP_AWS_REGION               = var.aws_region
+      DB_HOST                      = aws_db_instance.postgres.address
+      DB_PORT                      = tostring(aws_db_instance.postgres.port)
+      DB_NAME                      = var.db_name
+      DB_USERNAME                  = var.db_username
+      DB_PASSWORD_SSM_PARAMETER    = aws_ssm_parameter.db_password.name
+      APP_SECRET_KEY_SSM_PARAMETER = aws_ssm_parameter.app_secret_key.name
+      JWT_SECRET_KEY_SSM_PARAMETER = aws_ssm_parameter.jwt_secret_key.name
+      ENVIRONMENT                  = "production"
+      DEBUG                        = "false"
+      S3_ENABLED                   = "true"
+      S3_BUCKET_NAME               = aws_s3_bucket.uploads.bucket
+      WILDCARD_DOMAIN              = var.base_domain
+    })
   }
 
   tags = merge(local.default_tags, {

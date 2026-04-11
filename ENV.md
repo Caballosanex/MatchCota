@@ -154,18 +154,24 @@ VITE_API_URL=https://api-staging.matchcota.com/api/v1
 
 **⚠️ MAI guardar secrets en .env en producció!**
 
-Usar **AWS Secrets Manager** o **AWS Systems Manager Parameter Store**.
+Usar **AWS Systems Manager Parameter Store (SSM)** amb contracte de resolució en runtime.
 
 ```bash
 ENVIRONMENT=production
 DEBUG=false
 
-# Obtenir de AWS Secrets Manager
-DATABASE_URL=<from secrets manager>
-SECRET_KEY=<from secrets manager>
-JWT_SECRET_KEY=<from secrets manager>
+# Runtime Lambda rep referències SSM (no valors secrets en shell deploy)
+DB_PASSWORD_SSM_PARAMETER=DB_PASSWORD
+APP_SECRET_KEY_SSM_PARAMETER=APP_SECRET_KEY
+JWT_SECRET_KEY_SSM_PARAMETER=JWT_SECRET_KEY
 
-# Obtenir de AWS SSM Parameter Store
+# Variables de connexió no secretes
+DB_HOST=<from terraform output rds_endpoint>
+DB_PORT=<from terraform output rds_port>
+DB_NAME=<from terraform output db_name>
+DB_USERNAME=<from terraform output db_username>
+
+# Infra/runtime
 AWS_REGION=us-east-1
 S3_BUCKET_NAME=matchcota-uploads-prod
 S3_ENABLED=true
@@ -173,6 +179,16 @@ S3_ENABLED=true
 VITE_API_URL=https://api.matchcota.com/api/v1
 WILDCARD_DOMAIN=matchcota.com
 ```
+
+### Rotació de secrets en producció
+
+Contracte Phase 9: **manual rotate + redeploy**.
+
+1. Actualitzar valor del paràmetre SSM via Terraform (`ssm_*_value`).
+2. Aplicar Terraform a `infrastructure/terraform/environments/prod`.
+3. Executar `bash infrastructure/scripts/deploy-backend.sh` per forçar nou cold start amb valors actualitzats.
+
+No hi ha hot refresh de secrets en runtime en aquesta fase.
 
 ---
 
