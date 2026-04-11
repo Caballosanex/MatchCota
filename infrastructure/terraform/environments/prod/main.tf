@@ -429,6 +429,7 @@ resource "aws_lambda_function" "runtime" {
   }
 
   environment {
+    # key-link: aws_lambda_function.runtime.environment.variables carries SSM parameter references.
     variables = merge(var.lambda_environment_variables, {
       APP_AWS_REGION               = var.aws_region
       DB_HOST                      = aws_db_instance.postgres.address
