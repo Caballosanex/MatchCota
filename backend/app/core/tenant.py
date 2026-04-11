@@ -3,9 +3,14 @@ from sqlalchemy.orm import Session
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
+import logging
+
 from app.database import SessionLocal, get_db
 from app.models.tenant import Tenant
 from app.config import settings
+
+
+logger = logging.getLogger(__name__)
 
 
 def extract_tenant_slug_from_host(host_header: str | None) -> str | None:
@@ -90,9 +95,12 @@ class TenantMiddleware(BaseHTTPMiddleware):
              request.state.tenant_id = tenant.id
              request.state.tenant = tenant
              
-        except Exception as e:
-            # Capturar errors de BD
-            return JSONResponse(status_code=500, content={"detail": f"Tenant resolution error: {str(e)}"})
+        except Exception:
+            logger.exception("Tenant resolution error")
+            return JSONResponse(
+                status_code=500,
+                content={"detail": "Internal tenant resolution error"},
+            )
         finally:
              db.close()
              
