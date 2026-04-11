@@ -9,7 +9,7 @@ This runbook is the operator guide for baseline Terraform provisioning in AWS Ac
    - Standard profile for this project: `matchcota`.
    - Script default: `terraform-preflight.sh` and `terraform-smoke.sh` auto-export `AWS_PROFILE=matchcota` when unset.
 3. Region is set to `us-east-1`.
-4. Backend state resources are known (S3 bucket + DynamoDB lock table).
+4. Backend state resources are created by the dedicated bootstrap stack.
 
 Preflight command:
 
@@ -20,22 +20,28 @@ bash infrastructure/scripts/terraform-preflight.sh
 ## Initial Apply
 
 1. Run preflight and confirm PASS.
-2. Initialize backend:
+2. Bootstrap backend resources:
+
+   ```bash
+   eval "$(bash infrastructure/scripts/terraform-bootstrap-backend.sh)"
+   ```
+
+3. Initialize backend:
 
    ```bash
    terraform -chdir=infrastructure/terraform/environments/prod init -reconfigure \
-     -backend-config="bucket=<state-bucket>" \
-     -backend-config="dynamodb_table=<lock-table>" \
-     -backend-config="region=us-east-1"
+     -backend-config="bucket=${TF_BACKEND_BUCKET}" \
+     -backend-config="dynamodb_table=${TF_BACKEND_DYNAMODB_TABLE}" \
+     -backend-config="region=${TF_BACKEND_REGION:-us-east-1}"
    ```
 
-3. Run smoke verification (no mutations):
+4. Run smoke verification (no mutations):
 
    ```bash
    bash infrastructure/scripts/terraform-smoke.sh
    ```
 
-4. Run layered applies in strict order:
+5. Run layered applies in strict order:
 
    ```bash
    bash infrastructure/scripts/terraform-apply-layer.sh foundation
@@ -47,7 +53,7 @@ bash infrastructure/scripts/terraform-preflight.sh
    Runtime layer includes Terraform-owned frontend edge resources (`aws_security_group.frontend_edge`, `data.aws_ssm_parameter.frontend_ami`, `aws_instance.frontend_edge`, `aws_eip.frontend_edge`, `aws_eip_association.frontend_edge`).
    Terraform user-data establishes nginx baseline; no manual post-apply host bootstrap step is part of the normal recovery contract.
 
-5. Verify Phase 3 private data-plane contract before release decision:
+6. Verify Phase 3 private data-plane contract before release decision:
 
    ```bash
    terraform -chdir=infrastructure/terraform/environments/prod state show aws_db_instance.postgres | grep -E "engine\s+=\s+\"postgres\"|engine_version\s+=\s+\"15\"|instance_class\s+=\s+\"db.t3.micro\"|backup_retention_period\s+=\s+7|allocated_storage\s+=\s+20|multi_az\s+=\s+false|publicly_accessible\s+=\s+false"
@@ -57,7 +63,7 @@ bash infrastructure/scripts/terraform-preflight.sh
 
    If any command above fails, stop rollout and re-run `bash infrastructure/scripts/terraform-apply-layer.sh data`.
 
-6. Capture Route53 delegation checkpoint after hosted zone output:
+7. Capture Route53 delegation checkpoint after hosted zone output:
 
    ```bash
    terraform -chdir=infrastructure/terraform/environments/prod output route53_hosted_zone_name_servers
@@ -78,7 +84,7 @@ bash infrastructure/scripts/terraform-preflight.sh
 
    - Timeout policy: if the script exits `2`, treat this as propagation wait, keep status `blocked-waiting-for-delegation`, and rerun the same command after registrar update confirmation.
 
-7. Validate TLS readiness after delegation passes:
+8. Validate TLS readiness after delegation passes:
 
    ```bash
    bash infrastructure/scripts/tls-readiness-check.sh \
@@ -91,7 +97,7 @@ bash infrastructure/scripts/terraform-preflight.sh
 
    - Timeout policy: if the script exits `2`, continue certificate issuance/attachment steps below, then rerun until PASS.
 
-8. Save command output logs for each layer, smoke run, data-plane verification, delegation check, and TLS check as execution evidence.
+9. Save command output logs for each layer, smoke run, data-plane verification, delegation check, and TLS check as execution evidence.
 
 ## Recovery evidence gates (mandatory)
 
@@ -138,23 +144,31 @@ Wildcard issuance requires DNS-01 challenge. `certbot --nginx` is not valid for 
 3. Re-run preflight:
 
    ```bash
-   bash infrastructure/scripts/terraform-preflight.sh
+    bash infrastructure/scripts/terraform-preflight.sh
    ```
 
-4. Re-run smoke harness to confirm readiness:
+4. Inspect lock status before resuming apply:
+
+   ```bash
+   aws dynamodb describe-table --table-name "${TF_BACKEND_DYNAMODB_TABLE}"
+   ```
+
+   If a stale lock must be cleared, use the AWS console or one-off `terraform force-unlock` manually as a manual break-glass action. Do not automate this in scripts.
+
+5. Re-run smoke harness to confirm readiness:
 
    ```bash
    bash infrastructure/scripts/terraform-smoke.sh
    ```
 
-5. Resume from failed or pending layer only:
+6. Resume from failed or pending layer only:
 
    ```bash
      bash infrastructure/scripts/terraform-apply-layer.sh <foundation|network|data|runtime>
    ```
 
-6. Continue remaining layers in order.
-7. If pending/failed scope includes private data-plane resources, rerun and confirm:
+7. Continue remaining layers in order.
+8. If pending/failed scope includes private data-plane resources, rerun and confirm:
 
    ```bash
    bash infrastructure/scripts/terraform-apply-layer.sh data
@@ -162,7 +176,7 @@ Wildcard issuance requires DNS-01 challenge. `certbot --nginx` is not valid for 
    terraform -chdir=infrastructure/terraform/environments/prod state show aws_vpc_endpoint.s3_gateway | grep -E "com.amazonaws.us-east-1.s3"
    ```
 
-8. If previously paused at delegation checkpoint, rerun `dns-delegation-check.sh` and `tls-readiness-check.sh` before proceeding.
+9. If previously paused at delegation checkpoint, rerun `dns-delegation-check.sh` and `tls-readiness-check.sh` before proceeding.
 
 ## Post-reset recovery and launch verification
 
@@ -177,7 +191,14 @@ Use this sequence after AWS Academy lab reset or whenever production needs full 
    AWS_PROFILE=matchcota bash infrastructure/scripts/terraform-preflight.sh
    ```
 
-2. Apply Terraform layers in strict order (resume-safe):
+2. Bootstrap backend resources and export init values:
+
+   ```bash
+   export AWS_PROFILE=matchcota
+   eval "$(bash infrastructure/scripts/terraform-bootstrap-backend.sh)"
+   ```
+
+3. Apply Terraform layers in strict order (resume-safe):
 
    ```bash
    AWS_PROFILE=matchcota bash infrastructure/scripts/terraform-apply-layer.sh foundation
@@ -186,18 +207,15 @@ Use this sequence after AWS Academy lab reset or whenever production needs full 
    AWS_PROFILE=matchcota bash infrastructure/scripts/terraform-apply-layer.sh runtime
    ```
 
-3. Publish backend Lambda runtime (required secrets in shell):
+4. Publish backend Lambda runtime:
 
    ```bash
-   export AWS_PROFILE=matchcota
-   export AWS_REGION=us-east-1
-   export DB_PASSWORD='<rds-password>'
-   export APP_SECRET_KEY='<fastapi-secret-key>'
-   export JWT_SECRET_KEY='<jwt-secret-key>'
-   bash infrastructure/scripts/deploy-backend.sh
+    export AWS_PROFILE=matchcota
+    export AWS_REGION=us-east-1
+    bash infrastructure/scripts/deploy-backend.sh
    ```
 
-4. Publish frontend static SPA (required host contract):
+5. Publish frontend static SPA (required host contract):
 
    ```bash
    export AWS_PROFILE=matchcota
@@ -209,19 +227,19 @@ Use this sequence after AWS Academy lab reset or whenever production needs full 
 
    Transport policy remains SSM-first with SSH fallback (`DEPLOY_TRANSPORT=auto`). Both channels must pass the same `verify_host_routing_contracts` and preboot contract checks.
 
-5. Run post-deploy readiness gate (DNS → TLS → API):
+6. Run post-deploy readiness gate (DNS → TLS → API):
 
    ```bash
    AWS_PROFILE=matchcota bash infrastructure/scripts/post-deploy-readiness.sh
    ```
 
-6. Run production fixture leakage audit:
+7. Run production fixture leakage audit:
 
    ```bash
    AWS_PROFILE=matchcota bash infrastructure/scripts/production-data-audit.sh
    ```
 
-7. Complete owner launch UAT evidence capture:
+8. Complete owner launch UAT evidence capture:
 
    ```bash
    # Fill the evidence artifact with timestamps, pass/fail, and notes.
