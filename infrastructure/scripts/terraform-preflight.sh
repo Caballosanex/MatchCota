@@ -4,6 +4,8 @@ set -euo pipefail
 
 EXPECTED_REGION="us-east-1"
 MIN_TF_MINOR=14
+TF_BACKEND_BUCKET="${TF_BACKEND_BUCKET:-}"
+TF_BACKEND_DYNAMODB_TABLE="${TF_BACKEND_DYNAMODB_TABLE:-}"
 
 # Default to the project AWS Academy profile unless caller overrides.
 AWS_PROFILE="${AWS_PROFILE:-matchcota}"
@@ -45,6 +47,28 @@ check_region() {
   fi
 }
 
+check_backend_bucket() {
+  if [[ -z "$TF_BACKEND_BUCKET" ]]; then
+    return
+  fi
+
+  if ! aws s3api head-bucket --bucket "$TF_BACKEND_BUCKET" >/dev/null 2>&1; then
+    echo "ERROR: Backend bucket is not accessible: ${TF_BACKEND_BUCKET}" >&2
+    exit 1
+  fi
+}
+
+check_backend_lock_table() {
+  if [[ -z "$TF_BACKEND_DYNAMODB_TABLE" ]]; then
+    return
+  fi
+
+  if ! aws dynamodb describe-table --table-name "$TF_BACKEND_DYNAMODB_TABLE" >/dev/null 2>&1; then
+    echo "ERROR: Backend lock table is not accessible: ${TF_BACKEND_DYNAMODB_TABLE}" >&2
+    exit 1
+  fi
+}
+
 main() {
   require_cmd aws
   require_cmd terraform
@@ -58,6 +82,19 @@ main() {
 
   echo "[preflight] verifying AWS credentials with STS"
   aws sts get-caller-identity >/dev/null
+
+  if [[ -n "$TF_BACKEND_BUCKET" || -n "$TF_BACKEND_DYNAMODB_TABLE" ]]; then
+    if [[ -z "$TF_BACKEND_BUCKET" || -z "$TF_BACKEND_DYNAMODB_TABLE" ]]; then
+      echo "ERROR: Backend prerequisites are incomplete. Set both TF_BACKEND_BUCKET and TF_BACKEND_DYNAMODB_TABLE." >&2
+      exit 1
+    fi
+
+    echo "[preflight] verifying backend bucket access"
+    check_backend_bucket
+
+    echo "[preflight] verifying backend lock table access"
+    check_backend_lock_table
+  fi
 
   echo "[preflight] PASS"
 }
