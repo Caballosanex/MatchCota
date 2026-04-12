@@ -31,3 +31,33 @@ No milestone-audit artifact was present at close (`.planning/v1.0-MILESTONE-AUDI
 - `SECU-05`
 
 ---
+
+## v1.1 Reliability + UX Hardening (Shipped: 2026-04-12)
+
+**Delivered:** Reliability and UX hardening for tenant onboarding, Terraform disaster recovery reproducibility, remote-state and runtime secret hardening, and milestone-signoff evidence closure.
+
+**Phases completed:** 07-13 — 18 plans, 36 tasks
+
+**Key accomplishments:**
+- Eliminated tenant first-paint branding instability by enforcing preboot tenant context contracts and validating edge preboot behavior.
+- Codified frontend edge EC2/EIP/nginx lifecycle in Terraform and aligned deploy scripts to Terraform-derived host outputs.
+- Added deterministic backend state bootstrap and lock-aware recovery workflow for interrupted Terraform operations.
+- Migrated runtime secret delivery to Terraform-managed SSM references with fail-closed Lambda bootstrap and deterministic secret-test runner evidence.
+- Closed carry-forward onboarding reliability and tenant-isolation gaps with backend contract hardening and curated frontend diagnostics.
+- Completed human-UAT/readiness evidence promotion for ONBD-07, ONBD-08, and INFRA-16 and cleared milestone closure blockers.
+
+**Stats:**
+- 7 phases (`07-13`)
+- 18 plans
+- 36 tasks (from phase summaries)
+- 58 files changed
+- 3,498 insertions / 281 deletions
+- Timeline: 2026-04-10 -> 2026-04-12
+- Git range: `da52b3b` -> `HEAD`
+
+### Known Gaps (Accepted Tech Debt at Milestone Close)
+
+- Nyquist validation parity is incomplete across milestone phases (`07` missing, `09-13` partial) and should be normalized in follow-up validation work.
+- Human-UAT evidence style relies on concise user-confirmed transcript placeholders; future milestones should prefer richer capture artifacts where feasible.
+
+---
