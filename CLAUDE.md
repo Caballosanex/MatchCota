@@ -11,7 +11,7 @@ Ets un assistent de desenvolupament per al projecte MatchCota. Aquest document c
 
 ### Què és MatchCota?
 
-MatchCota és una plataforma SaaS multi-tenant que connecta protectores d'animals amb adoptants mitjançant un sistema intel·ligent de compatibilitat. Cada protectora té el seu propi subdomini (exemple: `protectora-barcelona.matchcota.com`) però totes comparteixen la mateixa infraestructura.
+MatchCota és una plataforma SaaS multi-tenant que connecta protectores d'animals amb adoptants mitjançant un sistema intel·ligent de compatibilitat. Cada protectora té el seu propi subdomini (exemple: `protectora-barcelona.matchcota.tech`) però totes comparteixen la mateixa infraestructura.
 
 ### Problema que resolem
 
@@ -77,7 +77,7 @@ Una sola instància de l'aplicació serveix múltiples protectores. L'aïllament
 ### Identificació del tenant
 
 ```
-1. Usuari accedeix a: protectora-barcelona.matchcota.com
+1. Usuari accedeix a: protectora-barcelona.matchcota.tech
 2. Middleware extreu "protectora-barcelona" del subdomini
 3. Busca a BD: SELECT * FROM tenants WHERE slug = 'protectora-barcelona'
 4. Totes les queries filtren per tenant_id
@@ -624,7 +624,7 @@ SMTP_HOST=mailhog
 SMTP_PORT=1025
 SMTP_USER=
 SMTP_PASSWORD=
-EMAIL_FROM=noreply@matchcota.com
+EMAIL_FROM=noreply@matchcota.tech
 
 # JWT
 JWT_SECRET_KEY=your-jwt-secret
@@ -738,8 +738,8 @@ terraform apply
 - **Repositori:** github.com/[org]/matchcota
 - **Trello:** [URL del taulell]
 - **Figma:** [URL del disseny]
-- **Producció:** matchcota.com
-- **API Docs:** api.matchcota.com/docs
+- **Producció:** matchcota.tech
+- **API Docs:** api.matchcota.tech/docs
 
 ---
 

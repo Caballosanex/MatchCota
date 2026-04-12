@@ -23,7 +23,7 @@ MatchCota no és un simple catàleg d'animals, funciona a través d'un **model d
 
 ## 4. Arquitectura Multi-Tenant i Rols Aïllats
 MatchCota no ha estat pensada per resoldre l'operativa d'un sol refugi. Es construeix com una plataforma SaaS escalable:
-- **SaaS Multi-tenant:** Una sola infraestructura cobreix el funcionament de múltiples protectores de cop, abaratint dràsticament els costos. Cada protectora té un subdomini independent (ex: `protectora-barcelona.matchcota.com`) on l'exposició de la dada i la informació queda 100% aïllada només a aquesta entitat.
+- **SaaS Multi-tenant:** Una sola infraestructura cobreix el funcionament de múltiples protectores de cop, abaratint dràsticament els costos. Cada protectora té un subdomini independent (ex: `protectora-barcelona.matchcota.tech`) on l'exposició de la dada i la informació queda 100% aïllada només a aquesta entitat.
 
 Aquest programa es divideix clarament de cara a satisfer dos perfils clau:
 1. **Públic Adoptant:** Disposa d'una via per posar-se a prova amb el test, veure els valors del rànquing propis i introduir les dades de contacte si es mostra interès actiu.

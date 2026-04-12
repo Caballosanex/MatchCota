@@ -147,7 +147,7 @@ SMTP_USER=<SES SMTP user>
 SMTP_PASSWORD=<SES SMTP password>
 SMTP_TLS=true
 
-VITE_API_URL=https://api-staging.matchcota.com/api/v1
+VITE_API_URL=https://api-staging.matchcota.tech/api/v1
 ```
 
 ### Production (AWS)
@@ -176,8 +176,8 @@ AWS_REGION=us-east-1
 S3_BUCKET_NAME=matchcota-uploads-prod
 S3_ENABLED=true
 
-VITE_API_URL=https://api.matchcota.com/api/v1
-WILDCARD_DOMAIN=matchcota.com
+VITE_API_URL=https://api.matchcota.tech/api/v1
+WILDCARD_DOMAIN=matchcota.tech
 ```
 
 ### Rotació de secrets en producció

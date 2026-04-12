@@ -85,7 +85,7 @@ class Settings(BaseSettings):
     smtp_password: Optional[str] = None
     smtp_tls: bool = False
     smtp_ssl: bool = False
-    email_from: str = "noreply@matchcota.com"
+    email_from: str = "noreply@matchcota.tech"
     email_from_name: str = "MatchCota"
 
     # ====================
@@ -160,9 +160,9 @@ class Settings(BaseSettings):
         Retorna els orígens permesos per CORS.
 
         En producció, es llegeixen de la variable CORS_ORIGINS al .env.
-        Exemple: CORS_ORIGINS=["https://matchcota.com","https://demo.matchcota.com"]
+        Exemple: CORS_ORIGINS=["https://matchcota.tech","https://demo.matchcota.tech"]
 
-        IMPORTANT: Els wildcards (https://*.matchcota.com) NO funcionen amb
+        IMPORTANT: Els wildcards (https://*.matchcota.tech) NO funcionen amb
         allow_credentials=True. Cal llistar els subdominis explícitament
         o usar un middleware CORS custom que validi dinàmicament.
         """
@@ -171,7 +171,7 @@ class Settings(BaseSettings):
             # Si no s'ha configurat, retornar el domini principal com a mínim
             if self.cors_origins and "localhost" not in self.cors_origins[0]:
                 return self.cors_origins
-            return ["https://matchcota.com"]
+            return ["https://matchcota.tech"]
         return self.cors_origins
 
 

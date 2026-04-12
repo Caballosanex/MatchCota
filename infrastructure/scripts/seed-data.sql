@@ -27,12 +27,12 @@ VALUES (
     gen_random_uuid(),
     'demo',
     'Protectora Demo',
-    'info@demo.matchcota.com',
+    'info@demo.matchcota.tech',
     '933123456',
     'Barcelona',
     '08001',
     'Carrer de Prova, 123',
-    'https://demo.matchcota.com',
+    'https://demo.matchcota.tech',
     NOW(),
     NOW()
 )

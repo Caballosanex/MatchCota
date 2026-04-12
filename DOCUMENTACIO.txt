@@ -63,7 +63,7 @@ Es construeix com una plataforma SaaS escalable:
 
   * SaaS Multi-tenant: Una sola infraestructura cobreix el funcionament de 
     múltiples protectores de cop, abaratint dràsticament els costos. Cada 
-    protectora té un subdomini independent (ex: protectora.matchcota.com) 
+    protectora té un subdomini independent (ex: protectora.matchcota.tech) 
     on l'exposició de la dada i la informació queda 100% aïllada.
 
 Aquest programa es divideix clarament de cara a satisfer dos perfils clau:
