@@ -28,6 +28,9 @@ class Lead(Base):
     top_matches = Column(JSON) # millors_match (store IDs or full objects?) usually JSON is fine for snapshot
     scores = Column(JSON) # puntuacions
 
+    # Workflow status
+    status = Column(String(20), nullable=False, default="new", server_default="new")
+
     # Dates
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
