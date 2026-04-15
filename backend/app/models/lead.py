@@ -19,7 +19,7 @@ class Lead(Base):
     tenant_id = Column(PG_UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
 
     # Contacte
-    email = Column(String(255), nullable=False) # email
+    email = Column(String(255), nullable=True) # email
     phone = Column(String(20)) # tel
     name = Column(String(100)) # nom
 
