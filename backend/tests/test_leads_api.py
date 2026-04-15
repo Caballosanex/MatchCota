@@ -37,6 +37,22 @@ def _admin_headers():
     }
 
 
+def _lead_detail_payload(lead_id: UUID, *, status: str, compatibility: float, animal_id: str):
+    return {
+        "id": lead_id,
+        "tenant_id": TENANT_ID,
+        "name": "Lead Detail",
+        "email": "detail@example.com",
+        "phone": "+34999999999",
+        "status": status,
+        "questionnaire_responses": {"children": "no"},
+        "top_matches": [{"animal_id": animal_id, "score": compatibility}],
+        "scores": {"compatibility": compatibility},
+        "created_at": datetime(2026, 4, 14, 9, 0, tzinfo=timezone.utc),
+        "updated_at": datetime(2026, 4, 14, 9, 15, tzinfo=timezone.utc),
+    }
+
+
 def test_create_lead_returns_201_receipt_contract(monkeypatch):
     created_at = datetime(2026, 4, 15, 16, 30, tzinfo=timezone.utc)
     lead_id = UUID("22222222-2222-2222-2222-222222222222")
@@ -110,19 +126,7 @@ def test_admin_detail_same_tenant_returns_full_payload(monkeypatch):
     def _fake_get_lead(_db, requested_id, tenant_id):
         assert requested_id == lead_id
         assert tenant_id == TENANT_ID
-        return {
-            "id": lead_id,
-            "tenant_id": TENANT_ID,
-            "name": "Lead Detail",
-            "email": "detail@example.com",
-            "phone": "+34999999999",
-            "status": "new",
-            "questionnaire_responses": {"children": "no"},
-            "top_matches": [{"animal_id": "cat-1", "score": 0.88}],
-            "scores": {"compatibility": 0.88},
-            "created_at": datetime(2026, 4, 14, 9, 0, tzinfo=timezone.utc),
-            "updated_at": datetime(2026, 4, 14, 9, 15, tzinfo=timezone.utc),
-        }
+        return _lead_detail_payload(lead_id, status="new", compatibility=0.88, animal_id="cat-1")
 
     monkeypatch.setattr(leads_api.leads_service, "get_lead", _fake_get_lead)
     client = TestClient(_build_app())
@@ -161,19 +165,14 @@ def test_admin_status_patch_updates_status_and_rejects_invalid_enum(monkeypatch)
         assert requested_id == lead_id
         assert tenant_id == TENANT_ID
         assert status_data.status == "adopted"
-        return {
-            "id": lead_id,
-            "tenant_id": TENANT_ID,
-            "name": "Lead Status",
-            "email": "status@example.com",
-            "phone": "+34111111111",
-            "status": "adopted",
-            "questionnaire_responses": {"space": "large"},
-            "top_matches": [{"animal_id": "dog-2", "score": 0.95}],
-            "scores": {"compatibility": 0.95},
-            "created_at": datetime(2026, 4, 14, 11, 0, tzinfo=timezone.utc),
-            "updated_at": datetime(2026, 4, 14, 11, 30, tzinfo=timezone.utc),
-        }
+        payload = _lead_detail_payload(lead_id, status="adopted", compatibility=0.95, animal_id="dog-2")
+        payload["name"] = "Lead Status"
+        payload["email"] = "status@example.com"
+        payload["phone"] = "+34111111111"
+        payload["questionnaire_responses"] = {"space": "large"}
+        payload["created_at"] = datetime(2026, 4, 14, 11, 0, tzinfo=timezone.utc)
+        payload["updated_at"] = datetime(2026, 4, 14, 11, 30, tzinfo=timezone.utc)
+        return payload
 
     monkeypatch.setattr(leads_api.leads_service, "update_lead_status", _fake_update)
     client = TestClient(_build_app())
