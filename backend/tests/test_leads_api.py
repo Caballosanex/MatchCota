@@ -84,6 +84,31 @@ def test_create_lead_requires_at_least_one_contact_medium():
     assert response.status_code == 422
 
 
+def test_create_lead_accepts_phone_only_and_passes_email_none_to_service(monkeypatch):
+    created_at = datetime(2026, 4, 15, 16, 45, tzinfo=timezone.utc)
+    lead_id = UUID("77777777-7777-7777-7777-777777777777")
+
+    def _fake_create_lead(_db, lead_data, tenant_id):
+        assert tenant_id == TENANT_ID
+        assert lead_data.email is None
+        assert lead_data.phone == "+34911111111"
+        return SimpleNamespace(id=lead_id, created_at=created_at)
+
+    monkeypatch.setattr(leads_api.leads_service, "create_lead", _fake_create_lead)
+    client = TestClient(_build_app())
+
+    response = client.post(
+        "/api/v1/leads",
+        json={"name": "Phone Only", "phone": "+34911111111"},
+    )
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert set(payload.keys()) == {"id", "created_at", "message"}
+    assert payload["id"] == str(lead_id)
+    assert payload["message"] == "Lead submitted successfully"
+
+
 def test_admin_list_applies_status_filter_and_returns_summary_only(monkeypatch):
     def _fake_list_leads(_db, tenant_id, skip, limit, lead_status):
         assert tenant_id == TENANT_ID
