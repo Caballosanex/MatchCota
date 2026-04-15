@@ -57,7 +57,7 @@ def test_create_lead_returns_201_receipt_contract(monkeypatch):
     payload = response.json()
     assert set(payload.keys()) == {"id", "created_at", "message"}
     assert payload["id"] == str(lead_id)
-    assert payload["message"] == "Lead received"
+    assert payload["message"] == "Lead submitted successfully"
 
 
 def test_create_lead_requires_at_least_one_contact_medium():
