@@ -80,13 +80,14 @@ if not settings.is_production() and not _is_lambda_runtime():
     app.mount("/uploads", StaticFiles(directory=uploads_path), name="uploads")
 
 # Register Routers
-from app.api.v1 import tenants, auth, animals, users, upload, matching
+from app.api.v1 import tenants, auth, animals, users, upload, matching, leads
 app.include_router(tenants.router, prefix="/api/v1/tenants", tags=["tenants"])
 app.include_router(auth.router, prefix="/api/v1", tags=["auth"])
 app.include_router(animals.router, prefix="/api/v1", tags=["animals"])
 app.include_router(users.router, prefix="/api/v1", tags=["users"])
 app.include_router(upload.router, prefix="/api/v1", tags=["upload"])
 app.include_router(matching.router, prefix="/api/v1", tags=["matching"])
+app.include_router(leads.router, prefix="/api/v1", tags=["leads"])
 
 
 # Configuració Swagger: Afegir header X-Tenant-Slug global
