@@ -126,7 +126,7 @@ export default function MatchTest() {
             const results = await calculateMatches(tenant?.slug, requestData);
 
             // Navegar als resultats passant les dades per state
-            navigate('/test/results', { state: { results } });
+            navigate('/test/results', { state: { results, responses } });
         } catch (err) {
             setError(err.message);
             setSubmitting(false);
