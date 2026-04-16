@@ -93,7 +93,7 @@ export default function Landing() {
                     <div className="flex flex-col sm:flex-row gap-4 pt-4">
                         <Link
                             to="/register-tenant"
-                            className="px-8 py-4 bg-[#B4C0FF] text-indigo-900 rounded-full font-bold hover:bg-[#A3B0FF] transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 text-center"
+                            className="px-8 py-4 bg-primary/20 text-primary-dark rounded-full font-bold hover:bg-primary/30 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 text-center"
                         >
                             Registra la teva protectora &rarr;
                         </Link>
@@ -117,7 +117,7 @@ export default function Landing() {
 
                     <div className="grid md:grid-cols-3 gap-10">
                         <div className="bg-white border border-gray-100 rounded-[30px] p-10 hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col items-center text-center">
-                            <div className="w-16 h-16 bg-[#6C8DCA] rounded-full flex items-center justify-center mb-8 shadow-blue-200 shadow-lg">
+                            <div className="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mb-8 shadow-indigo-200 shadow-lg">
                                 <ClipboardIcon />
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 mb-4">1. Registra't en 2 minuts</h3>
@@ -167,7 +167,7 @@ export default function Landing() {
                         </div>
 
                         <div className="bg-white p-6 rounded-[24px] shadow-sm hover:shadow-md transition-all flex items-start gap-6 border border-gray-100">
-                            <div className="w-14 h-14 bg-[#BFD3E6] rounded-2xl flex items-center justify-center flex-shrink-0">
+                            <div className="w-14 h-14 bg-slate-300 rounded-2xl flex items-center justify-center flex-shrink-0">
                                 <ClockIcon />
                             </div>
                             <div>
