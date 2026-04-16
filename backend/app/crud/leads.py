@@ -53,6 +53,8 @@ def get_leads_by_tenant(
         if not _is_missing_status_column_error(exc):
             raise
 
+        db.rollback()
+
         # Backward-compatible fallback for runtimes where alembic revision
         # 05_lead_status_contract has not yet been applied.
         if status and status != "new":
@@ -86,6 +88,8 @@ def get_lead_by_tenant(db: Session, lead_id: UUID, tenant_id: UUID) -> Optional[
     except ProgrammingError as exc:
         if not _is_missing_status_column_error(exc):
             raise
+
+        db.rollback()
 
         row = (
             db.query(
