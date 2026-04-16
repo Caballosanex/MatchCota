@@ -201,7 +201,7 @@ export default function RegisterTenant() {
 
   return (
     <div className="min-h-screen bg-white flex font-sans overflow-hidden">
-      <div className="hidden lg:flex lg:w-1/2 bg-[#4A90A4] relative items-center justify-center p-12 overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-primary relative items-center justify-center p-12 overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
           <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
             <path d="M0,0 L100,0 L100,100 Z" fill="white" />
@@ -253,12 +253,12 @@ export default function RegisterTenant() {
         <div className="max-w-xl w-full">
           <div className="lg:hidden mb-6 text-center">
             <Link to="/" className="inline-flex items-center gap-3">
-              <div className="w-10 h-10 bg-[#4A90A4] rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
-              <span className="text-2xl font-bold text-[#4A90A4]">MatchCota</span>
+              <span className="text-2xl font-bold text-primary">MatchCota</span>
             </Link>
           </div>
 
@@ -274,7 +274,7 @@ export default function RegisterTenant() {
                 {...register('name')}
                 placeholder="Protectora d'Animals..."
                 className={`w-full bg-white border-2 rounded-2xl px-5 py-3 focus:outline-none transition-all duration-300 shadow-sm ${
-                  errors.name ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'
+                  errors.name ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-primary hover:border-gray-200'
                 }`}
               />
               {errors.name && <span className="text-red-500 text-xs font-bold block mt-2 ml-1 animate-shake">*{errors.name.message}</span>}
@@ -287,10 +287,10 @@ export default function RegisterTenant() {
                   {...register('slug')}
                   placeholder="la-teva-entitat"
                   className={`w-full bg-white border-2 rounded-2xl px-5 py-3 pr-32 focus:outline-none transition-all duration-300 shadow-sm ${
-                    errors.slug ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'
+                    errors.slug ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-primary hover:border-gray-200'
                   }`}
                 />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-5 pointer-events-none text-gray-300 font-bold group-focus-within:text-[#4A90A4]">
+                <div className="absolute inset-y-0 right-0 flex items-center pr-5 pointer-events-none text-gray-300 font-bold group-focus-within:text-primary">
                   .matchcota.tech
                 </div>
               </div>
@@ -303,7 +303,7 @@ export default function RegisterTenant() {
                 {...register('email')}
                 placeholder="exemple@entitat.cat"
                 className={`w-full bg-white border-2 rounded-2xl px-5 py-3 focus:outline-none transition-all duration-300 shadow-sm ${
-                  errors.email ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'
+                  errors.email ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-primary hover:border-gray-200'
                 }`}
               />
               {errors.email && <span className="text-red-500 text-xs font-bold block mt-2 ml-1 animate-shake">*{errors.email.message}</span>}
@@ -315,7 +315,7 @@ export default function RegisterTenant() {
                 {...register('cif')}
                 placeholder="G-12345678"
                 className={`w-full bg-white border-2 rounded-2xl px-5 py-3 focus:outline-none transition-all duration-300 shadow-sm ${
-                  errors.cif ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'
+                  errors.cif ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-primary hover:border-gray-200'
                 }`}
               />
               {errors.cif && <span className="text-red-500 text-xs font-bold block mt-2 ml-1">*{errors.cif.message}</span>}
@@ -327,7 +327,7 @@ export default function RegisterTenant() {
                 {...register('phone')}
                 placeholder="+34..."
                 className={`w-full bg-white border-2 rounded-2xl px-5 py-3 focus:outline-none transition-all duration-300 shadow-sm ${
-                  errors.phone ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'
+                  errors.phone ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-primary hover:border-gray-200'
                 }`}
               />
               {errors.phone && <span className="text-red-500 text-xs font-bold block mt-2 ml-1">*{errors.phone.message}</span>}
@@ -339,7 +339,7 @@ export default function RegisterTenant() {
                 {...register('city')}
                 placeholder="Barcelona"
                 className={`w-full bg-white border-2 rounded-2xl px-5 py-3 focus:outline-none transition-all duration-300 shadow-sm ${
-                  errors.city ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'
+                  errors.city ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-primary hover:border-gray-200'
                 }`}
               />
               {errors.city && <span className="text-red-500 text-xs font-bold block mt-2 ml-1">*{errors.city.message}</span>}
@@ -351,7 +351,7 @@ export default function RegisterTenant() {
                 {...register('website')}
                 placeholder="https://..."
                 className={`w-full bg-white border-2 rounded-2xl px-5 py-3 focus:outline-none transition-all duration-300 shadow-sm ${
-                  errors.website ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'
+                  errors.website ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-primary hover:border-gray-200'
                 }`}
               />
               {errors.website && <span className="text-red-500 text-xs font-bold block mt-2 ml-1 animate-shake">*{errors.website.message}</span>}
@@ -366,13 +366,13 @@ export default function RegisterTenant() {
                   autoComplete="new-password"
                   placeholder="••••••••"
                   className={`w-full bg-white border-2 rounded-2xl px-5 py-3 pr-24 focus:outline-none transition-all duration-300 shadow-sm ${
-                    errors.admin_password ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'
+                    errors.admin_password ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-primary hover:border-gray-200'
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((current) => !current)}
-                  className="absolute inset-y-0 right-0 px-5 text-xs font-bold text-[#4A90A4] hover:text-[#3a7c8d]"
+                  className="absolute inset-y-0 right-0 px-5 text-xs font-bold text-primary hover:text-primary-dark"
                   aria-label={showPassword ? 'Amaga la contrasenya' : 'Mostra la contrasenya'}
                 >
                   {showPassword ? 'Amaga' : 'Mostra'}
@@ -393,13 +393,13 @@ export default function RegisterTenant() {
                   autoComplete="new-password"
                   placeholder="••••••••"
                   className={`w-full bg-white border-2 rounded-2xl px-5 py-3 pr-24 focus:outline-none transition-all duration-300 shadow-sm ${
-                    errors.confirm_password ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-[#4A90A4] hover:border-gray-200'
+                    errors.confirm_password ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-100 focus:border-primary hover:border-gray-200'
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword((current) => !current)}
-                  className="absolute inset-y-0 right-0 px-5 text-xs font-bold text-[#4A90A4] hover:text-[#3a7c8d]"
+                  className="absolute inset-y-0 right-0 px-5 text-xs font-bold text-primary hover:text-primary-dark"
                   aria-label={showConfirmPassword ? 'Amaga la confirmació de contrasenya' : 'Mostra la confirmació de contrasenya'}
                 >
                   {showConfirmPassword ? 'Amaga' : 'Mostra'}
@@ -421,7 +421,7 @@ export default function RegisterTenant() {
               )}
 
               {registrationOutcome && (
-                <div className="text-[#4A90A4] text-sm font-bold bg-[#4A90A4]/10 p-4 rounded-xl border border-[#4A90A4]/20 space-y-3">
+                <div className="text-primary text-sm font-bold bg-primary/10 p-4 rounded-xl border border-primary/20 space-y-3">
                   <p className="text-base">Diagnòstic d'onboarding</p>
                   <p>
                     {resolveCuratedMessage(registrationOutcome.userMessageKey)}
@@ -435,7 +435,7 @@ export default function RegisterTenant() {
                       <button
                         type="button"
                         onClick={handleRetryRedirect}
-                        className="bg-[#4A90A4] text-white text-xs uppercase tracking-wider px-4 py-2 rounded-lg hover:bg-[#3a7c8d] transition-colors"
+                        className="bg-primary text-white text-xs uppercase tracking-wider px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors"
                       >
                         Retry checks
                       </button>
@@ -467,7 +467,7 @@ export default function RegisterTenant() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-[#4A90A4] text-white font-black text-lg py-4 rounded-2xl shadow-xl shadow-[#4A90A4]/20 hover:bg-[#3a7c8d] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 group"
+                className="w-full bg-primary text-white font-black text-lg py-4 rounded-2xl shadow-xl shadow-primary/20 hover:bg-primary-dark hover:-translate-y-1 active:translate-y-0 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 group"
               >
                 {isSubmitting ? 'Enviant dades...' : 'Create Shelter Account'}
                 {!isSubmitting && (

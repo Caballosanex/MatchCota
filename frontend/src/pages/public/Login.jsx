@@ -88,12 +88,12 @@ export default function Login() {
             <div className="p-8">
                 <Link to="/" className="inline-flex items-center gap-3">
                     {/* Logo blau personalitzat MatchCota */}
-                    <div className="w-10 h-10 bg-[#4A90A4] rounded-xl flex items-center justify-center">
+                    <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
                         <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </div>
-                    <span className="text-2xl font-bold text-[#4A90A4]">MatchCota</span>
+                    <span className="text-2xl font-bold text-primary">MatchCota</span>
                 </Link>
             </div>
 
@@ -119,7 +119,7 @@ export default function Login() {
 
                             {/* CAIXA: CORREU ELECTRÒNIC */}
                             <div className="relative group">
-                                <label className="text-[11px] font-black text-[#4A90A4] uppercase tracking-widest mb-2 block ml-1">Correu electrònic</label>
+                                <label className="text-[11px] font-black text-primary uppercase tracking-widest mb-2 block ml-1">Correu electrònic</label>
                                 <input
                                     type="email"
                                     autoComplete="email"
@@ -127,7 +127,7 @@ export default function Login() {
                                     {...register('email')}
                                     placeholder="hola@la-teva-entitat.com"
                                     className={`w-full bg-gray-50/50 border-2 py-4 px-6 rounded-2xl focus:bg-white focus:outline-none transition-all duration-300 font-bold text-gray-900 placeholder-gray-300 shadow-sm
-                                        ${errors.email ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-[#4A90A4]'}`}
+                                        ${errors.email ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-primary'}`}
                                 />
                                 {/* PINTANT L'ERROR ESPECÍFIC DE ZOD */}
                                 {errors.email && (
@@ -141,9 +141,9 @@ export default function Login() {
                             <div className="relative group">
                                 {/* Label i l'opció oblit junts */}
                                 <div className="flex justify-between items-center mb-2">
-                                    <label className="text-[11px] font-black text-[#4A90A4] uppercase tracking-widest block ml-1">Contrasenya</label>
+                                    <label className="text-[11px] font-black text-primary uppercase tracking-widest block ml-1">Contrasenya</label>
                                     {/* Link simple que actualment no porta a cap lloc realment # */}
-                                    <a href="#" className="text-[11px] font-black text-gray-300 uppercase tracking-widest hover:text-[#4A90A4] transition-colors">Has oblidat la clau?</a>
+                                    <a href="#" className="text-[11px] font-black text-gray-300 uppercase tracking-widest hover:text-primary transition-colors">Has oblidat la clau?</a>
                                 </div>
                                 <input
                                     type="password"
@@ -151,7 +151,7 @@ export default function Login() {
                                     {...register('password')}
                                     placeholder="••••••••"
                                     className={`w-full bg-gray-50/50 border-2 py-4 px-6 rounded-2xl focus:bg-white focus:outline-none transition-all duration-300 font-bold text-gray-900 placeholder-gray-300 shadow-sm
-                                        ${errors.password ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-[#4A90A4]'}`}
+                                        ${errors.password ? 'border-red-400 focus:border-red-500' : 'border-gray-100 focus:border-primary'}`}
                                 />
                                 {errors.password && (
                                     <span className="text-red-500 text-xs font-bold block mt-2 ml-1 animate-shake">
@@ -175,7 +175,7 @@ export default function Login() {
                             <button
                                 type="submit"
                                 disabled={isSubmitting} // Si React Hook Form ho està eviant i la promesa no respon, es bloca botó auto
-                                className="w-full bg-[#4A90A4] text-white font-black text-lg py-5 rounded-2xl shadow-xl shadow-[#4A90A4]/20 hover:bg-[#3a7c8d] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-3 group disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full bg-primary text-white font-black text-lg py-5 rounded-2xl shadow-xl shadow-primary/20 hover:bg-primary-dark hover:-translate-y-1 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-3 group disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isSubmitting ? 'Verificant...' : 'Entrar ara'}
                                 {/* Fletxeta animada al passar el ratolí */}
@@ -191,7 +191,7 @@ export default function Login() {
             </div>
 
             {/* BARRA DECORATIVA A BAIX DE TOT PINTADA A COLOR BLAU I LILA SUAU */}
-            <div className="h-2 bg-gradient-to-r from-[#4A90A4] to-indigo-100"></div>
+            <div className="h-2 bg-gradient-to-r from-primary to-primary-light"></div>
         </div>
     );
 }

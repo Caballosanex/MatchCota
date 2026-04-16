@@ -9,7 +9,7 @@ function ApexPublicHeader() {
                 <div className="flex justify-between h-16">
                     <div className="flex">
                         <div className="flex-shrink-0 flex items-center">
-                            <Link to="/" className="text-2xl font-bold text-blue-600">
+                            <Link to="/" className="text-2xl font-bold text-primary">
                                 MatchCota
                             </Link>
                         </div>
@@ -44,7 +44,7 @@ function TenantPublicHeader({ tenantName }) {
                 <div className="flex justify-between h-16">
                     <div className="flex">
                         <div className="flex-shrink-0 flex items-center">
-                            <Link to="/" className="text-2xl font-bold text-teal-700">
+                            <Link to="/" className="text-2xl font-bold text-primary">
                                 {displayName}
                             </Link>
                         </div>
@@ -103,7 +103,7 @@ function TenantNotFoundState({ error }) {
                 <div className="mt-8">
                     <a
                         href={recoveryUrl}
-                        className="inline-flex items-center justify-center rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800"
+                        className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-dark"
                     >
                         Return to matchcota.tech
                     </a>
