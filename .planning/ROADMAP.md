@@ -13,7 +13,7 @@
 ### Phases
 
 - [x] **Phase 14: Leads Backend** - Schema migration + 4 API endpoints (public POST + admin GET/GET/PATCH) with cross-tenant isolation (completed 2026-04-15)
-- [ ] **Phase 15: Admin Leads Panel** - Shelter admin UI to list, filter, and inspect leads with human-readable questionnaire answers
+- [x] **Phase 15: Admin Leads Panel** - Shelter admin UI to list, filter, and inspect leads with human-readable questionnaire answers (completed 2026-04-16)
 - [ ] **Phase 16: Adopter Lead Capture** - Post-match contact capture form embedded below results with questionnaire context stored in lead record
 - [ ] **Phase 17: UI Palette Normalization** - Align all React apps to indigo-600 primary token; eliminate teal and blue outliers
 
@@ -50,7 +50,7 @@ Plans:
 
 Plans:
 - [x] 15-01-PLAN.md — Define leads data contracts (API helper + questionnaire label/group utility)
-- [ ] 15-02-PLAN.md — Implement admin leads list/detail UI, route/nav wiring, and production verification checkpoint
+- [x] 15-02-PLAN.md — Implement admin leads list/detail UI, route/nav wiring, and production verification checkpoint
 
 #### Phase 16: Adopter Lead Capture
 **Goal**: Adopters who see their match results can leave contact info that is stored together with their questionnaire and scores
@@ -81,7 +81,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 14. Leads Backend | 4/4 | Complete    | 2026-04-15 |
-| 15. Admin Leads Panel | 1/2 | In Progress|  |
+| 15. Admin Leads Panel | 2/2 | Complete   | 2026-04-16 |
 | 16. Adopter Lead Capture | 0/? | Not started | - |
 | 17. UI Palette Normalization | 0/? | Not started | - |
 
