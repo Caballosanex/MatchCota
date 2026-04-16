@@ -12,6 +12,7 @@ _REQUIRED_REFERENCE_VARS = {
     "JWT_SECRET_KEY_SSM_PARAMETER": "JWT_SECRET_KEY",
 }
 _REQUIRED_DB_ENV_VARS = ("DB_HOST", "DB_PORT", "DB_NAME", "DB_USERNAME")
+_DIRECT_RUNTIME_VARS = ("DATABASE_URL", "SECRET_KEY", "JWT_SECRET_KEY")
 
 
 def _require_env(name: str) -> str:
@@ -46,6 +47,20 @@ def bootstrap_runtime_secrets() -> Dict[str, str]:
     if _RUNTIME_CACHE:
         os.environ.update(_RUNTIME_CACHE)
         return dict(_RUNTIME_CACHE)
+
+    # Production safety fallback: if runtime secrets are already provided directly
+    # (for example when VPC egress to SSM is unavailable), skip SSM bootstrap.
+    direct_values = {name: os.getenv(name, "").strip() for name in _DIRECT_RUNTIME_VARS}
+    if all(direct_values.values()):
+        resolved_direct = {
+            "DATABASE_URL": direct_values["DATABASE_URL"],
+            "SECRET_KEY": direct_values["SECRET_KEY"],
+            "JWT_SECRET_KEY": direct_values["JWT_SECRET_KEY"],
+            "RUNTIME_SECRETS_BOOTSTRAPPED": "true",
+        }
+        _RUNTIME_CACHE.update(resolved_direct)
+        os.environ.update(resolved_direct)
+        return dict(resolved_direct)
 
     reference_values: Dict[str, str] = {}
     for reference_env in _REQUIRED_REFERENCE_VARS:

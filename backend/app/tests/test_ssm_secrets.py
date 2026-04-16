@@ -76,3 +76,23 @@ def test_bootstrap_reuses_process_cache(monkeypatch):
     bootstrap_runtime.bootstrap_runtime_secrets()
 
     assert ssm_client.get_parameter.call_count == 3
+
+
+def test_bootstrap_uses_direct_runtime_vars_without_ssm(monkeypatch):
+    _reset_runtime_cache(monkeypatch)
+    monkeypatch.setenv(
+        "DATABASE_URL",
+        "postgresql://matchcota_admin:db-pass@db.example.internal:5432/matchcota?sslmode=require",
+    )
+    monkeypatch.setenv("SECRET_KEY", "direct-app-secret")
+    monkeypatch.setenv("JWT_SECRET_KEY", "direct-jwt-secret")
+    client_factory = MagicMock()
+    monkeypatch.setattr(bootstrap_runtime.boto3, "client", client_factory)
+
+    resolved = bootstrap_runtime.bootstrap_runtime_secrets()
+
+    assert resolved["RUNTIME_SECRETS_BOOTSTRAPPED"] == "true"
+    assert resolved["DATABASE_URL"].startswith("postgresql://matchcota_admin")
+    assert resolved["SECRET_KEY"] == "direct-app-secret"
+    assert resolved["JWT_SECRET_KEY"] == "direct-jwt-secret"
+    assert client_factory.call_count == 0
