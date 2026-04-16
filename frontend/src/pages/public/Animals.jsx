@@ -145,7 +145,7 @@ export default function Animals() {
                                     </p>
                                     <div className="flex gap-2 mt-2">
                                         {animal.sex && (
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
                                                 {animal.sex === 'male' ? 'Mascle' : 'Femella'}
                                             </span>
                                         )}

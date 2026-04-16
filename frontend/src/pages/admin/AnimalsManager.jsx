@@ -329,7 +329,7 @@ export default function AnimalsManager() {
 
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="flex flex-col gap-1 items-start">
-                                                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 border border-blue-100 text-blue-700 w-fit">
+                                                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-violet-50 border border-violet-100 text-violet-700 w-fit">
                                                             {mapSpecies(animal.species)} • {mapSize(animal.size)}
                                                         </span>
                                                         <span className="text-xs text-gray-500 ml-1">{mapSex(animal.sex)}</span>

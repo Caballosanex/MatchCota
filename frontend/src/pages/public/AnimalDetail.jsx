@@ -72,7 +72,7 @@ export default function AnimalDetail() {
                         </p>
                         <div className="flex gap-2 mt-2">
                             {animal.sex && (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                                     {LABEL_MAP.sex[animal.sex] || animal.sex}
                                 </span>
                             )}
