@@ -79,7 +79,7 @@ Plans:
 Plans:
 - [x] 17-01-PLAN.md — Remap Tailwind primary token to indigo and normalize shared UI primitive states
 - [ ] 17-02-PLAN.md — Migrate public/auth/layout palette outliers with behavior-safe visual checkpoint
-- [ ] 17-03-PLAN.md — Sweep admin/animal component outliers and run full frontend palette regression gate
+- [x] 17-03-PLAN.md — Sweep admin/animal component outliers and run full frontend palette regression gate
 
 ### Progress Table
 
@@ -88,7 +88,7 @@ Plans:
 | 14. Leads Backend | 4/4 | Complete    | 2026-04-15 |
 | 15. Admin Leads Panel | 2/2 | Complete    | 2026-04-16 |
 | 16. Adopter Lead Capture | 2/2 | Complete    | 2026-04-16 |
-| 17. UI Palette Normalization | 1/3 | In Progress|  |
+| 17. UI Palette Normalization | 2/3 | In Progress|  |
 
 ---
 
