@@ -1,6 +1,6 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 export default function AdminLayout() {
     const { user, loading, logout } = useAuth();
@@ -47,6 +47,13 @@ export default function AdminLayout() {
                                 }`}>
                                 <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                                 Gestió d'Animals
+                            </Link>
+                            <Link to="/admin/leads" className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all ${location.pathname.includes('/admin/leads')
+                                ? 'bg-indigo-600/10 text-indigo-400 border-l-4 border-indigo-500'
+                                : 'text-slate-400 hover:bg-slate-800 hover:text-white border-l-4 border-transparent'
+                                }`}>
+                                <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h10M7 16h6M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                Leads
                             </Link>
                         </nav>
                     </div>

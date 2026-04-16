@@ -15,6 +15,8 @@ import Dashboard from './pages/admin/Dashboard';
 import AnimalsManager from './pages/admin/AnimalsManager';
 import AnimalCreate from './pages/admin/AnimalCreate';
 import AnimalEdit from './pages/admin/AnimalEdit';
+import LeadsList from './pages/admin/LeadsList';
+import LeadDetail from './pages/admin/LeadDetail';
 import {
   resolveHostContext,
   isApexTenantPathBlocked,
@@ -111,6 +113,8 @@ export default function App() {
               <Route path="animals" element={<AnimalsManager />} />
               <Route path="animals/new" element={<AnimalCreate />} />
               <Route path="animals/:id" element={<AnimalEdit />} />
+              <Route path="leads" element={<LeadsList />} />
+              <Route path="leads/:leadId" element={<LeadDetail />} />
             </Route>
 
             <Route
