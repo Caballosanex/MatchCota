@@ -12,7 +12,7 @@ export default function AnimalFilters({ filters, onFilterChange }) {
                     name="species"
                     value={filters.species || ''}
                     onChange={handleChange}
-                    className="rounded-md border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="rounded-md border-gray-300 text-sm focus:ring-primary focus:border-primary"
                 >
                     <option value="">Totes</option>
                     <option value="dog">Gos</option>
@@ -26,7 +26,7 @@ export default function AnimalFilters({ filters, onFilterChange }) {
                     name="size"
                     value={filters.size || ''}
                     onChange={handleChange}
-                    className="rounded-md border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="rounded-md border-gray-300 text-sm focus:ring-primary focus:border-primary"
                 >
                     <option value="">Totes</option>
                     <option value="small">Petit</option>
@@ -40,7 +40,7 @@ export default function AnimalFilters({ filters, onFilterChange }) {
                     name="sex"
                     value={filters.sex || ''}
                     onChange={handleChange}
-                    className="rounded-md border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="rounded-md border-gray-300 text-sm focus:ring-primary focus:border-primary"
                 >
                     <option value="">Tots</option>
                     <option value="male">Mascle</option>

@@ -19,7 +19,7 @@ export default function PhotoGallery({ photos = [] }) {
                             key={i}
                             onClick={() => setSelected(i)}
                             className={`flex-shrink-0 h-16 w-16 rounded-md overflow-hidden border-2 transition-colors
-                                ${i === selected ? 'border-blue-500' : 'border-transparent hover:border-gray-300'}`}
+                                ${i === selected ? 'border-primary' : 'border-transparent hover:border-gray-300'}`}
                         >
                             <img
                                 src={url}

@@ -2,11 +2,11 @@ const BARS = [
     { key: 'energy_level', label: 'Energia', color: 'bg-yellow-500' },
     { key: 'sociability', label: 'Sociabilitat', color: 'bg-green-500' },
     { key: 'attention_needs', label: "Necessitat d'atencio", color: 'bg-purple-500' },
-    { key: 'good_with_children', label: 'Bo amb nens', color: 'bg-blue-500' },
+    { key: 'good_with_children', label: 'Bo amb nens', color: 'bg-indigo-500' },
     { key: 'good_with_dogs', label: 'Bo amb gossos', color: 'bg-orange-500' },
     { key: 'good_with_cats', label: 'Bo amb gats', color: 'bg-pink-500' },
     { key: 'experience_required', label: 'Experiencia req.', color: 'bg-red-500' },
-    { key: 'maintenance_level', label: 'Manteniment', color: 'bg-teal-500' },
+    { key: 'maintenance_level', label: 'Manteniment', color: 'bg-amber-500' },
 ];
 
 export default function MatchingBars({ animal }) {
