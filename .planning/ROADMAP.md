@@ -15,7 +15,7 @@
 - [x] **Phase 14: Leads Backend** - Schema migration + 4 API endpoints (public POST + admin GET/GET/PATCH) with cross-tenant isolation (completed 2026-04-15)
 - [x] **Phase 15: Admin Leads Panel** - Shelter admin UI to list, filter, and inspect leads with human-readable questionnaire answers (completed 2026-04-16)
 - [x] **Phase 16: Adopter Lead Capture** - Post-match contact capture form embedded below results with questionnaire context stored in lead record (completed 2026-04-16)
-- [ ] **Phase 17: UI Palette Normalization** - Align all React apps to indigo-600 primary token; eliminate teal and blue outliers
+- [x] **Phase 17: UI Palette Normalization** - Align all React apps to indigo-600 primary token; eliminate teal and blue outliers (completed 2026-04-16)
 
 ### Phase Details
 
@@ -78,7 +78,7 @@ Plans:
 
 Plans:
 - [x] 17-01-PLAN.md — Remap Tailwind primary token to indigo and normalize shared UI primitive states
-- [ ] 17-02-PLAN.md — Migrate public/auth/layout palette outliers with behavior-safe visual checkpoint
+- [x] 17-02-PLAN.md — Migrate public/auth/layout palette outliers with behavior-safe visual checkpoint
 - [x] 17-03-PLAN.md — Sweep admin/animal component outliers and run full frontend palette regression gate
 
 ### Progress Table
@@ -88,7 +88,7 @@ Plans:
 | 14. Leads Backend | 4/4 | Complete    | 2026-04-15 |
 | 15. Admin Leads Panel | 2/2 | Complete    | 2026-04-16 |
 | 16. Adopter Lead Capture | 2/2 | Complete    | 2026-04-16 |
-| 17. UI Palette Normalization | 2/3 | In Progress|  |
+| 17. UI Palette Normalization | 3/3 | Complete   | 2026-04-16 |
 
 ---
 
