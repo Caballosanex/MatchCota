@@ -17,7 +17,7 @@ const Textarea = forwardRef(({
                 ref={ref}
                 className={`
                     block w-full rounded-md border shadow-sm sm:text-sm
-                    focus:border-blue-500 focus:ring-blue-500
+                    focus:border-primary focus:ring-primary
                     disabled:cursor-not-allowed disabled:bg-gray-50
                     ${error ? 'border-red-300 text-red-900 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}
                 `}

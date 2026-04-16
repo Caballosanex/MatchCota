@@ -52,7 +52,7 @@ const Input = forwardRef(({
                     disabled:cursor-not-allowed disabled:bg-gray-50
                     ${error
                         ? 'border-red-300 text-red-900 focus:border-red-500 focus:ring-red-500 placeholder-red-300'
-                        : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                        : 'border-gray-300 focus:border-primary focus:ring-primary'
                     }
                 `}
 
