@@ -31,9 +31,9 @@ describe('Lead detail and admin wiring contract', () => {
   it('renders Contact -> Matches -> Questionnaire sections in order', () => {
     const detailSource = requireFile(LEAD_DETAIL_PATH, 'LeadDetail.jsx');
 
-    const contactIndex = detailSource.indexOf('Contact');
-    const matchesIndex = detailSource.indexOf('Matches');
-    const questionnaireIndex = detailSource.indexOf('Questionnaire');
+    const contactIndex = detailSource.indexOf('>Contact</h2>');
+    const matchesIndex = detailSource.indexOf('>Matches</h2>');
+    const questionnaireIndex = detailSource.indexOf('>Questionnaire</h2>');
 
     expect(contactIndex).toBeGreaterThanOrEqual(0);
     expect(matchesIndex).toBeGreaterThan(contactIndex);
