@@ -26,7 +26,7 @@
 
 ### UI Palette
 
-- [ ] **PAL-01**: All React apps use a consistent primary colour token (indigo-600 family); no teal or blue outliers remain in any public-facing or admin layout
+- [x] **PAL-01**: All React apps use a consistent primary colour token (indigo-600 family); no teal or blue outliers remain in any public-facing or admin layout
 
 ---
 
@@ -76,7 +76,7 @@
 | ADOP-01 | Phase 16 | Pending |
 | ADOP-02 | Phase 16 | Pending |
 | ADOP-03 | Phase 16 | Pending |
-| PAL-01 | Phase 17 | Pending |
+| PAL-01 | Phase 17 | Complete |
 
 **Coverage:**
 - v1.2 requirements: 9 total

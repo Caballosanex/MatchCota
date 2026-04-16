@@ -14,7 +14,7 @@
 
 - [x] **Phase 14: Leads Backend** - Schema migration + 4 API endpoints (public POST + admin GET/GET/PATCH) with cross-tenant isolation (completed 2026-04-15)
 - [x] **Phase 15: Admin Leads Panel** - Shelter admin UI to list, filter, and inspect leads with human-readable questionnaire answers (completed 2026-04-16)
-- [ ] **Phase 16: Adopter Lead Capture** - Post-match contact capture form embedded below results with questionnaire context stored in lead record
+- [x] **Phase 16: Adopter Lead Capture** - Post-match contact capture form embedded below results with questionnaire context stored in lead record (completed 2026-04-16)
 - [ ] **Phase 17: UI Palette Normalization** - Align all React apps to indigo-600 primary token; eliminate teal and blue outliers
 
 ### Phase Details
@@ -73,17 +73,22 @@ Plans:
   1. `tailwind.config.js` defines `primary` as the indigo family (`#4F46E5` DEFAULT, `#4338CA` dark, `#6366F1` light) and no other primary-like tokens remain
   2. A manual visual check of all public pages (`/`, `/animals`, `/test`, `/test/results`) and all admin pages (`/admin`, `/admin/animals`, `/admin/leads`, `/admin/settings`) shows no teal or blue-600 elements — all interactive elements and CTAs use the indigo token
   3. The palette change ships as an isolated PR from feature work; no leads or questionnaire functionality is affected by the diff
-**Plans**: TBD
+**Plans**: 3 plans
 **UI hint**: yes
+
+Plans:
+- [x] 17-01-PLAN.md — Remap Tailwind primary token to indigo and normalize shared UI primitive states
+- [ ] 17-02-PLAN.md — Migrate public/auth/layout palette outliers with behavior-safe visual checkpoint
+- [ ] 17-03-PLAN.md — Sweep admin/animal component outliers and run full frontend palette regression gate
 
 ### Progress Table
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 14. Leads Backend | 4/4 | Complete    | 2026-04-15 |
-| 15. Admin Leads Panel | 2/2 | Complete   | 2026-04-16 |
-| 16. Adopter Lead Capture | 0/? | Not started | - |
-| 17. UI Palette Normalization | 0/? | Not started | - |
+| 15. Admin Leads Panel | 2/2 | Complete    | 2026-04-16 |
+| 16. Adopter Lead Capture | 2/2 | Complete    | 2026-04-16 |
+| 17. UI Palette Normalization | 1/3 | In Progress|  |
 
 ---
 
