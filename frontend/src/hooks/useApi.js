@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react';
 import { useAuth } from './useAuth';
 import { useTenant } from './useTenant';
 import { getApiBaseUrl } from '../api/baseUrl';
@@ -7,10 +8,13 @@ export function useApi() {
     const { tenant } = useTenant();
 
     const baseUrl = getApiBaseUrl();
+    const token = user?.token;
+    const tenantSlug = tenant?.slug;
+    const tenantId = tenant?.id;
 
-    const request = async (endpoint, options = {}) => {
+    const request = useCallback(async (endpoint, options = {}) => {
         // Guard: si no hi ha tenant, les requests fallaran al backend
-        if (!tenant?.slug) {
+        if (!tenantSlug) {
             throw new Error('No hi ha cap protectora seleccionada.');
         }
 
@@ -19,12 +23,12 @@ export function useApi() {
             ...options.headers,
         };
 
-        if (user && user.token) {
-            headers['Authorization'] = `Bearer ${user.token}`;
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
         }
 
-        headers['X-Tenant-Slug'] = tenant.slug;
-        headers['X-Tenant-ID'] = tenant.id;
+        headers['X-Tenant-Slug'] = tenantSlug;
+        headers['X-Tenant-ID'] = tenantId;
 
         const config = {
             ...options,
@@ -45,12 +49,12 @@ export function useApi() {
             console.error('API Request failed:', error);
             throw error;
         }
-    };
+    }, [baseUrl, tenantSlug, tenantId, token]);
 
-    return {
+    return useMemo(() => ({
         get: (endpoint) => request(endpoint, { method: 'GET' }),
         post: (endpoint, body) => request(endpoint, { method: 'POST', body: JSON.stringify(body) }),
         put: (endpoint, body) => request(endpoint, { method: 'PUT', body: JSON.stringify(body) }),
         delete: (endpoint) => request(endpoint, { method: 'DELETE' }),
-    };
+    }), [request]);
 }
