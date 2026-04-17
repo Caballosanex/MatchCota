@@ -1,8 +1,8 @@
 # MatchCota AWS Production Deployment
 
-## Current Milestone: v1.3 (Planning)
+## Current Milestone: v1.2 (Shipped)
 
-**Goal:** Define and execute the next milestone after v1.2 closure.
+**Next:** Run `/gsd-new-milestone` to define v1.3.
 
 ## What This Is
 
