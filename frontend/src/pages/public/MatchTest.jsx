@@ -133,13 +133,15 @@ export default function MatchTest() {
         }
     };
 
+    const currentCategoryName = questionnaire?.categories?.find(c => c.id === currentQuestion?.category)?.name || currentQuestion?.category;
+
     // Renderitzat condicional
     if (loading) {
         return (
-            <div className="min-h-[60vh] flex items-center justify-center">
-                <div className="text-center">
+            <div className="min-h-[60vh] flex items-center justify-center px-4 py-8">
+                <div className="w-full max-w-lg rounded-3xl border border-indigo-100 bg-white/90 p-8 text-center shadow-lg">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Carregant questionari...</p>
+                    <p className="mt-4 text-gray-600 font-medium">Carregant questionari...</p>
                 </div>
             </div>
         );
@@ -147,13 +149,13 @@ export default function MatchTest() {
 
     if (error) {
         return (
-            <div className="min-h-[60vh] flex items-center justify-center">
-                <div className="text-center bg-red-50 p-6 rounded-lg max-w-md">
-                    <p className="text-red-600 font-semibold">Error</p>
-                    <p className="text-red-500 mt-2">{error}</p>
+            <div className="min-h-[60vh] flex items-center justify-center px-4 py-8">
+                <div className="w-full max-w-xl rounded-3xl border border-red-100 bg-red-50/70 p-6 text-center shadow-sm">
+                    <p className="text-red-700 font-bold">Error</p>
+                    <p className="text-red-600 mt-2">{error}</p>
                     <button
                         onClick={() => window.location.reload()}
-                        className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                        className="mt-5 inline-flex items-center justify-center rounded-xl bg-red-600 px-5 py-2.5 text-white font-semibold hover:bg-red-700 transition-colors"
                     >
                         Reintentar
                     </button>
@@ -164,10 +166,10 @@ export default function MatchTest() {
 
     if (submitting) {
         return (
-            <div className="min-h-[60vh] flex items-center justify-center">
-                <div className="text-center">
+            <div className="min-h-[60vh] flex items-center justify-center px-4 py-8">
+                <div className="w-full max-w-lg rounded-3xl border border-indigo-100 bg-white/90 p-8 text-center shadow-lg">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Calculant els teus matches...</p>
+                    <p className="mt-4 text-gray-600 font-medium">Calculant els teus matches...</p>
                 </div>
             </div>
         );
@@ -175,11 +177,17 @@ export default function MatchTest() {
 
     // Vista principal: pregunta actual
     return (
-        <div className="max-w-2xl mx-auto px-4 py-8">
-            <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="max-w-4xl mx-auto px-4 py-8 sm:py-10">
+            <div className="mb-5 rounded-2xl border border-indigo-100 bg-indigo-50/70 px-5 py-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-indigo-700">Test de compatibilitat</p>
+                <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-gray-900">Troba el millor match per tu</h1>
+                <p className="mt-2 text-sm text-gray-600">Respon el qüestionari i et mostrarem els animals més compatibles.</p>
+            </div>
+
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-xl p-6 sm:p-8">
                 {/* Progress bar */}
                 <div className="mb-6">
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
                         <div
                             className="h-full bg-indigo-600 transition-all duration-300"
                             style={{ width: `${progress}%` }}
@@ -193,14 +201,14 @@ export default function MatchTest() {
                 {/* Categoria */}
                 {currentQuestion?.category && (
                     <div className="mb-4">
-                        <span className="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 text-sm font-medium rounded-full">
-                            {questionnaire?.categories?.find(c => c.id === currentQuestion.category)?.name || currentQuestion.category}
+                        <span className="inline-flex px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-semibold uppercase tracking-wide rounded-full">
+                            {currentCategoryName}
                         </span>
                     </div>
                 )}
 
                 {/* Pregunta */}
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
                     {currentQuestion?.text}
                 </h2>
 
@@ -210,7 +218,7 @@ export default function MatchTest() {
 
                 {/* Tipus de pregunta */}
                 {currentQuestion?.type === 'multiple_choice' && (
-                    <p className="text-sm text-indigo-600 mb-4">
+                    <p className="text-sm text-indigo-600 mb-4 font-medium">
                         Pots seleccionar varies opcions
                     </p>
                 )}
@@ -221,10 +229,10 @@ export default function MatchTest() {
                         <button
                             key={option.value}
                             onClick={() => handleOptionSelect(option.value)}
-                            className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                            className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 ${
                                 isOptionSelected(option.value)
-                                    ? 'border-indigo-600 bg-indigo-50'
-                                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                    ? 'border-indigo-600 bg-indigo-50 shadow-sm'
+                                    : 'border-gray-200 hover:border-indigo-200 hover:bg-indigo-50/40'
                             }`}
                         >
                             <div className="flex items-center justify-between">
@@ -244,11 +252,11 @@ export default function MatchTest() {
                 </div>
 
                 {/* Navegacio */}
-                <div className="flex justify-between">
+                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
                     <button
                         onClick={handlePrevious}
                         disabled={currentIndex === 0}
-                        className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-6 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         Anterior
                     </button>
@@ -256,7 +264,7 @@ export default function MatchTest() {
                     <button
                         onClick={handleNext}
                         disabled={!canProceed()}
-                        className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {currentIndex < totalQuestions - 1 ? 'Seguent' : 'Veure Resultats'}
                     </button>
