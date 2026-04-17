@@ -1,169 +1,200 @@
 # Project Research Summary
 
 **Project:** MatchCota
-**Domain:** AWS production migration for a multi-tenant FastAPI + React SaaS under AWS Academy constraints
-**Researched:** 2026-04-08
-**Confidence:** HIGH
+**Domain:** Leads Management + UX Unification (multi-tenant FastAPI + React SaaS on AWS)
+**Milestone:** v1.2
+**Researched:** 2026-04-15
+**Confidence:** HIGH — all findings from direct codebase inspection
+
+---
 
 ## Executive Summary
 
-MatchCota is best built as a **constraint-aware multi-tenant SaaS** where DNS/TLS and tenant trust boundaries are treated as first-class architecture decisions, not post-launch hardening. The strongest expert consensus across the research is to keep the locked topology (EC2+nginx for wildcard SPA, API Gateway HTTP API + Lambda/Mangum for backend, private RDS Postgres, S3 via VPC endpoint) and optimize for reliability under Academy limitations (temporary credentials, no custom IAM roles, no CloudFront/SES/CloudWatch-heavy assumptions).
+v1.2 is a pure implementation milestone with no new dependencies and no architecture changes. The entire feature set — leads admin panel, post-match lead capture, match results UX improvements, and palette normalization — is covered by the existing installed stack. The only schema change is additive: two columns (`status`, `notes`) added to an existing `leads` table that already has all other required fields.
 
-The recommended approach is opinionated: pre-provision wildcard DNS/certs once, keep onboarding purely app-data transactional (no runtime Route53 writes), and ship only after end-to-end proof that a new shelter can register, resolve `{slug}.matchcota.tech`, log in, and reach admin without manual intervention. Terraform must be executed in slices with explicit gates, not as a one-shot apply, to survive credential expiry and minimize blast radius.
+The recommended approach is a strict four-phase build in dependency order: backend schema + API first (unblocks everything), then admin leads UI, then public lead capture UX, then palette normalization as an isolated PR. Deployment within each phase follows the mandatory sequence: Alembic migration → Lambda zip → EC2 static push. Reversing this order at any stage risks visible errors to shelter admins or adopters.
 
-Top risks are onboarding partial failures, DNS/TLS drift, tenant-isolation bypass, and Lambda→RDS connection pressure. Mitigation is equally clear: atomic tenant+admin transactions, registrar/delegation checklists with automated smoke checks, strict host-derived tenant resolution with negative tests, and explicit DB guardrails (reserved concurrency + conservative pooling, with RDS Proxy evaluation if load demonstrates need and permissions allow).
+The dominant risk is not technical complexity — it is a cross-tenant data leak if admin leads endpoints are written without the mandatory `tenant_id` filter. This is a GDPR-level breach. Everything else (spam on the public endpoint, stale frontend cache, Lambda response size) is moderate and has clear mechanical mitigations. Ship the backend with cross-tenant isolation tests before any UI work touches leads.
+
+---
 
 ## Key Findings
 
-### Recommended Stack
+### Recommended Stack — No new libraries required
 
-Research converges on a pragmatic 2026 serverless-edge stack that preserves existing FastAPI/React code while reducing migration risk. The key is not novelty; it is reproducibility and safe operations under lab constraints.
+All three feature areas are covered by packages already installed and locked:
 
-**Core technologies:**
-- **Terraform `~>1.14` + AWS Provider `~>6.39`**: Infrastructure as code with modern AWS coverage and stable release pairing.
-- **API Gateway HTTP API (payload 2.0) + Lambda Python 3.13 + Mangum**: Lowest-friction path to run existing FastAPI in locked target architecture.
-- **RDS PostgreSQL 15 (private, single-AZ)**: Fits current app model and budget constraints.
-- **EC2 (AL2023) + nginx**: Required wildcard-host SPA delivery pattern for tenant subdomains.
-- **S3 + Gateway VPC Endpoint**: Private object access from Lambda without NAT cost.
+| Layer | Package | Version | Role in v1.2 |
+|-------|---------|---------|--------------|
+| Backend | `fastapi` | 0.109.0 | New leads endpoints |
+| Backend | `sqlalchemy` | 2.0.25 | Lead CRUD queries |
+| Backend | `alembic` | 1.13.1 | Add `status` + `notes` columns |
+| Backend | `pydantic` | 2.5.3 | `LeadCreate` / `LeadResponse` schemas with `model_validator` |
+| Backend | `python-jose` | 3.3.0 | JWT auth on admin endpoints |
+| Frontend | `react-hook-form` | 7.71.2 | Lead capture form |
+| Frontend | `zod` | 4.3.6 | Form validation |
+| Frontend | `@hookform/resolvers` | 5.2.2 | Zod-RHF bridge |
+| Frontend | `tailwindcss` | 3.4.1 | Config color token update only |
 
-**Critical version/operational requirements:**
-- Package Lambda artifacts in Linux-compatible Docker image; do not package on macOS host.
-- Pin `boto3` inside Lambda artifact to avoid runtime drift.
-- Use remote Terraform state + locking and modular applies due to expiring credentials.
+**Rejected alternatives:** PostgreSQL native ENUM for status (non-transactional DDL in PG); React Query/SWR (overkill for a single PATCH); shadcn/ui (would partially replace existing UI components); Tailwind v4 (breaking config changes, separate concern).
 
-### Expected Features
+**Key pattern established:** The public `POST /leads` endpoint must NOT use the `useApi` hook (requires auth). It follows the raw fetch pattern from `src/api/matching.js` with `X-Tenant-Slug` header only. Admin leads functions use `useApi()` exactly like `AnimalsManager`.
 
-Launch scope is dominated by reliability features, not net-new product surface area.
+---
 
-**Must have (table stakes):**
-- Wildcard DNS/TLS correctness for apex + wildcard tenant hosts + API domain.
-- Atomic tenant onboarding with immediate admin access.
-- Trusted tenant resolution from hostname (not client-forged tenant headers).
-- Production security baseline on signup/auth (rate limiting/challenge/slug policy/audit trail).
-- Data safety baseline (backup, migration discipline, tested restore).
-- Reproducible deploy runbook + mandatory E2E onboarding smoke verification.
+### Expected Features — What must ship
 
-**Should have (differentiators):**
-- Onboarding readiness SLA/status checkpoints.
-- Moderated onboarding mode (invite/approval toggle).
-- One-command post-deploy verification bundle.
-- Structured onboarding event diagnostics.
+**Leads admin panel (table stakes):**
+- Paginated lead list: name, contact, date, status badge — filterable by status, sorted by date desc
+- Status workflow: `new | contacted | adopted | rejected` — PATCH endpoint, mutable per admin
+- Free-text notes per lead
+- Lead detail: full questionnaire answers (human-readable labels, not raw JSON keys) + scores + top matches
 
-**Defer (v2+):**
-- Full CI/CD blue-green sophistication.
-- Expanded observability platform.
-- Major auth redesign (SSO/advanced RBAC/refresh-token expansion).
+**Post-match lead capture (table stakes):**
+- Results shown first, unconditionally — capture form appears below after results render
+- Required fields: name + one of email OR phone — nothing else mandatory
+- Confirmation state after successful submission
+- Match context (responses + matches + scores) stored atomically with the lead record
 
-### Architecture Approach
+**Match results UX improvements (table stakes):**
+- Large colour-coded score badge: green ≥75, amber 50–74, orange <50
+- Explanations as a distinct visual section (not buried in small text)
+- Stronger hero treatment for the #1 match
+- "M'interessa" CTA per card that scrolls to the capture form
 
-The target architecture is a clean split of **DNS/TLS edge**, **frontend delivery plane**, **API plane**, and **private data plane**, with tenant isolation enforced in application logic via host-resolved tenancy and mandatory `tenant_id` query scoping. Architectural guidance strongly favors immutable infra/artifact releases, removing infra side effects from request paths, and sequencing delivery by dependency-gated slices.
+**Palette normalization (table stakes):**
+- `tailwind.config.js` `primary` token remapped to indigo family (`#4F46E5` as DEFAULT, `#4338CA` dark, `#6366F1` light)
+- 3–4 outlier classes fixed in `PublicLayout.jsx` only (blue-600, teal-700, teal-800)
+- Strategy: additive — do NOT mass-replace working `indigo-*` classes
 
-**Major components:**
-1. **Route53 + ACM** — authoritative DNS and certificate lifecycle for apex/wildcard/API names.
-2. **EC2 + nginx frontend host** — wildcard SPA serving with HTTPS/security headers and host preservation.
-3. **API Gateway + Lambda (FastAPI/Mangum)** — stateless API execution and security boundary.
-4. **RDS PostgreSQL** — tenant-scoped relational source of truth.
-5. **S3 + VPC endpoint** — tenant-prefixed image/object storage without NAT.
+**Conversion research finding:** Results-first → soft CTA converts at ~40% opt-in. Email gate before results drops conversion to ~5%. Each additional required field loses ~4%.
+
+**Explicitly deferred to v2+:** Email notifications (SES unavailable in AWS Academy), lead export (CSV/PDF), full-text search on leads, bulk actions, analytics dashboard.
+
+---
+
+### Architecture Approach — Key integration points
+
+v1.2 adds one new domain (leads) as a clean vertical slice mirroring the existing animals domain. No existing endpoints are modified.
+
+**New backend files:**
+- `app/schemas/lead.py` — `LeadCreate`, `LeadResponse`, `LeadListItem`, `LeadDetail`, `LeadStatusUpdate`
+- `app/crud/leads.py` — `create_lead`, `get_leads_by_tenant`, `get_lead_by_tenant`, `update_lead`
+- `app/api/v1/leads.py` — public `POST /api/v1/leads` (no JWT) + admin `GET /admin/leads`, `GET /admin/leads/{id}`, `PATCH /admin/leads/{id}` (JWT required)
+- `alembic/versions/XXXX_add_lead_status_notes.py`
+
+**Modified files (backend):** `app/models/lead.py` (add columns), `app/main.py` (register router)
+
+**New frontend files:** `src/api/leads.js`, `src/pages/admin/Leads.jsx`, `src/pages/admin/LeadDetail.jsx`, `src/components/matching/LeadCaptureForm.jsx`
+
+**Modified files (frontend):** `tailwind.config.js`, `src/pages/public/MatchResults.jsx`, `src/pages/public/MatchTest.jsx` (pass `responses` in navigate state — currently missing), `src/App.jsx`, `src/layouts/AdminLayout.jsx`, `src/layouts/PublicLayout.jsx`
+
+**Critical integration point — questionnaire label mapping:** `LeadDetail.jsx` reuses `GET /api/v1/matching/questionnaire` to map raw JSON keys to human-readable labels. No new backend endpoint required.
+
+**Critical bug to fix in Phase 3:** `MatchTest.jsx` currently only passes `results` in navigate state. Must also pass `responses` so `MatchResults.jsx` can include them in the lead capture POST body.
+
+**Deployment sequence (mandatory within each phase):**
+1. Alembic migration — additive DDL, safe while old Lambda is live
+2. Lambda zip upload — smoke-test new endpoints with curl before touching frontend
+3. EC2 static push — only after backend smoke checks pass; keep previous `dist/` backup
+
+---
 
 ### Critical Pitfalls
 
-1. **Non-atomic onboarding (“signup succeeded” but unusable tenant)** — prevent with one-transaction tenant+admin bootstrap and E2E registration→login proof.
-2. **DNS/certificate drift for wildcard routing** — prevent with delegation gates, codified ACM validation, and automated DNS/TLS smoke matrix.
-3. **Lambda-to-RDS connection storms** — prevent with reserved concurrency, Lambda-safe SQLAlchemy settings, and early load testing (evaluate RDS Proxy where feasible).
-4. **Credential expiry during Terraform apply** — prevent with short slice-based applies, remote state locking, and explicit resume runbooks.
-5. **Tenant isolation bypass via header/host trust confusion** — prevent with strict trusted-host contract and cross-tenant denial tests.
+1. **Cross-tenant lead leak (GDPR-level)** — Admin endpoints written without `tenant_id` filter expose adopter contact info across shelters. Invisible in dev (single tenant). Prevention: `get_current_tenant` dependency required on every admin route; every `db.query(Lead)` must filter by `tenant_id`; add cross-tenant isolation test in Phase 1 before any UI exists.
+
+2. **Results gate kills conversion** — Lead capture form shown before results causes adopters to dismiss and never return. Results-first + inline CTA is non-negotiable. Never gate the results page on form submission.
+
+3. **Unauthenticated capture endpoint as spam vector** — Public `POST /leads` has no auth. Prevention: server-side rate limiting per IP per tenant slug at API Gateway or middleware; validate tenant is active before writing; reject non-JSON payloads. Must be addressed before production deploy.
+
+4. **Lambda 6 MB response limit on leads list** — Including full `respostes` + `puntuacions` JSON columns in list response hits the API Gateway 6 MB synchronous limit at scale. Prevention: list endpoint returns summary fields only; full JSON on detail endpoint only; hard server-side cap of 50 leads per page.
+
+5. **Palette normalization visual regressions** — Audit all token usages before touching config (`grep -r "bg-primary\|text-primary" src/`); additive strategy only; deploy as isolated PR; manual visual checklist of all pages post-build.
+
+---
 
 ## Implications for Roadmap
 
-Based on research, suggested phase structure:
+### Phase 1: Backend — Leads Schema + API
+**Rationale:** Pure backend work, no frontend dependency. Unblocks all other phases. The cross-tenant isolation test must live here.
+**Delivers:** Alembic migration (status + notes columns), `app/schemas/lead.py`, `app/crud/leads.py`, `app/api/v1/leads.py` (4 endpoints), model + main.py updates.
+**Addresses:** Leads admin panel and lead capture table stakes (API layer).
+**Avoids:** Cross-tenant data leak — isolation test written and passing before Phase 2 begins.
+**Deploy:** Migration → Lambda zip only.
 
-### Phase 1: Terraform Operating Model + Scope Guardrails
-**Rationale:** Every later phase depends on reliable, resumable infra operations in Academy sessions.
-**Delivers:** Remote state/locking, apply slicing strategy, allowed-services matrix, budget guardrails, resume runbook.
-**Addresses:** Reproducible infrastructure table stake.
-**Avoids:** Credential-expiry drift and unsupported-service redesign loops.
+### Phase 2: Admin Leads Panel
+**Rationale:** Shelter admin visibility into leads is the core business value of v1.2. Can ship independently once Phase 1 backend is live.
+**Delivers:** `Leads.jsx` (list + status filter + pagination), `LeadDetail.jsx` (detail + PATCH + questionnaire label mapping), `src/api/leads.js` (admin functions), `App.jsx` route additions, `AdminLayout.jsx` nav item.
+**Addresses:** Full leads admin panel table stakes.
+**Avoids:** Raw JSON rendered to admins — questionnaire label mapping required before merge.
+**Deploy:** EC2 static push.
 
-### Phase 2: DNS/TLS Foundation and Delegation Control
-**Rationale:** Tenant onboarding and wildcard UX are impossible without stable DNS/TLS first.
-**Delivers:** Route53 hosted zone wiring, registrar NS delegation checks, ACM issuance for apex/wildcard/API, DNS/TLS smoke script.
-**Addresses:** Wildcard DNS/TLS table stake.
-**Avoids:** DNS/cert drift and launch-day hostname failures.
+### Phase 3: Lead Capture + Match Results UX
+**Rationale:** Completes the adopter-facing flow; improves conversion from test-taker to actionable lead. Can run in parallel with Phase 2 once Phase 1 is live.
+**Delivers:** `LeadCaptureForm.jsx`, `MatchResults.jsx` embed + score badge improvements + "M'interessa" CTA, `MatchTest.jsx` navigate state fix, `src/api/leads.js` public `createLead`.
+**Addresses:** Post-match lead capture + match results UX table stakes.
+**Avoids:** Form-before-results (results unconditional); orphaned leads (responses passed in navigate state and POST body).
+**Deploy:** EC2 static push.
 
-### Phase 3: Data Plane Provisioning + Migration Safety
-**Rationale:** Backend runtime cutover needs stable DB/storage and rollback discipline.
-**Delivers:** Private RDS + subnet/SG boundaries, S3 with tenant key-prefix policy + VPC endpoint, migration rehearsal + restore drill.
-**Addresses:** Data safety baseline.
-**Avoids:** Irreversible schema mistakes and cross-tenant storage leakage.
-
-### Phase 4: Backend Runtime Migration + Tenant Trust Boundary
-**Rationale:** Core business risk sits in onboarding correctness and tenant isolation at API layer.
-**Delivers:** Mangum Lambda runtime, API custom domain mapping, strict host-derived tenant resolution, atomic tenant+admin onboarding transaction, auth/tenant negative tests.
-**Addresses:** Atomic onboarding and trusted tenant resolution table stakes.
-**Avoids:** Partial onboarding state and cross-tenant access bypass.
-
-### Phase 5: Frontend Production Host Cutover + Security Baseline
-**Rationale:** Public experience must align with finalized API/domain contract and remove dev surfaces.
-**Delivers:** nginx hardened wildcard SPA hosting, production route pruning, strict CORS/origin alignment, signup abuse controls.
-**Addresses:** Production security baseline.
-**Avoids:** exposed diagnostics, CORS misconfig, and abuse-prone onboarding.
-
-### Phase 6: E2E Verification + Capacity Guardrails
-**Rationale:** “Done” requires business-flow proof and performance safety under burst.
-**Delivers:** One-command smoke suite (register→login→admin→upload→matching), load tests, Lambda concurrency limits, DB guardrail tuning, rollback drills.
-**Addresses:** E2E onboarding verification and operational readiness.
-**Avoids:** launch regressions and DB saturation incidents.
+### Phase 4: UI Palette Normalization
+**Rationale:** Isolated cosmetic alignment — separate PR ensures visual regressions are self-contained and trivially reversible.
+**Delivers:** `tailwind.config.js` primary token update to indigo family, `PublicLayout.jsx` 3–4 class fixes.
+**Addresses:** UI palette normalization table stake.
+**Avoids:** Regressions in untouched components — additive token strategy + manual visual checklist.
+**Deploy:** EC2 static push only (no backend change).
 
 ### Phase Ordering Rationale
 
-- Dependencies are linear and strict: ops model → DNS/TLS → data plane → API/onboarding trust boundary → frontend cutover → acceptance/perf hardening.
-- This grouping mirrors architecture slices and minimizes rework by validating the highest external-risk boundaries first.
-- The order directly neutralizes top pitfalls before scaling user-visible onboarding.
+- Phase 1 is a hard prerequisite for Phases 2 and 3 — cannot call endpoints that don't exist.
+- Phases 2 and 3 are independent of each other once Phase 1 is live — can be developed in parallel, deployed in either order.
+- Phase 4 is fully independent and must be a separate PR to isolate visual regression risk from feature work.
+- Within each phase: migration → Lambda → static is the mandatory deploy sequence; the inverse creates visible errors.
 
 ### Research Flags
 
-Phases likely needing deeper research during planning:
-- **Phase 2:** ACM exportability and nginx TLS material workflow under Academy policy constraints.
-- **Phase 6:** RDS Proxy feasibility versus direct-DB pattern in restricted IAM environment; confirm with load-test evidence.
+**Needs deeper research during planning:** None. All implementation patterns are established in the existing codebase or are well-documented FastAPI/React/Tailwind patterns. No phase requires `/gsd-research-phase`.
 
-Phases with standard patterns (likely skip `/gsd-research-phase`):
-- **Phase 1:** Terraform remote state/locking and sliced applies are mature, well-documented patterns.
-- **Phase 3:** Private RDS + S3 endpoint topology is standard AWS practice.
-- **Phase 4 (core adapter path):** FastAPI + Mangum on HTTP API payload 2.0 is established.
+**Standard patterns (skip research):**
+- **Phase 1:** CRUD pattern follows `crud/animals.py` exactly; auth pattern follows existing admin animals routes.
+- **Phase 2:** Admin list/detail pattern follows `AnimalsManager` with `useApi()` hook.
+- **Phase 3:** Public fetch pattern follows `src/api/matching.js`; results page pattern established.
+- **Phase 4:** Tailwind config change is mechanical once token audit is done.
+
+---
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | MEDIUM-HIGH | Strong official AWS/Terraform backing; moderate uncertainty around Academy-specific cert/IAM edges. |
-| Features | HIGH | Clear internal scope alignment and strong consistency with architecture/risk research. |
-| Architecture | HIGH | Locked topology and dependency-gated migration path are concrete and internally consistent. |
-| Pitfalls | HIGH | Risks are specific, observable, and mapped to prevention/recovery phases with official references. |
+| Stack | HIGH | All packages verified from `requirements.txt` and `package.json`; no assumptions |
+| Features | HIGH | Table stakes from codebase inspection + directional UX conversion research |
+| Architecture | HIGH | File-by-file change map from direct codebase inspection; no speculative components |
+| Pitfalls | HIGH | Cross-tenant and Lambda limits are architectural facts; UX conversion patterns from multiple practitioner sources |
 
-**Overall confidence:** HIGH
+**Overall confidence: HIGH**
 
 ### Gaps to Address
 
-- **ACM certificate handling for EC2 wildcard TLS material:** validate exact operational path allowed in Academy before phase execution.
-- **RDS Proxy availability/permissions:** treat as conditional optimization; baseline with direct DB + concurrency caps first.
-- **Observability without CloudWatch-heavy tooling:** finalize minimal logging/health/runbook standard so incident response remains practical.
-- **Quantitative load target for onboarding/matching bursts:** define explicit performance SLOs before final hardening.
+- **Audit trail decision:** `PATCH /leads/{id}` in-place overwrites lose status change history. Recommend adding `status_updated_at` + `status_updated_by` columns in the same Phase 1 migration — retroactive schema changes require a data migration. Decision must be made before Phase 1 executes.
+- **Rate limiting specifics:** Plan must specify concrete rate limits (requests/sec per IP, per tenant slug) before Phase 1 backend reaches production. This is a config decision, not an implementation blocker for development.
+- **Redis availability:** Confirmed approach does not require Redis — match context is passed from React state in the POST body. Assumption: React state is not cleared between `MatchTest.jsx` navigate and `MatchResults.jsx` form submission (same session, no reload required).
+
+---
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- `.planning/research/STACK.md`
-- `.planning/research/FEATURES.md`
-- `.planning/research/ARCHITECTURE.md`
-- `.planning/research/PITFALLS.md`
-- AWS official docs cited in those research files (Lambda, API Gateway, Route53, ACM, RDS, VPC endpoints, Terraform state/ops)
+- `.planning/research/STACK.md` — direct codebase inspection (packages, file inventory, color audit)
+- `.planning/research/FEATURES.md` — codebase inspection + UX conversion practitioner research
+- `.planning/research/ARCHITECTURE.md` — direct codebase inspection (file-level change map, API integration map)
+- `.planning/research/PITFALLS.md` — FastAPI/PostgreSQL official docs + UX conversion sources + AWS Lambda limits documentation
 
 ### Secondary (MEDIUM confidence)
-- Mangum project documentation (adapter implementation details)
-- Terraform/AWS provider release streams (version stability signals)
-
-### Tertiary (LOW confidence)
-- None identified in current research set.
+- UX conversion rate estimates (results-first vs gate patterns) — multiple practitioner sources, directionally consistent
 
 ---
-*Research completed: 2026-04-08*
+
+*Research completed: 2026-04-15*
+*Milestone: v1.2 — Leads Management + UX Unification*
 *Ready for roadmap: yes*

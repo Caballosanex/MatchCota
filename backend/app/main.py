@@ -3,10 +3,21 @@ import re
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.core.tenant import TenantMiddleware
+
+
+def _allowed_origin_regex() -> str:
+    domains = ["matchcota.tech"]
+    configured_domain = settings.wildcard_domain.strip().lower()
+    if configured_domain and configured_domain not in domains:
+        domains.append(configured_domain)
+
+    domain_pattern = "|".join(re.escape(domain) for domain in domains)
+    return rf"^https://([a-z0-9\-]+\.)?(?:{domain_pattern})$"
 
 
 def _is_lambda_runtime() -> bool:
@@ -29,9 +40,7 @@ if settings.is_production():
     # Producció: CORS dinàmic que accepta qualsevol subdomini de matchcota.tech
     # El wildcard "*" no funciona amb allow_credentials=True,
     # així que validem l'origin dinàmicament amb regex.
-    _allowed_origin_re = re.compile(
-        r"^https://([a-z0-9\-]+\.)?matchcota\.tech$"
-    )
+    _allowed_origin_re = re.compile(_allowed_origin_regex())
 
     @app.middleware("http")
     async def dynamic_cors(request, call_next):
@@ -42,7 +51,16 @@ if settings.is_production():
 
             response = Response(status_code=204)
         else:
-            response = await call_next(request)
+            try:
+                response = await call_next(request)
+            except Exception as exc:
+                import logging
+
+                logging.getLogger(__name__).exception("Unhandled exception in request: %s", exc)
+                response = JSONResponse(
+                    status_code=500,
+                    content={"detail": "Internal Server Error"},
+                )
 
         if _allowed_origin_re.match(origin):
             response.headers["Access-Control-Allow-Origin"] = origin
@@ -56,6 +74,7 @@ else:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.get_cors_origins(),
+        allow_origin_regex=_allowed_origin_regex(),
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

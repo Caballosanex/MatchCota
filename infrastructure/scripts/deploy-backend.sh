@@ -85,6 +85,11 @@ build_lambda_zip() {
   stage "copy backend application package"
   cp -R backend/app "$BUILD_TMP_DIR/app"
 
+  stage "copy Alembic migration assets"
+  mkdir -p "$BUILD_TMP_DIR/alembic"
+  cp -R backend/alembic/. "$BUILD_TMP_DIR/alembic/"
+  cp backend/alembic.ini "$BUILD_TMP_DIR/alembic.ini"
+
   stage "create Lambda artifact: $LAMBDA_ARTIFACT_PATH"
   rm -f "$LAMBDA_ARTIFACT_PATH"
   (
@@ -180,34 +185,6 @@ main() {
   stage "wait for Lambda runtime environment update"
   aws lambda wait function-updated --function-name "$lambda_function_name"
 
-  stage "run database migrations"
-  migration_result=$(aws lambda invoke \
-    --function-name "$lambda_function_name" \
-    --cli-binary-format raw-in-base64-out \
-    --payload '{"task":"migrate"}' \
-    /tmp/migrate-result.json 2>&1 && cat /tmp/migrate-result.json)
-  echo "$migration_result"
-  if echo "$migration_result" | grep -q '"status": "ok"'; then
-    stage "migrations successful"
-  elif echo "$migration_result" | grep -q '"statusCode"'; then
-    # The current Lambda code does not have the migration task handler — this is
-    # expected on the very first deploy of this handler (Lambda still runs old code;
-    # the new code is uploaded in the next step).  Skip gracefully so the new code
-    # can be deployed; migrations must then be triggered manually once:
-    #   aws lambda invoke --function-name <name> \
-    #     --cli-binary-format raw-in-base64-out \
-    #     --payload '{"task":"migrate"}' /tmp/migrate-result.json
-    echo "[deploy-backend] WARNING: Lambda returned an API Gateway response — migration task handler not present yet."
-    echo "[deploy-backend] WARNING: This is expected on the first deploy of this handler."
-    echo "[deploy-backend] WARNING: After this deploy completes, run migrations manually (see comment above)."
-  elif echo "$migration_result" | grep -q '"status": "error"'; then
-    echo "[deploy-backend] ERROR: migration failed, aborting deploy"
-    exit 1
-  else
-    echo "[deploy-backend] ERROR: unexpected migration response, aborting deploy"
-    exit 1
-  fi
-
   stage "upload Lambda artifact to S3: s3://${lambda_artifact_bucket_name}/${lambda_artifact_object_key}"
   aws s3 cp "$LAMBDA_ARTIFACT_PATH" "s3://${lambda_artifact_bucket_name}/${lambda_artifact_object_key}" >/dev/null
 
@@ -220,6 +197,43 @@ main() {
 
   stage "wait for Lambda function update to complete"
   aws lambda wait function-updated --function-name "$lambda_function_name"
+
+  stage "run database migrations"
+  local migration_response_file migration_invoke_output migration_status
+  migration_response_file="$(mktemp)"
+  migration_invoke_output="$(aws lambda invoke \
+    --function-name "$lambda_function_name" \
+    --cli-binary-format raw-in-base64-out \
+    --payload '{"task":"migrate"}' \
+    "$migration_response_file")"
+
+  echo "$migration_invoke_output"
+  cat "$migration_response_file"
+
+  migration_status="$(python3 - "$migration_response_file" <<'PY'
+import json
+import pathlib
+import sys
+
+payload = json.loads(pathlib.Path(sys.argv[1]).read_text() or "{}")
+if payload.get("status") == "ok":
+    print("ok")
+elif any(k in payload for k in ("statusCode", "errorMessage", "errorType")):
+    print("[deploy-backend] ERROR: Lambda returned a handler error instead of a migration result. The migration handler may not be deployed correctly.", file=sys.stderr)
+    print(payload.get("errorMessage", str(payload)), file=sys.stderr)
+    print("error")
+else:
+    print(payload.get("status", "unknown"))
+PY
+)"
+  rm -f "$migration_response_file"
+
+  if [[ "$migration_status" != "ok" ]]; then
+    echo "[deploy-backend] ERROR: migration failed, aborting deploy" >&2
+    exit 1
+  fi
+
+  stage "migrations successful"
 
   stage "deploy complete"
   echo "lambda_function_name=${lambda_function_name}"

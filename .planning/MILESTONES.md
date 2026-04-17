@@ -61,3 +61,34 @@ No milestone-audit artifact was present at close (`.planning/v1.0-MILESTONE-AUDI
 - Human-UAT evidence style relies on concise user-confirmed transcript placeholders; future milestones should prefer richer capture artifacts where feasible.
 
 ---
+
+## v1.2 Product Features + UX Unification (Shipped: 2026-04-17)
+
+**Delivered:** Leads management features and premium tenant public UX unification, followed by closure of human-verification and missing verification-chain blockers for full requirement signoff.
+
+**Phases completed:** 14-20 — 17 plans, 44 tasks
+
+**Key accomplishments:**
+- Shipped tenant-safe leads backend contracts with one-of contact persistence and isolation-safe admin/public API coverage.
+- Delivered admin leads list/detail UX with grouped human-readable questionnaire answers and production route wiring.
+- Added results-first public lead capture flow that persists questionnaire responses and compact score context.
+- Normalized the frontend palette to indigo primary tokens and removed teal/legacy blue outliers across public and admin surfaces.
+- Upgraded tenant public routes to a premium unified visual language, including hero-prioritized match results hierarchy and modernized animals discovery surfaces.
+- Closed milestone audit blockers by recording human UAT closures and backfilling Phase 18 verification evidence for UX18 requirement traceability.
+
+**Stats:**
+- 7 phases (`14-20`)
+- 17 plans
+- 44 tasks (from plan task blocks)
+- 51 files changed
+- 2,691 insertions / 654 deletions
+- Timeline: 2026-04-15 -> 2026-04-17
+- Git range: `ddd728f` -> `e936cf9`
+
+### Known Gaps (Accepted Tech Debt at Milestone Close)
+
+- Nyquist validation coverage remains partial for phases `14-20`; run follow-up validation normalization in the next milestone.
+- `audit-open` command in current `gsd-tools` runtime throws `ReferenceError: output is not defined`; tooling issue should be repaired to restore pre-close automated artifact audit.
+- Known deferred items at close: 7 (see `.planning/STATE.md` Deferred Items).
+
+---

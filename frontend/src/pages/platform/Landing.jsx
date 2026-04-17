@@ -59,27 +59,6 @@ const DiamondIcon = () => (
 export default function Landing() {
     return (
         <div className="min-h-screen bg-white font-sans text-gray-900 selection:bg-indigo-100 selection:text-indigo-900">
-            <header className="fixed w-full top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 bg-indigo-200 rounded-full flex items-center justify-center">
-                            <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                        </div>
-                        <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-indigo-800">MatchCota</span>
-                    </div>
-                    <Link
-                        to="/register-tenant"
-                        className="px-6 py-2.5 border border-indigo-200 text-indigo-600 rounded-full hover:bg-indigo-50 hover:border-indigo-300 transition-all font-medium text-sm shadow-sm"
-                    >
-                        Registra't
-                    </Link>
-                </div>
-            </header>
-
-            <div className="h-20"></div>
-
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 grid lg:grid-cols-2 gap-12 items-center">
                 <div className="text-left space-y-8">
                     <h1 className="text-5xl lg:text-7xl font-extrabold text-gray-900 leading-[1.1] tracking-tight">

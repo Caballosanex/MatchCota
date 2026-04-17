@@ -59,10 +59,6 @@ def get_lead(db: Session, lead_id: UUID, tenant_id: UUID) -> Lead:
     lead = crud_leads.get_lead_by_tenant(db, lead_id, tenant_id)
     if not lead:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lead no trobat")
-
-    if isinstance(lead, dict):
-        return lead
-
     return lead
 
 
@@ -70,11 +66,5 @@ def update_lead_status(db: Session, lead_id: UUID, status_update: LeadStatusUpda
     lead = crud_leads.get_lead_by_tenant(db, lead_id, tenant_id)
     if not lead:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lead no trobat")
-
-    if isinstance(lead, dict):
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Lead status updates unavailable until runtime migration is applied",
-        )
 
     return crud_leads.update_lead(db, lead, {"status": status_update.status})
