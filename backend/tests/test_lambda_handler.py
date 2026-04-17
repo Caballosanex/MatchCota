@@ -1,20 +1,32 @@
+import importlib
+import sys
 from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
 
 
-def test_lambda_module_exports_handler_callable():
-    from app.lambda_handler import handler
+def _import_lambda_handler():
+    """Import (or re-import) app.lambda_handler with bootstrap mocked out."""
+    # Remove cached module so each helper call gets a fresh import with the mock
+    for mod_name in list(sys.modules.keys()):
+        if "lambda_handler" in mod_name:
+            del sys.modules[mod_name]
 
-    assert handler is not None
-    assert callable(handler)
+    with patch("app.bootstrap_runtime.bootstrap_runtime_secrets", return_value={}):
+        import app.lambda_handler as lh
+        return lh
+
+
+def test_lambda_module_exports_handler_callable():
+    lh = _import_lambda_handler()
+    assert lh.handler is not None
+    assert callable(lh.handler)
 
 
 def test_lambda_module_exports_mangum_handler_with_lifespan_off():
-    from app.lambda_handler import _mangum_handler
-
-    assert _mangum_handler is not None
-    assert hasattr(_mangum_handler, "app")
+    lh = _import_lambda_handler()
+    assert lh._mangum_handler is not None
+    assert hasattr(lh._mangum_handler, "app")
 
 
 def test_health_route_remains_reachable_via_asgi_app():
@@ -47,7 +59,7 @@ def test_tenant_registration_invalid_payload_returns_fastapi_validation_contract
 
 def test_migrate_task_returns_ok_on_alembic_success():
     """handler({"task": "migrate"}, {}) returns {"status": "ok"} when alembic exits 0."""
-    from app.lambda_handler import handler
+    lh = _import_lambda_handler()
 
     mock_result = MagicMock()
     mock_result.returncode = 0
@@ -55,7 +67,7 @@ def test_migrate_task_returns_ok_on_alembic_success():
     mock_result.stderr = ""
 
     with patch("subprocess.run", return_value=mock_result) as mock_run:
-        response = handler({"task": "migrate"}, {})
+        response = lh.handler({"task": "migrate"}, {})
 
     assert response["status"] == "ok"
     assert response["returncode"] == 0
@@ -66,7 +78,7 @@ def test_migrate_task_returns_ok_on_alembic_success():
 
 def test_migrate_task_returns_error_on_alembic_failure():
     """handler({"task": "migrate"}, {}) returns {"status": "error"} when alembic exits non-zero."""
-    from app.lambda_handler import handler
+    lh = _import_lambda_handler()
 
     mock_result = MagicMock()
     mock_result.returncode = 1
@@ -74,7 +86,7 @@ def test_migrate_task_returns_error_on_alembic_failure():
     mock_result.stderr = "FAILED: Can't locate revision identifier\n"
 
     with patch("subprocess.run", return_value=mock_result):
-        response = handler({"task": "migrate"}, {})
+        response = lh.handler({"task": "migrate"}, {})
 
     assert response["status"] == "error"
     assert response["returncode"] == 1
@@ -83,27 +95,26 @@ def test_migrate_task_returns_error_on_alembic_failure():
 
 def test_http_event_delegates_to_mangum():
     """handler({"httpMethod": "GET", ...}, {}) delegates to Mangum, not the migrate branch."""
-    from app.lambda_handler import handler
+    lh = _import_lambda_handler()
 
     # Verify that a non-migrate event does NOT trigger subprocess.run
     with patch("subprocess.run") as mock_run:
-        # We expect Mangum to handle this, which may raise since it's not a real Lambda env.
-        # What matters is subprocess.run is NOT called.
+        # Mangum may raise on a partial event in test env — that's expected
         try:
-            handler({"httpMethod": "GET", "path": "/api/v1/health"}, {})
+            lh.handler({"httpMethod": "GET", "path": "/api/v1/health"}, {})
         except Exception:
-            pass  # Mangum raising on a partial event is expected in test env
+            pass
 
     mock_run.assert_not_called()
 
 
 def test_event_without_task_key_delegates_to_mangum():
     """handler({}, {}) does not raise KeyError and does not call subprocess.run."""
-    from app.lambda_handler import handler
+    lh = _import_lambda_handler()
 
     with patch("subprocess.run") as mock_run:
         try:
-            handler({}, {})
+            lh.handler({}, {})
         except Exception:
             pass  # Mangum may raise on empty event; that's fine
 
