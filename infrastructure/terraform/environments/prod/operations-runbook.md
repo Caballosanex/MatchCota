@@ -17,6 +17,59 @@ Preflight command:
 bash infrastructure/scripts/terraform-preflight.sh
 ```
 
+## First-time bootstrap
+
+Run this once on a brand-new AWS Academy lab account before any Terraform
+layer can execute.  The script is idempotent — safe to re-run if interrupted.
+
+```bash
+export AWS_PROFILE=matchcota
+eval "$(bash infrastructure/scripts/bootstrap.sh)"
+export TF_VAR_frontend_allowed_ssh_cidrs='["<your-operator-ip>/32"]'
+```
+
+`bootstrap.sh` covers three prerequisites:
+
+| Step | What it does | Idempotency |
+|------|-------------|-------------|
+| 1 | Creates the S3 bucket and DynamoDB lock table for Terraform remote state (delegates to `terraform-bootstrap-backend.sh`) | Terraform apply is no-op if resources exist |
+| 2 | Allocates an Elastic IP tagged `project=matchcota` and writes it to `TF_VAR_frontend_elastic_ip` | Reuses the first unassociated tagged EIP if one already exists |
+| 3 | Generates cryptographically random secrets and stores them as SSM `SecureString` parameters (`DB_PASSWORD`, `APP_SECRET_KEY`, `JWT_SECRET_KEY`) | Skips any parameter that already exists; never overwrites |
+
+After `eval`, your shell has all `TF_BACKEND_*` and `TF_VAR_*` variables set.
+Set `TF_VAR_frontend_allowed_ssh_cidrs` manually with your operator CIDR.
+
+Full first-deploy order:
+
+```bash
+# 1. Bootstrap prereqs (above)
+
+# 2. Preflight
+bash infrastructure/scripts/terraform-preflight.sh
+
+# 3. Terraform init with remote backend
+terraform -chdir=infrastructure/terraform/environments/prod init -reconfigure \
+  -backend-config="bucket=${TF_BACKEND_BUCKET}" \
+  -backend-config="dynamodb_table=${TF_BACKEND_DYNAMODB_TABLE}" \
+  -backend-config="region=${TF_BACKEND_REGION:-us-east-1}"
+
+# 4. Layered apply (strict order)
+bash infrastructure/scripts/terraform-apply-layer.sh foundation
+bash infrastructure/scripts/terraform-apply-layer.sh network
+bash infrastructure/scripts/terraform-apply-layer.sh data
+bash infrastructure/scripts/terraform-apply-layer.sh runtime
+
+# 5. Deploy application code
+bash infrastructure/scripts/deploy-backend.sh
+bash infrastructure/scripts/deploy-frontend.sh
+```
+
+> **Note:** `deploy-backend.sh` runs Alembic migrations as part of its pipeline.
+> On a first deploy the database is empty and Alembic runs all migrations from
+> scratch — no manual `stamp` or seed step needed.
+
+---
+
 ## Initial Apply
 
 1. Run preflight and confirm PASS.
