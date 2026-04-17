@@ -31,6 +31,15 @@ describe('MatchResults lead capture contract', () => {
     expect(formHeading).toBeGreaterThan(resultsHeading);
   });
 
+  it('renders explicit top-match hero and compact secondary grid hierarchy', () => {
+    const source = getMatchResultsSource();
+
+    expect(source).toContain('const [topMatch, ...secondaryMatches] = matches;');
+    expect(source).toContain('El teu millor match');
+    expect(source).toContain('grid gap-4 sm:grid-cols-2 lg:grid-cols-3');
+    expect(source).toContain('secondaryMatches.map((match) =>');
+  });
+
   it('enforces name plus one contact medium validation', () => {
     expect(validateLeadForm({ name: '', email: '', phone: '' })).toEqual({
       name: 'El nom es obligatori.',
