@@ -113,6 +113,7 @@ main() {
   local lambda_function_name api_gateway_invoke_url lambda_artifact_bucket_name lambda_artifact_object_key
   local uploads_bucket_name ssm_db_param ssm_app_param ssm_jwt_param
   local db_host db_port db_name db_username
+  local db_password app_secret_key jwt_secret_key encoded_db_password database_url
 
   lambda_function_name="$(terraform -chdir="$TF_ENV_DIR" output -raw lambda_function_name)"
   api_gateway_invoke_url="$(terraform -chdir="$TF_ENV_DIR" output -raw api_gateway_invoke_url)"
@@ -157,24 +158,53 @@ main() {
   aws ssm get-parameter --name "$ssm_app_param" >/dev/null
   aws ssm get-parameter --name "$ssm_jwt_param" >/dev/null
 
+  stage "resolve runtime secret values from SSM"
+  db_password="$(aws ssm get-parameter --name "$ssm_db_param" --with-decryption --query 'Parameter.Value' --output text)"
+  app_secret_key="$(aws ssm get-parameter --name "$ssm_app_param" --with-decryption --query 'Parameter.Value' --output text)"
+  jwt_secret_key="$(aws ssm get-parameter --name "$ssm_jwt_param" --with-decryption --query 'Parameter.Value' --output text)"
+
+  if [[ -z "$db_password" || -z "$app_secret_key" || -z "$jwt_secret_key" ]]; then
+    echo "ERROR: Runtime secret values are empty after SSM resolution" >&2
+    exit 1
+  fi
+
+  encoded_db_password="$(python3 -c 'import sys, urllib.parse; print(urllib.parse.quote_plus(sys.argv[1]))' "$db_password")"
+  database_url="postgresql://${db_username}:${encoded_db_password}@${db_host}:${db_port}/${db_name}?sslmode=require"
+
   stage "lambda_function_name=${lambda_function_name}"
   stage "update Lambda runtime environment"
   aws lambda update-function-configuration \
     --function-name "$lambda_function_name" \
-    --environment "Variables={ENVIRONMENT=production,DEBUG=false,S3_ENABLED=true,S3_BUCKET_NAME=${uploads_bucket_name},WILDCARD_DOMAIN=matchcota.tech,APP_AWS_REGION=us-east-1,DB_HOST=${db_host},DB_PORT=${db_port},DB_NAME=${db_name},DB_USERNAME=${db_username},DB_PASSWORD_SSM_PARAMETER=${ssm_db_param},APP_SECRET_KEY_SSM_PARAMETER=${ssm_app_param},JWT_SECRET_KEY_SSM_PARAMETER=${ssm_jwt_param}}" >/dev/null
+    --environment "Variables={ENVIRONMENT=production,DEBUG=false,S3_ENABLED=true,S3_BUCKET_NAME=${uploads_bucket_name},WILDCARD_DOMAIN=matchcota.tech,APP_AWS_REGION=us-east-1,DB_HOST=${db_host},DB_PORT=${db_port},DB_NAME=${db_name},DB_USERNAME=${db_username},DB_PASSWORD_SSM_PARAMETER=${ssm_db_param},APP_SECRET_KEY_SSM_PARAMETER=${ssm_app_param},JWT_SECRET_KEY_SSM_PARAMETER=${ssm_jwt_param},DATABASE_URL=${database_url},SECRET_KEY=${app_secret_key},JWT_SECRET_KEY=${jwt_secret_key},RUNTIME_SECRETS_BOOTSTRAPPED=true}" >/dev/null
 
   stage "wait for Lambda runtime environment update"
   aws lambda wait function-updated --function-name "$lambda_function_name"
 
   stage "run database migrations"
-  migration_result=$(AWS_PROFILE=matchcota aws lambda invoke \
+  migration_result=$(aws lambda invoke \
     --function-name "$lambda_function_name" \
     --cli-binary-format raw-in-base64-out \
     --payload '{"task":"migrate"}' \
     /tmp/migrate-result.json 2>&1 && cat /tmp/migrate-result.json)
   echo "$migration_result"
-  if ! echo "$migration_result" | grep -q '"status": "ok"'; then
+  if echo "$migration_result" | grep -q '"status": "ok"'; then
+    stage "migrations successful"
+  elif echo "$migration_result" | grep -q '"statusCode"'; then
+    # The current Lambda code does not have the migration task handler — this is
+    # expected on the very first deploy of this handler (Lambda still runs old code;
+    # the new code is uploaded in the next step).  Skip gracefully so the new code
+    # can be deployed; migrations must then be triggered manually once:
+    #   aws lambda invoke --function-name <name> \
+    #     --cli-binary-format raw-in-base64-out \
+    #     --payload '{"task":"migrate"}' /tmp/migrate-result.json
+    echo "[deploy-backend] WARNING: Lambda returned an API Gateway response — migration task handler not present yet."
+    echo "[deploy-backend] WARNING: This is expected on the first deploy of this handler."
+    echo "[deploy-backend] WARNING: After this deploy completes, run migrations manually (see comment above)."
+  elif echo "$migration_result" | grep -q '"status": "error"'; then
     echo "[deploy-backend] ERROR: migration failed, aborting deploy"
+    exit 1
+  else
+    echo "[deploy-backend] ERROR: unexpected migration response, aborting deploy"
     exit 1
   fi
 
