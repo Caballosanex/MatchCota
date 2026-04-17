@@ -44,11 +44,6 @@ variable "base_domain" {
   default     = "matchcota.tech"
 }
 
-variable "frontend_elastic_ip" {
-  description = "Elastic IP address for apex and wildcard frontend A records"
-  type        = string
-}
-
 variable "frontend_instance_type" {
   description = "EC2 instance type for frontend edge host"
   type        = string
@@ -265,12 +260,6 @@ variable "db_username" {
   default     = "matchcota_admin"
 }
 
-variable "db_password" {
-  description = "PostgreSQL master password for MatchCota runtime"
-  type        = string
-  sensitive   = true
-}
-
 variable "ssm_db_password_parameter_name" {
   description = "SSM parameter name for runtime DB password secret"
   type        = string
@@ -287,24 +276,6 @@ variable "ssm_jwt_secret_key_parameter_name" {
   description = "SSM parameter name for runtime JWT secret key"
   type        = string
   default     = "JWT_SECRET_KEY"
-}
-
-variable "ssm_db_password_value" {
-  description = "Runtime DB password stored in SSM"
-  type        = string
-  sensitive   = true
-}
-
-variable "ssm_app_secret_key_value" {
-  description = "Runtime app secret key stored in SSM"
-  type        = string
-  sensitive   = true
-}
-
-variable "ssm_jwt_secret_key_value" {
-  description = "Runtime JWT secret key stored in SSM"
-  type        = string
-  sensitive   = true
 }
 
 variable "db_allocated_storage" {

@@ -126,7 +126,7 @@ export default function LeadDetail() {
               <article key={match.animal_id || `${match.name}-${match.score}`} className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">{match.name || 'No proporcionat'}</h3>
+                    <h3 className="text-lg font-semibold text-slate-900">{match.animal_name || 'No proporcionat'}</h3>
                     <p className="text-sm text-slate-500">{match.breed || match.species || 'No proporcionat'}</p>
                   </div>
                   <span className={`inline-flex rounded-full border px-3 py-1 text-sm font-semibold ${getScoreColor(match.score ?? 0)}`}>

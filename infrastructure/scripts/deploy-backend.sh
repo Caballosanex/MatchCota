@@ -13,6 +13,13 @@ LAMBDA_ARTIFACT_PATH="${LAMBDA_ARTIFACT_PATH:-$DEFAULT_ARTIFACT_PATH}"
 export AWS_PROFILE
 
 BUILD_TMP_DIR=""
+TERRAFORM_AVAILABLE="false"
+
+# Source deploy overrides if available (TF_OUT_* env vars)
+if [[ -f "${DEPLOY_ENV_FILE:-.env.deploy}" ]]; then
+  # shellcheck source=/dev/null
+  source "${DEPLOY_ENV_FILE:-.env.deploy}"
+fi
 
 usage() {
   cat <<'USAGE'
@@ -24,7 +31,17 @@ Environment variables:
   TF_BACKEND_BUCKET           Optional: Terraform state bucket for init
   TF_BACKEND_DYNAMODB_TABLE   Optional: Terraform lock table for init
   TF_BACKEND_REGION           Optional: Terraform backend region (default: us-east-1)
+  DEPLOY_ENV_FILE             Optional: path to env file with overrides (default: .env.deploy)
   Runtime secrets are resolved from SSM parameters managed by Terraform.
+
+  When Terraform state is not accessible (e.g. AWS Academy labs), provide
+  Terraform output values as TF_OUT_<output_name> environment variables
+  (directly or via .env.deploy file):
+    TF_OUT_lambda_function_name, TF_OUT_api_gateway_invoke_url,
+    TF_OUT_lambda_artifact_bucket_name, TF_OUT_lambda_artifact_object_key,
+    TF_OUT_uploads_bucket_name, TF_OUT_ssm_db_password_parameter_name,
+    TF_OUT_ssm_app_secret_key_parameter_name, TF_OUT_ssm_jwt_secret_key_parameter_name,
+    TF_OUT_rds_endpoint, TF_OUT_rds_port, TF_OUT_db_name, TF_OUT_db_username
 USAGE
 }
 
@@ -48,20 +65,51 @@ cleanup() {
 
 ensure_terraform_initialized() {
   if [[ -d "$TF_ENV_DIR/.terraform" ]]; then
+    if terraform -chdir="$TF_ENV_DIR" output >/dev/null 2>&1; then
+      TERRAFORM_AVAILABLE="true"
+      return
+    fi
+    stage "Terraform state not accessible — will use TF_OUT_* env overrides"
     return
   fi
 
   if [[ -z "$TF_BACKEND_BUCKET" || -z "$TF_BACKEND_DYNAMODB_TABLE" ]]; then
-    echo "ERROR: Terraform is not initialized in $TF_ENV_DIR and TF_BACKEND_BUCKET / TF_BACKEND_DYNAMODB_TABLE are not set." >&2
-    echo "Run terraform init in $TF_ENV_DIR or provide backend env vars." >&2
-    exit 1
+    stage "Terraform not initialized — will use TF_OUT_* env overrides"
+    return
   fi
 
   stage "terraform init (remote backend)"
-  terraform -chdir="$TF_ENV_DIR" init -reconfigure \
+  if terraform -chdir="$TF_ENV_DIR" init -reconfigure \
     -backend-config="bucket=${TF_BACKEND_BUCKET}" \
     -backend-config="dynamodb_table=${TF_BACKEND_DYNAMODB_TABLE}" \
-    -backend-config="region=${TF_BACKEND_REGION}"
+    -backend-config="region=${TF_BACKEND_REGION}" 2>&1; then
+    TERRAFORM_AVAILABLE="true"
+  else
+    stage "Terraform init failed — will use TF_OUT_* env overrides"
+  fi
+}
+
+resolve_output() {
+  local name="$1"
+  local env_var="TF_OUT_${name}"
+  local env_value="${!env_var:-}"
+
+  if [[ -n "$env_value" ]]; then
+    echo "$env_value"
+    return 0
+  fi
+
+  if [[ "$TERRAFORM_AVAILABLE" == "true" ]]; then
+    local tf_value
+    tf_value="$(terraform -chdir="$TF_ENV_DIR" output -raw "$name" 2>/dev/null)" || true
+    if [[ -n "$tf_value" && "$tf_value" != "null" ]]; then
+      echo "$tf_value"
+      return 0
+    fi
+  fi
+
+  echo "ERROR: Could not resolve '$name'. Set TF_OUT_${name} or fix Terraform state access." >&2
+  return 1
 }
 
 build_lambda_zip() {
@@ -114,24 +162,24 @@ main() {
   ensure_terraform_initialized
   build_lambda_zip
 
-  stage "resolve Terraform runtime outputs"
+  stage "resolve runtime outputs"
   local lambda_function_name api_gateway_invoke_url lambda_artifact_bucket_name lambda_artifact_object_key
   local uploads_bucket_name ssm_db_param ssm_app_param ssm_jwt_param
   local db_host db_port db_name db_username
   local db_password app_secret_key jwt_secret_key encoded_db_password database_url
 
-  lambda_function_name="$(terraform -chdir="$TF_ENV_DIR" output -raw lambda_function_name)"
-  api_gateway_invoke_url="$(terraform -chdir="$TF_ENV_DIR" output -raw api_gateway_invoke_url)"
-  lambda_artifact_bucket_name="$(terraform -chdir="$TF_ENV_DIR" output -raw lambda_artifact_bucket_name)"
-  lambda_artifact_object_key="$(terraform -chdir="$TF_ENV_DIR" output -raw lambda_artifact_object_key)"
-  uploads_bucket_name="$(terraform -chdir="$TF_ENV_DIR" output -raw uploads_bucket_name)"
-  ssm_db_param="$(terraform -chdir="$TF_ENV_DIR" output -raw ssm_db_password_parameter_name)"
-  ssm_app_param="$(terraform -chdir="$TF_ENV_DIR" output -raw ssm_app_secret_key_parameter_name)"
-  ssm_jwt_param="$(terraform -chdir="$TF_ENV_DIR" output -raw ssm_jwt_secret_key_parameter_name)"
-  db_host="$(terraform -chdir="$TF_ENV_DIR" output -raw rds_endpoint)"
-  db_port="$(terraform -chdir="$TF_ENV_DIR" output -raw rds_port)"
-  db_name="$(terraform -chdir="$TF_ENV_DIR" output -raw db_name)"
-  db_username="$(terraform -chdir="$TF_ENV_DIR" output -raw db_username)"
+  lambda_function_name="$(resolve_output lambda_function_name)"
+  api_gateway_invoke_url="$(resolve_output api_gateway_invoke_url)"
+  lambda_artifact_bucket_name="$(resolve_output lambda_artifact_bucket_name)"
+  lambda_artifact_object_key="$(resolve_output lambda_artifact_object_key)"
+  uploads_bucket_name="$(resolve_output uploads_bucket_name)"
+  ssm_db_param="$(resolve_output ssm_db_password_parameter_name)"
+  ssm_app_param="$(resolve_output ssm_app_secret_key_parameter_name)"
+  ssm_jwt_param="$(resolve_output ssm_jwt_secret_key_parameter_name)"
+  db_host="$(resolve_output rds_endpoint)"
+  db_port="$(resolve_output rds_port)"
+  db_name="$(resolve_output db_name)"
+  db_username="$(resolve_output db_username)"
 
   if [[ -z "$lambda_function_name" ]]; then
     echo "ERROR: Terraform output lambda_function_name is empty" >&2

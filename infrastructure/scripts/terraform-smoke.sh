@@ -178,12 +178,7 @@ main() {
   cat >"${SMOKE_TFVARS}" <<'EOF'
 terraform_state_bucket = "smoke-placeholder-state-bucket"
 terraform_lock_table   = "smoke-placeholder-lock-table"
-frontend_elastic_ip    = "203.0.113.10"
 frontend_allowed_ssh_cidrs = ["203.0.113.0/24"]
-db_password            = "smoke-placeholder-password"
-ssm_db_password_value  = "smoke-placeholder-password"
-ssm_app_secret_key_value = "smoke-placeholder-app-secret"
-ssm_jwt_secret_key_value = "smoke-placeholder-jwt-secret"
 EOF
 
   SMOKE_TMP_ENV_DIR="$(mktemp -d)"

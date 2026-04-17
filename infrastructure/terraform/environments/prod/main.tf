@@ -263,6 +263,21 @@ resource "aws_db_subnet_group" "postgres_private" {
   })
 }
 
+resource "random_password" "db_password" {
+  length  = 32
+  special = false
+}
+
+resource "random_password" "app_secret_key" {
+  length  = 64
+  special = false
+}
+
+resource "random_password" "jwt_secret_key" {
+  length  = 64
+  special = false
+}
+
 resource "aws_db_instance" "postgres" {
   identifier              = "matchcota-prod-postgres"
   engine                  = "postgres"
@@ -270,7 +285,7 @@ resource "aws_db_instance" "postgres" {
   instance_class          = "db.t3.micro"
   db_name                 = var.db_name
   username                = var.db_username
-  password                = var.db_password
+  password                = random_password.db_password.result
   allocated_storage       = var.db_allocated_storage
   backup_retention_period = 7
   multi_az                = false
@@ -285,36 +300,52 @@ resource "aws_db_instance" "postgres" {
   tags = merge(local.default_tags, {
     Name = "matchcota-prod-postgres"
   })
+
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 resource "aws_ssm_parameter" "db_password" {
   name  = var.ssm_db_password_parameter_name
   type  = "String"
-  value = var.ssm_db_password_value
+  value = random_password.db_password.result
 
   tags = merge(local.default_tags, {
     Name = var.ssm_db_password_parameter_name
   })
+
+  lifecycle {
+    ignore_changes = [value, type]
+  }
 }
 
 resource "aws_ssm_parameter" "app_secret_key" {
   name  = var.ssm_app_secret_key_parameter_name
   type  = "String"
-  value = var.ssm_app_secret_key_value
+  value = random_password.app_secret_key.result
 
   tags = merge(local.default_tags, {
     Name = var.ssm_app_secret_key_parameter_name
   })
+
+  lifecycle {
+    ignore_changes = [value, type]
+  }
 }
 
 resource "aws_ssm_parameter" "jwt_secret_key" {
   name  = var.ssm_jwt_secret_key_parameter_name
   type  = "String"
-  value = var.ssm_jwt_secret_key_value
+  value = random_password.jwt_secret_key.result
 
   tags = merge(local.default_tags, {
     Name = var.ssm_jwt_secret_key_parameter_name
   })
+
+  lifecycle {
+    ignore_changes = [value, type]
+  }
 }
 
 resource "aws_s3_bucket" "uploads" {

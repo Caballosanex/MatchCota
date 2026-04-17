@@ -37,8 +37,15 @@ RESOLVED_INSTANCE_ID=""
 DIST_ARCHIVE=""
 STAGED_S3_URI=""
 VERIFY_ROUTE_CONTRACTS_ONLY="false"
+TERRAFORM_AVAILABLE="false"
 
 export AWS_PROFILE
+
+# Source deploy overrides if available (TF_OUT_* env vars)
+if [[ -f "${DEPLOY_ENV_FILE:-.env.deploy}" ]]; then
+  # shellcheck source=/dev/null
+  source "${DEPLOY_ENV_FILE:-.env.deploy}"
+fi
 
 stage() {
   echo "[deploy-frontend] $1"
@@ -193,30 +200,84 @@ configure_ssh_opts() {
 
 ensure_terraform_initialized() {
   if [[ -d "$TF_ENV_DIR/.terraform" ]]; then
+    if terraform -chdir="$TF_ENV_DIR" output >/dev/null 2>&1; then
+      TERRAFORM_AVAILABLE="true"
+      return
+    fi
+    stage "Terraform state not accessible — will use TF_OUT_* env overrides"
     return
   fi
 
   if [[ -z "$TF_BACKEND_BUCKET" || -z "$TF_BACKEND_DYNAMODB_TABLE" ]]; then
-    echo "ERROR: Terraform is not initialized in $TF_ENV_DIR and TF_BACKEND_BUCKET / TF_BACKEND_DYNAMODB_TABLE are not set." >&2
-    echo "Run terraform init in $TF_ENV_DIR or provide backend env vars." >&2
-    exit 1
+    stage "Terraform not initialized — will use TF_OUT_* env overrides"
+    return
   fi
 
   stage "terraform init (remote backend)"
-  terraform -chdir="$TF_ENV_DIR" init -reconfigure \
+  if terraform -chdir="$TF_ENV_DIR" init -reconfigure \
     -backend-config="bucket=${TF_BACKEND_BUCKET}" \
     -backend-config="dynamodb_table=${TF_BACKEND_DYNAMODB_TABLE}" \
-    -backend-config="region=${TF_BACKEND_REGION}"
+    -backend-config="region=${TF_BACKEND_REGION}" 2>&1; then
+    TERRAFORM_AVAILABLE="true"
+  else
+    stage "Terraform init failed — will use TF_OUT_* env overrides"
+  fi
+}
+
+resolve_output() {
+  local name="$1"
+  local env_var="TF_OUT_${name}"
+  local env_value="${!env_var:-}"
+
+  if [[ -n "$env_value" ]]; then
+    echo "$env_value"
+    return 0
+  fi
+
+  if [[ "$TERRAFORM_AVAILABLE" == "true" ]]; then
+    local tf_value
+    tf_value="$(terraform -chdir="$TF_ENV_DIR" output -raw "$name" 2>/dev/null)" || true
+    if [[ -n "$tf_value" && "$tf_value" != "null" ]]; then
+      echo "$tf_value"
+      return 0
+    fi
+  fi
+
+  echo "ERROR: Could not resolve '$name'. Set TF_OUT_${name} or fix Terraform state access." >&2
+  return 1
+}
+
+resolve_output_json() {
+  local name="$1"
+  local env_var="TF_OUT_${name}"
+  local env_value="${!env_var:-}"
+
+  if [[ -n "$env_value" ]]; then
+    echo "$env_value"
+    return 0
+  fi
+
+  if [[ "$TERRAFORM_AVAILABLE" == "true" ]]; then
+    local tf_value
+    tf_value="$(terraform -chdir="$TF_ENV_DIR" output -json "$name" 2>/dev/null)" || true
+    if [[ -n "$tf_value" && "$tf_value" != "null" ]]; then
+      echo "$tf_value"
+      return 0
+    fi
+  fi
+
+  echo "ERROR: Could not resolve '$name' (json). Set TF_OUT_${name} or fix Terraform state access." >&2
+  return 1
 }
 
 verify_dns_contract() {
   stage "verify Terraform DNS contract outputs"
   local hosted_zone_id wildcard_eip apex_eip preboot_contract
 
-  hosted_zone_id="$(terraform -chdir="$TF_ENV_DIR" output -raw route53_hosted_zone_id)"
-  wildcard_eip="$(terraform -chdir="$TF_ENV_DIR" output -raw dns_wildcard_record_target_eip)"
-  apex_eip="$(terraform -chdir="$TF_ENV_DIR" output -raw dns_apex_record_target_eip)"
-  preboot_contract="$(terraform -chdir="$TF_ENV_DIR" output -json frontend_tenant_preboot_contract 2>/dev/null || true)"
+  hosted_zone_id="$(resolve_output route53_hosted_zone_id)"
+  wildcard_eip="$(resolve_output dns_wildcard_record_target_eip)"
+  apex_eip="$(resolve_output dns_apex_record_target_eip)"
+  preboot_contract="$(resolve_output_json frontend_tenant_preboot_contract 2>/dev/null || true)"
 
   if [[ -z "$hosted_zone_id" || -z "$wildcard_eip" || -z "$apex_eip" ]]; then
     echo "ERROR: Missing required Terraform DNS outputs (route53_hosted_zone_id / dns_wildcard_record_target_eip / dns_apex_record_target_eip)." >&2
@@ -268,7 +329,7 @@ resolve_frontend_host() {
 
   stage "resolve FRONTEND_HOST from Terraform output frontend_edge_host_for_deploy"
 
-  tf_host="$(terraform -chdir="$TF_ENV_DIR" output -raw frontend_edge_host_for_deploy 2>/dev/null || true)"
+  tf_host="$(resolve_output frontend_edge_host_for_deploy 2>/dev/null || true)"
   tf_host="$(printf '%s' "$tf_host" | tr -d '\r\n')"
 
   if [[ -z "$tf_host" || "$tf_host" == "null" ]]; then
@@ -621,7 +682,7 @@ publish_static_assets() {
   fi
 
   if [[ -z "$S3_STAGE_BUCKET" ]]; then
-    S3_STAGE_BUCKET="$(terraform -chdir="$TF_ENV_DIR" output -raw uploads_bucket_name)"
+    S3_STAGE_BUCKET="$(resolve_output uploads_bucket_name)"
   fi
 
   if [[ -z "$S3_STAGE_BUCKET" ]]; then

@@ -28,21 +28,16 @@ eval "$(bash infrastructure/scripts/bootstrap.sh)"
 export TF_VAR_frontend_allowed_ssh_cidrs='["<your-operator-ip>/32"]'
 ```
 
-`bootstrap.sh` covers three prerequisites:
+`bootstrap.sh` creates only the Terraform state backend (S3 bucket + DynamoDB lock table).
+All other resources (EIP, SSM secrets, RDS, Lambda) are managed by Terraform using `random_password`.
 
-| Step | What it does | Idempotency |
-|------|-------------|-------------|
-| 1 | Creates the S3 bucket and DynamoDB lock table for Terraform remote state (delegates to `terraform-bootstrap-backend.sh`) | Terraform apply is no-op if resources exist |
-| 2 | Allocates an Elastic IP tagged `project=matchcota` and writes it to `TF_VAR_frontend_elastic_ip` | Reuses the first unassociated tagged EIP if one already exists |
-| 3 | Generates cryptographically random secrets and stores them as SSM `SecureString` parameters (`DB_PASSWORD`, `APP_SECRET_KEY`, `JWT_SECRET_KEY`) | Skips any parameter that already exists; never overwrites |
-
-After `eval`, your shell has all `TF_BACKEND_*` and `TF_VAR_*` variables set.
+After `eval`, your shell has `TF_BACKEND_*` and `TF_VAR_terraform_*` variables set.
 Set `TF_VAR_frontend_allowed_ssh_cidrs` manually with your operator CIDR.
 
 Full first-deploy order:
 
 ```bash
-# 1. Bootstrap prereqs (above)
+# 1. Bootstrap state backend (above)
 
 # 2. Preflight
 bash infrastructure/scripts/terraform-preflight.sh
@@ -59,14 +54,21 @@ bash infrastructure/scripts/terraform-apply-layer.sh network
 bash infrastructure/scripts/terraform-apply-layer.sh data
 bash infrastructure/scripts/terraform-apply-layer.sh runtime
 
-# 5. Deploy application code
+# 5. If lab session expired, discover outputs for deploy scripts
+bash infrastructure/scripts/discover-outputs.sh
+
+# 6. Deploy application code
 bash infrastructure/scripts/deploy-backend.sh
-bash infrastructure/scripts/deploy-frontend.sh
+KNOWN_TENANT_SLUG=<slug> bash infrastructure/scripts/deploy-frontend.sh
 ```
 
 > **Note:** `deploy-backend.sh` runs Alembic migrations as part of its pipeline.
 > On a first deploy the database is empty and Alembic runs all migrations from
 > scratch — no manual `stamp` or seed step needed.
+>
+> **Note:** If Terraform state becomes inaccessible between sessions (common in
+> AWS Academy labs), `discover-outputs.sh` queries live AWS resources and writes
+> a `.env.deploy` file that the deploy scripts source automatically.
 
 ---
 

@@ -11,6 +11,8 @@ export function buildTopMatches(matches = []) {
   return matches.slice(0, 5).map((match) => ({
     animal_id: match.id,
     animal_name: match.name,
+    species: match.species || null,
+    breed: match.breed || null,
     score: toNumber(match.score),
     explanations: Array.isArray(match.explanations) ? match.explanations : [],
   }));

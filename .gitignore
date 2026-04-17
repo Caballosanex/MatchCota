@@ -64,6 +64,7 @@ tfplan-*
 
 # AWS
 *.pem
+.env.deploy
 
 # Logs
 *.log

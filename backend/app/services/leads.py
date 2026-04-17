@@ -13,6 +13,8 @@ def _normalize_top_match_snapshot(raw_match: dict[str, Any]) -> dict[str, Any]:
     return {
         "animal_id": raw_match.get("animal_id"),
         "animal_name": raw_match.get("animal_name"),
+        "species": raw_match.get("species"),
+        "breed": raw_match.get("breed"),
         "score": raw_match.get("score"),
         "explanations": raw_match.get("explanations") or [],
     }
