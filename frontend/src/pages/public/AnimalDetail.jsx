@@ -54,77 +54,90 @@ export default function AnimalDetail() {
     }, [id]);
 
     // 3. RENDERITZAT ESCALONAT I CONDICIONAL
-    if (loading) return <div className="text-center py-10">Carregant detalls...</div>;
+    if (loading) {
+        return (
+            <div className="rounded-2xl border border-slate-200 bg-white/90 px-6 py-10 text-center text-slate-500 shadow-sm shadow-slate-200/60">
+                Carregant detalls...
+            </div>
+        );
+    }
+
     if (error) return <div className="text-center py-10 text-red-600">{error}</div>;
     if (!animal) return <div className="text-center py-10">Animal no trobat</div>;
 
+    const speciesLabel = LABEL_MAP.species[animal.species] || animal.species;
+    const sexLabel = LABEL_MAP.sex[animal.sex] || animal.sex;
+    const sizeLabel = LABEL_MAP.size[animal.size] || animal.size;
+
     // 4. Disseny final: layout 2 columnes amb galeria, fitxa i barres
     return (
-        <div className="space-y-6">
-            {/* Capçalera i galeria */}
-            <div className="bg-white shadow sm:rounded-lg">
-                <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
+        <div className="space-y-8">
+            <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-primary-light/20 to-indigo-100/40 shadow-sm shadow-slate-200/60">
+                <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200/80 px-6 py-6 sm:px-8">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">{animal.name}</h1>
-                        <p className="mt-1 text-sm text-gray-500">
-                            {LABEL_MAP.species[animal.species] || animal.species}
-                            {animal.breed ? ` - ${animal.breed}` : ''}
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-dark/70">Ficha editorial</p>
+                        <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">{animal.name}</h1>
+                        <p className="mt-2 text-sm text-slate-600 sm:text-base">
+                            {speciesLabel}
+                            {animal.breed ? ` · ${animal.breed}` : ''}
                         </p>
-                        <div className="flex gap-2 mt-2">
+                        <div className="mt-4 flex flex-wrap gap-2">
                             {animal.sex && (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                    {LABEL_MAP.sex[animal.sex] || animal.sex}
+                                <span className="inline-flex items-center rounded-full border border-slate-200 bg-white/80 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+                                    {sexLabel}
                                 </span>
                             )}
                             {animal.size && (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    {LABEL_MAP.size[animal.size] || animal.size}
+                                <span className="inline-flex items-center rounded-full border border-slate-200 bg-white/80 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+                                    {sizeLabel}
                                 </span>
                             )}
                             {animal.is_ppp && (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <span className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-red-700">
                                     PPP
                                 </span>
                             )}
                         </div>
                     </div>
                     <Link to="/animals">
-                        <Button variant="secondary">Tornar</Button>
+                        <Button variant="secondary" className="rounded-full px-5">Tornar</Button>
                     </Link>
                 </div>
-                <div className="px-4 sm:px-6 pb-4">
+
+                <div className="px-4 pb-4 pt-4 sm:px-8 sm:pb-8">
                     <PhotoGallery photos={animal.photo_urls} />
                 </div>
-            </div>
+            </section>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Info principal */}
-                <div className="lg:col-span-2 bg-white shadow sm:rounded-lg">
-                    <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
-                        <h2 className="text-lg font-medium text-gray-900">Informació</h2>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white/90 shadow-sm shadow-slate-200/60 lg:col-span-2">
+                    <div className="border-b border-slate-200/80 px-6 py-4 sm:px-8">
+                        <h2 className="text-lg font-bold tracking-tight text-slate-900">Informació</h2>
+                        <p className="mt-1 text-sm text-slate-500">Dades essencials per conèixer millor aquest animal.</p>
                     </div>
-                    <dl className="sm:divide-y sm:divide-gray-200">
-                        <DetailRow label="Especie" value={LABEL_MAP.species[animal.species] || animal.species} />
+
+                    <dl className="sm:divide-y sm:divide-slate-100">
+                        <DetailRow label="Especie" value={speciesLabel} />
                         <DetailRow label="Raca" value={animal.breed} />
-                        <DetailRow label="Sexe" value={LABEL_MAP.sex[animal.sex]} />
+                        <DetailRow label="Sexe" value={sexLabel} />
                         <DetailRow label="Data Naixement" value={animal.birth_date} />
-                        <DetailRow label="Mida" value={LABEL_MAP.size[animal.size]} />
+                        <DetailRow label="Mida" value={sizeLabel} />
                         <DetailRow label="Pes" value={animal.weight_kg ? `${animal.weight_kg} kg` : null} />
                         <DetailRow label="Microxip" value={animal.microchip_number} />
-                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 sm:py-5">
                             <dt className="text-sm font-medium text-gray-500">Descripció</dt>
-                            <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 whitespace-pre-line">
+                            <dd className="mt-1 whitespace-pre-line text-sm text-gray-900 sm:col-span-2 sm:mt-0">
                                 {animal.description || 'Sense descripció disponible'}
                             </dd>
                         </div>
                         <DetailRow label="Condicions mediques" value={animal.medical_conditions} />
                     </dl>
-                </div>
+                </section>
 
-                {/* Barres matching */}
-                <div className="bg-white shadow sm:rounded-lg p-6">
+                <aside className="rounded-3xl border border-slate-200/80 bg-white/90 p-6 shadow-sm shadow-slate-200/60">
+                    <h3 className="mb-4 text-base font-bold tracking-tight text-slate-900">Compatibilitat</h3>
                     <MatchingBars animal={animal} />
-                </div>
+                </aside>
             </div>
         </div>
     );
