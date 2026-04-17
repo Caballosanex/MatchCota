@@ -56,7 +56,7 @@ export default function MatchResults() {
   }
 
   const { matches = [], total_animals = 0 } = results;
-  const topMatch = matches[0] || null;
+  const [topMatch, ...secondaryMatches] = matches;
 
   const getScoreColor = (score) => {
     if (score >= 80) return 'text-green-600 bg-green-100';
@@ -126,61 +126,55 @@ export default function MatchResults() {
         </div>
       ) : (
         <div className="space-y-6">
-          {matches.map((match, index) => (
-            <div
-              key={match.id}
-              className={`bg-white rounded-xl shadow-lg overflow-hidden ${index === 0 ? 'ring-2 ring-indigo-500' : ''}`}
-            >
-              {index === 0 && (
-                <div className="bg-indigo-600 text-white text-center py-2 text-sm font-semibold">
-                  El teu millor match!
-                </div>
-              )}
+          {topMatch && (
+            <section className="bg-white rounded-3xl shadow-xl ring-1 ring-indigo-100 overflow-hidden">
+              <div className="bg-indigo-600 text-white px-5 py-3 text-sm font-semibold tracking-wide uppercase">
+                El teu millor match
+              </div>
 
-              <div className="md:flex">
-                <div className="md:w-1/3">
+              <div className="lg:flex">
+                <div className="lg:w-2/5">
                   <img
-                    src={match.photo_url || PLACEHOLDER_IMAGE}
-                    alt={match.name}
-                    className="w-full h-64 md:h-full object-cover"
+                    src={topMatch.photo_url || PLACEHOLDER_IMAGE}
+                    alt={topMatch.name}
+                    className="h-72 w-full object-cover lg:h-full"
                   />
                 </div>
 
-                <div className="md:w-2/3 p-6">
-                  <div className="flex items-start justify-between mb-4">
+                <div className="lg:w-3/5 p-6 sm:p-8">
+                  <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-900">{match.name}</h2>
-                      <p className="text-gray-500">
-                        {match.breed || match.species}
-                        {match.sex && ` - ${match.sex}`}
+                      <h2 className="text-3xl font-extrabold text-gray-900">{topMatch.name}</h2>
+                      <p className="text-gray-500 mt-1">
+                        {topMatch.breed || topMatch.species}
+                        {topMatch.sex && ` - ${topMatch.sex}`}
                       </p>
                     </div>
-
-                    <div className={`px-4 py-2 rounded-full font-bold text-lg ${getScoreColor(match.score)}`}>
-                      {match.score}%
-                    </div>
+                    <span className={`px-4 py-2 rounded-full font-extrabold text-xl ${getScoreColor(topMatch.score)}`}>
+                      {topMatch.score}%
+                    </span>
                   </div>
 
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {match.size && (
+                    {topMatch.size && (
                       <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-                        {match.size === 'small' ? 'Petit' : match.size === 'medium' ? 'Mitja' : 'Gran'}
+                        {topMatch.size === 'small' ? 'Petit' : topMatch.size === 'medium' ? 'Mitja' : 'Gran'}
                       </span>
                     )}
-                    {match.age_category && (
+                    {topMatch.age_category && (
                       <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-                        {getAgeLabel(match.age_category)}
+                        {getAgeLabel(topMatch.age_category)}
                       </span>
                     )}
                   </div>
 
-                  {match.description && <p className="text-gray-600 mb-4 line-clamp-2">{match.description}</p>}
+                  {topMatch.description && <p className="text-gray-600 mb-5">{topMatch.description}</p>}
 
-                  {match.explanations && match.explanations.length > 0 && (
-                    <div className="mb-4">
+                  {topMatch.explanations && topMatch.explanations.length > 0 && (
+                    <div className="mb-5">
                       <h3 className="text-sm font-semibold text-gray-700 mb-2">Per que es un bon match:</h3>
-                      <ul className="space-y-1">
-                        {match.explanations.map((exp, index) => (
+                      <ul className="space-y-1.5">
+                        {topMatch.explanations.map((exp, index) => (
                           <li key={index} className="flex items-start text-sm text-gray-600">
                             <svg
                               className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0"
@@ -201,15 +195,69 @@ export default function MatchResults() {
                   )}
 
                   <Link
-                    to={`/animals/${match.id}`}
-                    className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                    to={`/animals/${topMatch.id}`}
+                    className="inline-block px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
                   >
                     Veure perfil complet
                   </Link>
                 </div>
               </div>
-            </div>
-          ))}
+            </section>
+          )}
+
+          {secondaryMatches.length > 0 && (
+            <section>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">Altres opcions compatibles</h3>
+                <span className="text-sm text-gray-500">{secondaryMatches.length} resultats</span>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {secondaryMatches.map((match) => (
+                  <article key={match.id} className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100">
+                    <img
+                      src={match.photo_url || PLACEHOLDER_IMAGE}
+                      alt={match.name}
+                      className="w-full h-40 object-cover"
+                    />
+                    <div className="p-4">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <h4 className="text-lg font-bold text-gray-900 leading-tight">{match.name}</h4>
+                        <span className={`px-2.5 py-1 rounded-full text-sm font-bold ${getScoreColor(match.score)}`}>
+                          {match.score}%
+                        </span>
+                      </div>
+
+                      <p className="text-sm text-gray-500 mb-3">
+                        {match.breed || match.species}
+                        {match.sex && ` - ${match.sex}`}
+                      </p>
+
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {match.size && (
+                          <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-xs">
+                            {match.size === 'small' ? 'Petit' : match.size === 'medium' ? 'Mitja' : 'Gran'}
+                          </span>
+                        )}
+                        {match.age_category && (
+                          <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-xs">
+                            {getAgeLabel(match.age_category)}
+                          </span>
+                        )}
+                      </div>
+
+                      <Link
+                        to={`/animals/${match.id}`}
+                        className="inline-block w-full text-center px-3 py-2 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors text-sm font-semibold"
+                      >
+                        Veure perfil
+                      </Link>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       )}
 
@@ -240,7 +288,7 @@ export default function MatchResults() {
               </Link>
               {topMatch && (
                 <Link
-                  to={`/animals/${matches[0].id}`}
+                  to={`/animals/${topMatch.id}`}
                   className="px-4 py-2 border border-indigo-200 text-indigo-700 rounded-lg hover:bg-indigo-50 transition-colors text-center"
                 >
                   Veure perfil del millor match
