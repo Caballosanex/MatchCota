@@ -166,6 +166,18 @@ main() {
   stage "wait for Lambda runtime environment update"
   aws lambda wait function-updated --function-name "$lambda_function_name"
 
+  stage "run database migrations"
+  migration_result=$(AWS_PROFILE=matchcota aws lambda invoke \
+    --function-name "$lambda_function_name" \
+    --cli-binary-format raw-in-base64-out \
+    --payload '{"task":"migrate"}' \
+    /tmp/migrate-result.json 2>&1 && cat /tmp/migrate-result.json)
+  echo "$migration_result"
+  if ! echo "$migration_result" | grep -q '"status": "ok"'; then
+    echo "[deploy-backend] ERROR: migration failed, aborting deploy"
+    exit 1
+  fi
+
   stage "upload Lambda artifact to S3: s3://${lambda_artifact_bucket_name}/${lambda_artifact_object_key}"
   aws s3 cp "$LAMBDA_ARTIFACT_PATH" "s3://${lambda_artifact_bucket_name}/${lambda_artifact_object_key}" >/dev/null
 
